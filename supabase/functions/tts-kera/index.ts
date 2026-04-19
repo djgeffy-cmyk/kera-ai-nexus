@@ -10,6 +10,17 @@ const corsHeaders = {
 const ELEVEN_DEFAULT_VOICE = "EXAVITQu4vr4xnSDxMaL"; // Sarah
 const ELEVEN_DEFAULT_MODEL = "eleven_multilingual_v2";
 
+// Pré-processador de pronúncia para PT-BR.
+// O ElevenLabs (e a maioria dos TTS multilíngues) interpreta "Ge" como /ʒe/ (jê)
+// só na frente de "e/i". Em "Geverson", ele lê /ʒeverson/ → "Jêverson"
+// (que o usuário ouve como "Queverson"). Forçamos a grafia fonética "Guêverson".
+function fixPronunciation(text: string): string {
+  return text
+    // Geverson / geverson / GEVERSON → Guêverson (mantém capitalização)
+    .replace(/\bGeverson\b/g, "Guêverson")
+    .replace(/\bgeverson\b/gi, "guêverson");
+}
+
 // OpenAI - fallback
 const OPENAI_DEFAULT_VOICE = "nova";
 const OPENAI_DEFAULT_MODEL = "gpt-4o-mini-tts";
@@ -165,6 +176,9 @@ Deno.serve(async (req) => {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
+
+    // Conserta pronúncia de nomes que TTS erra em PT-BR (ex: Geverson → Guêverson)
+    const speakText = fixPronunciation(text);
 
     const wantEleven = provider === "elevenlabs" || (!provider && !!ELEVEN_KEY);
     const wantOpenAI = provider === "openai" || (!provider && !ELEVEN_KEY && !!OPENAI_KEY);
