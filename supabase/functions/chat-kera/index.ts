@@ -253,11 +253,7 @@ Deno.serve(async (req) => {
       // Detecta se a pergunta menciona Rodrigo (dev dos sistemas da prefeitura)
       // ou Geverson (admin da rede da prefeitura) e injeta zoeira específica.
       const mentionsRodrigo = /\brodrig[oa]\b|\bprofessor linguiç?a\b/i.test(lastText);
-      const mentionsGeverson = /\bgeverson\b|\bdj\.?\s*geffy\b|\bdalpra\b/i.test(lastText)
-        // não dispara quando o próprio Geverson tá só assinando ou se citando de leve
-        && /\b(rede|wi-?fi|wifi|internet|infra|infraestrutura|servidor|conex[aã]o|ti\b)\b/i.test(lastText) === false
-        ? true
-        : /\bgeverson\b|\bdj\.?\s*geffy\b|\bdalpra\b/i.test(lastText);
+      const mentionsGeverson = /\bgeverson\b|\bdj\.?\s*geffy\b|\bdalpra\b/i.test(lastText);
 
       const triggers: string[] = [];
 
