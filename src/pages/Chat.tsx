@@ -242,6 +242,39 @@ const Chat = () => {
     if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); sendText(); }
   };
 
+  const addFiles = async (files: FileList | File[]) => {
+    const list = Array.from(files);
+    for (const f of list) {
+      try {
+        const a = await fileToAttachment(f);
+        setAttachments(prev => [...prev, a]);
+      } catch (err: any) {
+        toast.error(err?.message || `Falha ao anexar ${f.name}`);
+      }
+    }
+  };
+
+  const onPaste = async (e: React.ClipboardEvent<HTMLTextAreaElement>) => {
+    const items = e.clipboardData?.items;
+    if (!items) return;
+    const files: File[] = [];
+    for (const it of Array.from(items)) {
+      if (it.kind === "file") {
+        const f = it.getAsFile();
+        if (f) files.push(f);
+      }
+    }
+    if (files.length) {
+      e.preventDefault();
+      await addFiles(files);
+      toast.success(`${files.length} arquivo(s) colado(s)`);
+    }
+  };
+
+  const removeAttachment = (idx: number) => {
+    setAttachments(prev => prev.filter((_, i) => i !== idx));
+  };
+
   const currentAgent = getBuiltinAgent(agentKey) || customAgents.find(a => a.id === agentKey);
   const currentAgentName = currentAgent?.name || "Kera";
 
