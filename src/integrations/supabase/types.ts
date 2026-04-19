@@ -14,8 +14,45 @@ export type Database = {
   }
   public: {
     Tables: {
+      agents: {
+        Row: {
+          color: string
+          created_at: string
+          description: string | null
+          icon: string
+          id: string
+          name: string
+          system_prompt: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          color?: string
+          created_at?: string
+          description?: string | null
+          icon?: string
+          id?: string
+          name: string
+          system_prompt: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          color?: string
+          created_at?: string
+          description?: string | null
+          icon?: string
+          id?: string
+          name?: string
+          system_prompt?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       conversations: {
         Row: {
+          agent_key: string
           created_at: string
           id: string
           title: string
@@ -23,6 +60,7 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          agent_key?: string
           created_at?: string
           id?: string
           title?: string
@@ -30,6 +68,7 @@ export type Database = {
           user_id: string
         }
         Update: {
+          agent_key?: string
           created_at?: string
           id?: string
           title?: string
