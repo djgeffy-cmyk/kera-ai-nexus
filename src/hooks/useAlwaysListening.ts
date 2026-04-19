@@ -10,6 +10,7 @@
 // 5. Mantém escutando indefinidamente até stop().
 
 import { useScribe } from "@elevenlabs/react";
+import { CommitStrategy } from "@elevenlabs/client";
 import { useCallback, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 
