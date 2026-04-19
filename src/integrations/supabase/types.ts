@@ -119,6 +119,51 @@ export type Database = {
         }
         Relationships: []
       }
+      ipm_query_cache: {
+        Row: {
+          cache_key: string
+          created_at: string
+          endpoint_id: string | null
+          expires_at: string
+          filtro_status: string | null
+          hit_count: number
+          id: string
+          last_hit_at: string
+          path: string | null
+          response: Json
+          tipo: string
+          url: string | null
+        }
+        Insert: {
+          cache_key: string
+          created_at?: string
+          endpoint_id?: string | null
+          expires_at?: string
+          filtro_status?: string | null
+          hit_count?: number
+          id?: string
+          last_hit_at?: string
+          path?: string | null
+          response: Json
+          tipo: string
+          url?: string | null
+        }
+        Update: {
+          cache_key?: string
+          created_at?: string
+          endpoint_id?: string | null
+          expires_at?: string
+          filtro_status?: string | null
+          hit_count?: number
+          id?: string
+          last_hit_at?: string
+          path?: string | null
+          response?: Json
+          tipo?: string
+          url?: string | null
+        }
+        Relationships: []
+      }
       licitacoes_alerts: {
         Row: {
           created_at: string
