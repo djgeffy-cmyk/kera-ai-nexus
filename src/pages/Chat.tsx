@@ -396,6 +396,8 @@ Por favor, analise: há perda de pacote? jitter alto sugere instabilidade de rot
       toast.error(`Falha na análise de rede: ${msg}`);
     }
   };
+
+  const Sidebar = () => (
     <aside className="h-full w-full md:w-72 panel border-r border-border flex flex-col">
       <div className="p-4 border-b border-border flex items-center gap-2">
         <img src={keraLogo} alt="Kera AI" className="h-8" />
