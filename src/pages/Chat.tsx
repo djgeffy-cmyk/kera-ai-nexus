@@ -780,9 +780,19 @@ Por favor, analise: há perda de pacote? jitter alto sugere instabilidade de rot
                 </p>
               </div>
             )}
-            {messages.map((m, i) => (
-              <MessageBubble key={m.id ?? i} msg={m} streaming={streaming && i === messages.length - 1 && m.role === "assistant"} />
-            ))}
+            {messages.map((m, i) => {
+              const isLast = i === messages.length - 1;
+              return (
+                <MessageBubble
+                  key={m.id ?? i}
+                  msg={m}
+                  streaming={streaming && isLast && m.role === "assistant"}
+                  onSpeak={(t) => { voice.warmUpTTS(); voice.speak(t); }}
+                  onStopSpeak={voice.stopSpeaking}
+                  isSpeaking={voice.speaking && isLast && m.role === "assistant"}
+                />
+              );
+            })}
           </div>
         </div>
 
