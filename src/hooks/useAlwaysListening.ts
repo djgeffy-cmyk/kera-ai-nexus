@@ -16,9 +16,10 @@ import { supabase } from "@/integrations/supabase/client";
 
 const SCRIBE_TOKEN_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/scribe-token`;
 
-// Regex pra wake word "kera" — STT em PT-BR comumente erra pra:
-// kera, kéra, kerá, quera, queira, kara, kará, cara, kerra, querra, que era
-const WAKE_WORD_REGEX = /\b(k[eéê]r+[aá]|qu?er+[aá]|qu?eira|c[aá]r[aá]|kerr?[aá]|querr?[aá]|que\s?era)\b[\s,!?:.\-]*/i;
+// Regex pra wake word "kera" — STT em PT-BR comumente erra pra MUITAS variações.
+// Cobertura: kera, kéra, kerá, kerra, querá, quera, queira, querida, queret, keret,
+// karen, kara, kará, cara, kira, carla, kerê, querer (início)
+const WAKE_WORD_REGEX = /\b(k[eéêia]r+(?:[aáeio]|et|en)\w{0,3}|qu?er+(?:[aáei]|ida|et)\w{0,3}|qu?eira|c[aá]r[aáel]\w{0,3}|kir[aá])\b[\s,!?:.\-]*/i;
 
 export type AlwaysListeningStatus =
   | "idle"
