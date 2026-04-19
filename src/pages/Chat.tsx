@@ -8,7 +8,7 @@ import { toast } from "sonner";
 import {
   Plus, LogOut, Send, MessageSquare, Trash2, Menu, Settings,
   Image as ImageIcon, LayoutGrid, FolderPlus, Mic, MicOff, Volume2, VolumeX, Bot, ChevronRight,
-  Paperclip, X, FileText, ShieldCheck, Activity,
+  Paperclip, X, FileText, ShieldCheck, Activity, Download,
 } from "lucide-react";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -21,6 +21,8 @@ import { PROVIDERS, getPreferredProvider, setPreferredProvider, type ProviderId 
 import { BUILTIN_AGENTS, getBuiltinAgent, DEFAULT_AGENT_KEY } from "@/lib/agents";
 import { useVoice } from "@/hooks/useVoice";
 import { fileToAttachment, buildUserContent, type Attachment } from "@/lib/attachments";
+import { isImageRequest, extractImagePrompt } from "@/lib/imageDetect";
+import { exportConversationToPdf } from "@/lib/exportPdf";
 
 type Conversation = { id: string; title: string; updated_at: string; agent_key: string };
 type CustomAgent = { id: string; name: string; system_prompt: string; description: string | null };
@@ -29,6 +31,7 @@ const CHAT_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/chat-kera`;
 const STATUS_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/providers-status`;
 const MONITOR_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/monitor-urls`;
 const NETTRACE_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/network-trace`;
+const IMAGE_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/generate-image`;
 
 const Chat = () => {
   const navigate = useNavigate();
@@ -136,10 +139,111 @@ const Chat = () => {
     return custom?.system_prompt;
   };
 
+  const generateImageMessage = async (rawText: string) => {
+    let convId = currentId;
+    if (!convId) {
+      const titleSeed = rawText.slice(0, 40);
+      const { data, error } = await supabase
+        .from("conversations").insert({ user_id: userId, title: titleSeed, agent_key: agentKey })
+        .select().single();
+      if (error) return toast.error(error.message);
+      convId = data.id;
+      setCurrentId(convId);
+      setConversations([data as Conversation, ...conversations]);
+    }
+
+    const userMsg: ChatMessage = { role: "user", content: rawText };
+    setMessages(prev => [...prev, userMsg]);
+    setInput("");
+    setStreaming(true);
+
+    await supabase.from("messages").insert({
+      conversation_id: convId, user_id: userId, role: "user", content: rawText,
+    });
+    if (messages.length === 0) {
+      const newTitle = rawText.slice(0, 50);
+      await supabase.from("conversations").update({ title: newTitle }).eq("id", convId);
+      setConversations(prev => prev.map(c => c.id === convId ? { ...c, title: newTitle } : c));
+    }
+
+    // placeholder enquanto gera
+    setMessages(prev => [...prev, { role: "assistant", content: "🎨 Gerando imagem..." }]);
+
+    try {
+      const imgPrompt = extractImagePrompt(rawText);
+      const { data: sess } = await supabase.auth.getSession();
+      const resp = await fetch(IMAGE_URL, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          ...(sess.session ? { Authorization: `Bearer ${sess.session.access_token}` } : {}),
+        },
+        body: JSON.stringify({ prompt: imgPrompt }),
+      });
+      const j = await resp.json();
+      if (!resp.ok) {
+        if (resp.status === 429) toast.error("Muitas requisições. Aguarde alguns segundos.");
+        else if (resp.status === 402) toast.error("Créditos de IA esgotados.");
+        else toast.error(j.error || "Falha ao gerar imagem.");
+        setMessages(prev => prev.slice(0, -1));
+        setStreaming(false);
+        return;
+      }
+
+      const imageUrl: string = j.imageUrl;
+      const assistantContent = [
+        { type: "text" as const, text: `Aqui está sua imagem: *${imgPrompt}*` },
+        { type: "image_url" as const, image_url: { url: imageUrl } },
+      ];
+
+      setMessages(prev => {
+        const copy = [...prev];
+        copy[copy.length - 1] = { role: "assistant", content: assistantContent };
+        return copy;
+      });
+
+      await supabase.from("messages").insert({
+        conversation_id: convId, user_id: userId, role: "assistant",
+        content: JSON.stringify(assistantContent),
+      });
+      await supabase.from("conversations").update({ updated_at: new Date().toISOString() }).eq("id", convId);
+    } catch (e: any) {
+      toast.error(e.message || "Erro ao gerar imagem.");
+      setMessages(prev => prev.slice(0, -1));
+    } finally {
+      setStreaming(false);
+    }
+  };
+
+  const handleExportPdf = async () => {
+    if (!messages.length) {
+      toast.error("Nada pra exportar — a conversa está vazia.");
+      return;
+    }
+    const conv = conversations.find(c => c.id === currentId);
+    toast.info("Gerando PDF...");
+    try {
+      await exportConversationToPdf({
+        title: conv?.title || "Conversa",
+        agentName: currentAgentName,
+        messages,
+      });
+      toast.success("PDF baixado!");
+    } catch (e: any) {
+      toast.error(e.message || "Erro ao exportar PDF.");
+    }
+  };
+
   const sendText = async (text?: string) => {
     const rawText = (text ?? input).trim();
     const hasAttach = attachments.length > 0;
     if ((!rawText && !hasAttach) || streaming || !userId) return;
+
+    // 🎨 Detecção de pedido de geração de imagem (sem anexos)
+    if (rawText && !hasAttach && isImageRequest(rawText)) {
+      await generateImageMessage(rawText);
+      return;
+    }
 
     let convId = currentId;
     if (!convId) {
@@ -610,6 +714,17 @@ Por favor, analise: há perda de pacote? jitter alto sugere instabilidade de rot
             className="text-muted-foreground hover:text-primary"
           >
             <Plus className="size-5" />
+          </Button>
+
+          <Button
+            variant="ghost" size="icon"
+            onClick={handleExportPdf}
+            aria-label="Exportar conversa em PDF"
+            title="Exportar PDF"
+            disabled={!messages.length || streaming}
+            className="text-muted-foreground hover:text-primary"
+          >
+            <Download className="size-5" />
           </Button>
 
           <div className="ml-auto flex items-center gap-2">
