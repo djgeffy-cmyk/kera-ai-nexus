@@ -15,6 +15,7 @@ import { IpmEndpointsManager } from "@/components/admin/IpmEndpointsManager";
 import { KeraPromptEditor } from "@/components/admin/KeraPromptEditor";
 import { KeraVoiceSelector } from "@/components/admin/KeraVoiceSelector";
 import { KeraTriggersManager } from "@/components/admin/KeraTriggersManager";
+import { PronunciationFixesManager } from "@/components/admin/PronunciationFixesManager";
 
 type Status = Record<string, boolean>;
 
@@ -221,6 +222,8 @@ const Admin = () => {
         <KeraPromptEditor />
 
         <KeraVoiceSelector />
+
+        <PronunciationFixesManager />
 
         <KeraTriggersManager />
 

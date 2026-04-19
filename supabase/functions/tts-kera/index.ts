@@ -11,14 +11,57 @@ const ELEVEN_DEFAULT_VOICE = "EXAVITQu4vr4xnSDxMaL"; // Sarah
 const ELEVEN_DEFAULT_MODEL = "eleven_multilingual_v2";
 
 // Pré-processador de pronúncia para PT-BR.
-// O ElevenLabs (e a maioria dos TTS multilíngues) interpreta "Ge" como /ʒe/ (jê)
-// só na frente de "e/i". Em "Geverson", ele lê /ʒeverson/ → "Jêverson"
-// (que o usuário ouve como "Queverson"). Forçamos a grafia fonética "Guêverson".
-function fixPronunciation(text: string): string {
-  return text
-    // Geverson / geverson / GEVERSON → Guêverson (mantém capitalização)
-    .replace(/\bGeverson\b/g, "Guêverson")
-    .replace(/\bgeverson\b/gi, "guêverson");
+// Carrega correções da tabela pronunciation_fixes (gerenciada no painel admin)
+// e aplica antes de enviar pro TTS.
+type PronFix = {
+  word: string;
+  replacement: string;
+  case_sensitive: boolean;
+  whole_word: boolean;
+  enabled: boolean;
+};
+
+let pronCache: { fixes: PronFix[]; ts: number } | null = null;
+const PRON_CACHE_MS = 60_000; // 1 min — propaga edição rápido sem martelar o banco
+
+function escapeRegex(s: string): string {
+  return s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
+async function loadPronFixes(): Promise<PronFix[]> {
+  if (pronCache && Date.now() - pronCache.ts < PRON_CACHE_MS) return pronCache.fixes;
+  try {
+    const SUPABASE_URL = Deno.env.get("SUPABASE_URL");
+    const SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+    if (!SUPABASE_URL || !SERVICE_KEY) return pronCache?.fixes ?? [];
+    const r = await fetch(
+      `${SUPABASE_URL}/rest/v1/pronunciation_fixes?enabled=eq.true&select=word,replacement,case_sensitive,whole_word,enabled`,
+      { headers: { apikey: SERVICE_KEY, Authorization: `Bearer ${SERVICE_KEY}` } },
+    );
+    if (!r.ok) return pronCache?.fixes ?? [];
+    const rows = (await r.json()) as PronFix[];
+    pronCache = { fixes: rows, ts: Date.now() };
+    return rows;
+  } catch (e) {
+    console.warn("[tts-kera] falha ao carregar pronunciation_fixes:", e);
+    return pronCache?.fixes ?? [];
+  }
+}
+
+function applyPronFixes(text: string, fixes: PronFix[]): string {
+  let out = text;
+  for (const f of fixes) {
+    if (!f.enabled || !f.word) continue;
+    const flags = f.case_sensitive ? "g" : "gi";
+    const body = escapeRegex(f.word);
+    const pattern = f.whole_word ? `\\b${body}\\b` : body;
+    try {
+      out = out.replace(new RegExp(pattern, flags), f.replacement);
+    } catch (e) {
+      console.warn("[tts-kera] regex inválida para", f.word, e);
+    }
+  }
+  return out;
 }
 
 // OpenAI - fallback
@@ -178,7 +221,9 @@ Deno.serve(async (req) => {
     }
 
     // Conserta pronúncia de nomes que TTS erra em PT-BR (ex: Geverson → Guêverson)
-    const speakText = fixPronunciation(text);
+    // Carrega correções cadastradas no admin (cache de 1 min).
+    const pronFixes = await loadPronFixes();
+    const speakText = applyPronFixes(text, pronFixes);
 
     const wantEleven = provider === "elevenlabs" || (!provider && !!ELEVEN_KEY);
     const wantOpenAI = provider === "openai" || (!provider && !ELEVEN_KEY && !!OPENAI_KEY);
