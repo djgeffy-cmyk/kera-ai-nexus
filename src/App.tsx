@@ -9,6 +9,7 @@ import Admin from "./pages/Admin.tsx";
 import Agents from "./pages/Agents.tsx";
 import Security from "./pages/Security.tsx";
 import Transparencia from "./pages/Transparencia.tsx";
+import TransparenciaHistorico from "./pages/TransparenciaHistorico.tsx";
 import NotFound from "./pages/NotFound.tsx";
 import { ProtectedRoute } from "./components/ProtectedRoute";
 import Footer from "./components/Footer";
@@ -30,6 +31,7 @@ const App = () => (
           <Route path="/agents" element={<ProtectedRoute><Agents /></ProtectedRoute>} />
           <Route path="/security" element={<ProtectedRoute><Security /></ProtectedRoute>} />
           <Route path="/transparencia" element={<ProtectedRoute><Transparencia /></ProtectedRoute>} />
+          <Route path="/transparencia/historico" element={<ProtectedRoute><TransparenciaHistorico /></ProtectedRoute>} />
           <Route path="*" element={<NotFound />} />
         </Routes>
         <Footer />

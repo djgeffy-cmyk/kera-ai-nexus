@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
-import { ArrowLeft, FileSearch, Loader2, Gavel, FileText, FileSignature, RefreshCw, ExternalLink } from "lucide-react";
+import { ArrowLeft, FileSearch, Loader2, Gavel, FileText, FileSignature, RefreshCw, ExternalLink, History } from "lucide-react";
 import { toast } from "sonner";
 import keraLogo from "@/assets/kera-logo.png";
 
@@ -36,6 +36,7 @@ interface Result {
   total: number;
   observacoes: string | null;
   markdown_preview: string;
+  snapshot_stats?: { novas: number; atualizadas: number; total: number } | null;
 }
 
 const TIPOS: Array<{ id: Tipo; label: string; icon: typeof Gavel; desc: string }> = [
@@ -72,7 +73,12 @@ const Transparencia = () => {
         throw new Error(data.error || `HTTP ${resp.status}`);
       }
       setResult(data);
-      toast.success(`${data.total} item(ns) extraído(s)`);
+      const snap = data.snapshot_stats;
+      if (snap) {
+        toast.success(`${data.total} item(ns) · ${snap.novas} nova(s), ${snap.atualizadas} atualizada(s) no histórico`);
+      } else {
+        toast.success(`${data.total} item(ns) extraído(s)`);
+      }
     } catch (e) {
       const msg = e instanceof Error ? e.message : "Erro";
       toast.error("Falha ao raspar: " + msg);
@@ -101,6 +107,9 @@ const Transparencia = () => {
         </Button>
         <img src={keraLogo} alt="Kera AI" className="h-7" />
         <h1 className="font-display text-glow text-lg ml-2">TRANSPARÊNCIA</h1>
+        <Button variant="ghost" size="sm" className="ml-auto gap-1" onClick={() => navigate("/transparencia/historico")}>
+          <History className="size-4" /> Histórico
+        </Button>
       </header>
 
       <main className="max-w-4xl mx-auto px-4 py-6 space-y-6">

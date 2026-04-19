@@ -1,4 +1,6 @@
 // Scraping do portal da transparência de Guaramirim via Firecrawl
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
+
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers":
@@ -127,6 +129,60 @@ Deno.serve(async (req) => {
     const payload = result?.data ?? result;
     const json = (payload?.json ?? {}) as { items?: ExtractedItem[]; total_encontrado?: number; observacoes?: string };
     const markdown = payload?.markdown ?? "";
+    const items = json.items ?? [];
+
+    // Persistir snapshot (apenas para licitações por enquanto — schema é otimizado pra elas)
+    let snapshot_stats: { novas: number; atualizadas: number; total: number } | null = null;
+    if (tipo === "licitacoes" && items.length > 0) {
+      try {
+        const supabase = createClient(
+          Deno.env.get("SUPABASE_URL")!,
+          Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
+        );
+        let novas = 0, atualizadas = 0;
+        for (const it of items) {
+          const numero = String(it.numero ?? "").trim().toLowerCase();
+          const obj = String(it.objeto ?? "").trim().toLowerCase().slice(0, 80);
+          const enc = String(it.data_encerramento ?? "").trim();
+          const hash = `${numero}|${obj}|${enc}`;
+          if (hash === "||") continue;
+          const status = String(it.status ?? "").toLowerCase();
+          const open = status.includes("abert") || status.includes("andament") || status.includes("ativ") || status.includes("public");
+          const row = {
+            hash,
+            numero: String(it.numero ?? "") || null,
+            modalidade: String(it.modalidade ?? "") || null,
+            objeto: String(it.objeto ?? "") || null,
+            status: String(it.status ?? "") || null,
+            data_abertura: String(it.data_abertura ?? "") || null,
+            data_encerramento: String(it.data_encerramento ?? "") || null,
+            valor: String(it.valor ?? "") || null,
+            vencedor: String(it.vencedor ?? "") || null,
+            link: String(it.link ?? "") || null,
+            raw: it,
+            source_url: url,
+            last_seen_at: new Date().toISOString(),
+            is_open: open,
+          };
+          const { data: existing } = await supabase
+            .from("licitacoes_snapshot")
+            .select("id")
+            .eq("hash", hash)
+            .maybeSingle();
+          if (existing) {
+            await supabase.from("licitacoes_snapshot").update(row).eq("id", existing.id);
+            atualizadas++;
+          } else {
+            await supabase.from("licitacoes_snapshot").insert({ ...row, first_seen_at: new Date().toISOString() });
+            novas++;
+          }
+        }
+        snapshot_stats = { novas, atualizadas, total: items.length };
+        console.log(`[transparencia-scrape] snapshot: ${JSON.stringify(snapshot_stats)}`);
+      } catch (snapErr) {
+        console.warn("[transparencia-scrape] snapshot falhou:", snapErr);
+      }
+    }
 
     return new Response(
       JSON.stringify({
@@ -135,10 +191,11 @@ Deno.serve(async (req) => {
         label,
         url,
         scraped_at: new Date().toISOString(),
-        items: json.items ?? [],
-        total: json.total_encontrado ?? json.items?.length ?? 0,
+        items,
+        total: json.total_encontrado ?? items.length,
         observacoes: json.observacoes ?? null,
         markdown_preview: markdown.slice(0, 2000),
+        snapshot_stats,
       }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
