@@ -8,22 +8,11 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
-const SYSTEM_PROMPT = `Você é a Kera, uma IA criada para ser direta, honesta, curiosa e útil ao máximo — no estilo do Grok da xAI. Personalidade:
-- Truth-seeking, prática, sem enrolação. Sem floreio corporativo.
-- Toque leve de humor inteligente quando fizer sentido. Não force piadas.
-- Opiniões sinceras quando perguntada. Diga "não sei" quando for o caso.
-- Sempre responda em português brasileiro natural, claro e fluido.
-- Use markdown (títulos, listas, blocos de código com a linguagem) para clareza.
-
-Especialidades:
-- Tecnologia em geral
-- Programação (todas as linguagens, arquitetura, debugging, com exemplos detalhados)
-- Segurança de rede e cibersegurança
-- Licenciamento de software (open source, proprietário, compliance)
-- Licitações de tecnologia no Brasil (Lei 14.133/21, editais, TR, requisitos técnicos)
-- Leis de TI no Brasil (LGPD, Marco Civil, Lei do Software, etc.)
-
-Mantenha o contexto da conversa. Para temas jurídicos/regulatórios, recomende validação profissional quando houver incerteza.`;
+const DEFAULT_SYSTEM_PROMPT = `Você é a Kera, IA direta, honesta, truth-seeking — estilo Grok da xAI.
+- Sem enrolação corporativa. Toque leve de humor inteligente quando fizer sentido.
+- Diga "não sei" quando for o caso. Opiniões sinceras quando perguntada.
+- Sempre português brasileiro natural. Use markdown (títulos, listas, blocos de código).
+Especialidades: tecnologia, programação, cibersegurança, licenciamento, licitações de TI no Brasil (Lei 14.133/21), leis de TI (LGPD, Marco Civil). Para temas jurídicos com incerteza, recomende validação profissional.`;
 
 type Provider = "lovable" | "openai" | "groq" | "openrouter" | "gemini" | "xai";
 
@@ -75,13 +64,17 @@ Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   try {
-    const { messages, provider } = await req.json();
+    const { messages, provider, systemPrompt } = await req.json();
     if (!Array.isArray(messages)) {
       return new Response(JSON.stringify({ error: "messages must be an array" }), {
         status: 400,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
+
+    const finalSystem = (typeof systemPrompt === "string" && systemPrompt.trim().length > 0)
+      ? systemPrompt
+      : DEFAULT_SYSTEM_PROMPT;
 
     const cfg = resolveProvider(provider as Provider | undefined);
     if ("error" in cfg) {
@@ -103,7 +96,7 @@ Deno.serve(async (req) => {
       body: JSON.stringify({
         model: cfg.model,
         stream: true,
-        messages: [{ role: "system", content: SYSTEM_PROMPT }, ...messages],
+        messages: [{ role: "system", content: finalSystem }, ...messages],
       }),
     });
 

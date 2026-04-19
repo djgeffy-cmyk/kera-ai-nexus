@@ -1,4 +1,4 @@
-// Retorna quais provedores de IA estão configurados (sem expor as chaves)
+// Atualiza o status para incluir ElevenLabs também
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers":
@@ -15,6 +15,7 @@ Deno.serve((req) => {
     openrouter: !!Deno.env.get("OPENROUTER_API_KEY"),
     gemini: !!Deno.env.get("GEMINI_API_KEY"),
     xai: !!Deno.env.get("XAI_API_KEY"),
+    elevenlabs: !!Deno.env.get("ELEVENLABS_API_KEY"),
   };
 
   return new Response(JSON.stringify(status), {

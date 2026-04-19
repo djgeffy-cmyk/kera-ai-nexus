@@ -5,3 +5,6 @@ verify_jwt = false
 
 [functions.providers-status]
 verify_jwt = false
+
+[functions.tts-kera]
+verify_jwt = false
