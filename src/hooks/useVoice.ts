@@ -15,7 +15,9 @@ type SR = {
 };
 
 const TTS_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/tts-kera`;
-const MAX_TTS_CHARS = 280;
+// Backend (ElevenLabs/OpenAI) aceita até 4000 chars; mantemos uma única chamada
+// na maioria das mensagens para evitar que o iOS bloqueie autoplay entre chunks.
+const MAX_TTS_CHARS = 3500;
 
 function splitTextForTTS(text: string, maxChars = MAX_TTS_CHARS): string[] {
   const normalized = text.replace(/\s+/g, " ").trim();
