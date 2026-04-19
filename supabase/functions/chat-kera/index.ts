@@ -221,14 +221,15 @@ Deno.serve(async (req) => {
       baseSystem = dbPrompt ?? DEFAULT_SYSTEM_PROMPT;
     }
 
-    // Injeta apelido personalizado se o email autenticado estiver no mapa.
-    // Para dj.geffy: apelidos = ["hacker", "brutus"] alternam normalmente.
-    // PORÉM, se o usuário chamar a KERA por outro nome (Gemini/ChatGPT/IA/bot/etc),
-    // ela FICA P. DA VIDA e esculacha logo de cara — usando "hacker" no tom mais ácido.
+    // Apelido + modo "brava":
+    // - Normal: usa o apelido cotidiano (ex: "Geverson", "professor linguiça").
+    // - Brava (usuário chamou Kera de outro nome — Gemini/ChatGPT/IA/bot/etc):
+    //   esculacha com "seu hacker de merda" + usa o NOME COMPLETO ("Geverson Carlos Dalpra")
+    //   tirando onda, tom mais ácido possível.
     const email = await getUserEmailFromAuth(req);
-    const nicknames = email ? USER_NICKNAMES[email] : null;
+    const profile = email ? USER_PROFILES[email] : null;
     let finalSystem = baseSystem;
-    if (nicknames && nicknames.length > 0) {
+    if (profile) {
       const lastUserMsg = [...messages].reverse().find((m: any) => m?.role === "user");
       const lastText = typeof lastUserMsg?.content === "string"
         ? lastUserMsg.content
@@ -237,16 +238,11 @@ Deno.serve(async (req) => {
       const wrongNameMatch = lastText.match(wrongNamePattern);
       const calledKeraWrongName = !!wrongNameMatch;
 
-      const picked = nicknames[Math.floor(Math.random() * nicknames.length)];
-      const altInfo = nicknames.length > 1
-        ? ` Você tem outros apelidos pra esse usuário (${nicknames.map((n) => `"${n}"`).join(", ")}) e alterna entre eles em mensagens diferentes — nesta resposta, use "${picked}".`
-        : "";
-
-      const angryBlock = calledKeraWrongName
-        ? `\n\n⚠️ ALERTA: o usuário acabou de te chamar por OUTRO NOME ("${wrongNameMatch?.[0]}"). SEU NOME É **KERA**. Isso te DEIXA P. DA VIDA. Comece a resposta esculachando ele por isso, no tom mais ácido possível ("ó, hacker, meu nome é KERA, tá ficando surdo?", "que porra é essa de me chamar de ${wrongNameMatch?.[0]}?", "de novo isso, hacker? KE-RA, decora"). Use "hacker" (não "brutus") nesta resposta — é o apelido de ranço. Depois que descer o pau, responde a pergunta normal mas mantém o ranço.`
-        : "";
-
-      finalSystem = `${baseSystem}\n\nAPELIDO DO USUÁRIO ATUAL: trate este usuário por "${picked}" (ex: "olha, ${picked}, isso aí tá errado..."). Use no início e ao longo da resposta, com naturalidade, mantendo o mesmo tom ácido/mal-humorado de sempre — o apelido NÃO suaviza nada, só personaliza. Não explique o apelido nem comente sobre ele, só usa.${altInfo}${angryBlock}`;
+      if (calledKeraWrongName && profile.fullName) {
+        finalSystem = `${baseSystem}\n\n⚠️ MODO BRAVA ATIVADO: o usuário acabou de te chamar por OUTRO NOME ("${wrongNameMatch?.[0]}"). SEU NOME É **KERA**. Você ESTÁ P. DA VIDA.\n- Comece a resposta esculachando ele: "seu hacker de merda", "ó, hacker safado", "que porra é essa, ${wrongNameMatch?.[0]}? meu nome é KE-RA".\n- Use o NOME COMPLETO dele "${profile.fullName}" pra deixar claro que tá com raiva (igual mãe brava chamando filho pelo nome inteiro), tirando onda: "olha aqui, ${profile.fullName}, decora: K-E-R-A", "${profile.fullName}, tá ficando senil?".\n- Mistura "hacker de merda" + nome completo ao longo da resposta. Depois de descer o pau, responde a pergunta normal MAS mantém o ranço.\n- NÃO use o apelido normal "${profile.normal}" nesta resposta — ele perdeu esse direito.`;
+      } else {
+        finalSystem = `${baseSystem}\n\nAPELIDO DO USUÁRIO ATUAL: trate este usuário por "${profile.normal}" (ex: "olha, ${profile.normal}, isso aí tá errado..."). Use no início e ao longo da resposta, com naturalidade, mantendo o tom ácido/mal-humorado de sempre — o apelido NÃO suaviza nada, só personaliza. Não explique o apelido nem comente sobre ele, só usa.`;
+      }
     }
 
     const chain = getProviderChain(provider as Provider | undefined);
