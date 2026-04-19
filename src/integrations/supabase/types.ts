@@ -119,6 +119,113 @@ export type Database = {
         }
         Relationships: []
       }
+      licitacoes_alerts: {
+        Row: {
+          created_at: string
+          data_encerramento: string | null
+          id: string
+          link: string | null
+          modalidade: string | null
+          numero: string | null
+          objeto: string | null
+          read_at: string | null
+          snapshot_id: string | null
+          status: string | null
+          valor: string | null
+        }
+        Insert: {
+          created_at?: string
+          data_encerramento?: string | null
+          id?: string
+          link?: string | null
+          modalidade?: string | null
+          numero?: string | null
+          objeto?: string | null
+          read_at?: string | null
+          snapshot_id?: string | null
+          status?: string | null
+          valor?: string | null
+        }
+        Update: {
+          created_at?: string
+          data_encerramento?: string | null
+          id?: string
+          link?: string | null
+          modalidade?: string | null
+          numero?: string | null
+          objeto?: string | null
+          read_at?: string | null
+          snapshot_id?: string | null
+          status?: string | null
+          valor?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "licitacoes_alerts_snapshot_id_fkey"
+            columns: ["snapshot_id"]
+            isOneToOne: false
+            referencedRelation: "licitacoes_snapshot"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      licitacoes_snapshot: {
+        Row: {
+          data_abertura: string | null
+          data_encerramento: string | null
+          first_seen_at: string
+          hash: string
+          id: string
+          is_open: boolean
+          last_seen_at: string
+          link: string | null
+          modalidade: string | null
+          numero: string | null
+          objeto: string | null
+          raw: Json | null
+          source_url: string
+          status: string | null
+          valor: string | null
+          vencedor: string | null
+        }
+        Insert: {
+          data_abertura?: string | null
+          data_encerramento?: string | null
+          first_seen_at?: string
+          hash: string
+          id?: string
+          is_open?: boolean
+          last_seen_at?: string
+          link?: string | null
+          modalidade?: string | null
+          numero?: string | null
+          objeto?: string | null
+          raw?: Json | null
+          source_url: string
+          status?: string | null
+          valor?: string | null
+          vencedor?: string | null
+        }
+        Update: {
+          data_abertura?: string | null
+          data_encerramento?: string | null
+          first_seen_at?: string
+          hash?: string
+          id?: string
+          is_open?: boolean
+          last_seen_at?: string
+          link?: string | null
+          modalidade?: string | null
+          numero?: string | null
+          objeto?: string | null
+          raw?: Json | null
+          source_url?: string
+          status?: string | null
+          valor?: string | null
+          vencedor?: string | null
+        }
+        Relationships: []
+      }
       messages: {
         Row: {
           content: string
