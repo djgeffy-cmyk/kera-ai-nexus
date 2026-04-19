@@ -716,6 +716,17 @@ Por favor, analise: há perda de pacote? jitter alto sugere instabilidade de rot
             <Plus className="size-5" />
           </Button>
 
+          <Button
+            variant="ghost" size="icon"
+            onClick={handleExportPdf}
+            aria-label="Exportar conversa em PDF"
+            title="Exportar PDF"
+            disabled={!messages.length || streaming}
+            className="text-muted-foreground hover:text-primary"
+          >
+            <Download className="size-5" />
+          </Button>
+
           <div className="ml-auto flex items-center gap-2">
             <Select value={provider} onValueChange={(v) => { setProvider(v as ProviderId); setPreferredProvider(v as ProviderId); }}>
               <SelectTrigger className="h-8 w-[120px] sm:w-[180px] text-xs bg-input/40 border-border">
