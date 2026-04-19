@@ -54,12 +54,20 @@ export function useVoice(opts: { useElevenLabs?: boolean; useRemoteTTS?: boolean
 
   // ---------- TTS ----------
   const stopSpeaking = useCallback(() => {
-    // NÃO aborta fetch em andamento (causava "connection closed").
-    // Só para o áudio que já está tocando.
+    // Aborta fetch em andamento (se houver)
+    if (inflightRef.current) {
+      try { inflightRef.current.abort(); } catch {}
+      inflightRef.current = null;
+    }
     window.speechSynthesis?.cancel();
     if (audioRef.current) {
-      audioRef.current.pause();
-      audioRef.current.src = "";
+      try {
+        audioRef.current.pause();
+        audioRef.current.onended = null;
+        audioRef.current.onerror = null;
+        audioRef.current.src = "";
+        audioRef.current.load?.();
+      } catch {}
       audioRef.current = null;
     }
     setSpeaking(false);
@@ -68,28 +76,26 @@ export function useVoice(opts: { useElevenLabs?: boolean; useRemoteTTS?: boolean
   const speak = useCallback(async (text: string) => {
     if (!text.trim()) return;
 
-    // Se já tem requisição em andamento, ignora
+    // SEMPRE para o áudio anterior antes de começar um novo (evita duplicação)
     if (inflightRef.current) {
-      console.log("[useVoice] já tem TTS em andamento, ignorando");
-      return;
+      try { inflightRef.current.abort(); } catch {}
+      inflightRef.current = null;
     }
-
-    // CRÍTICO: cria o <audio> element AGORA (dentro do gesto do usuário)
-    // pra desbloquear o autoplay. Setamos a src depois quando o fetch completar.
     if (audioRef.current) {
-      audioRef.current.pause();
+      try {
+        audioRef.current.pause();
+        audioRef.current.onended = null;
+        audioRef.current.onerror = null;
+        audioRef.current.src = "";
+        audioRef.current.load?.();
+      } catch {}
       audioRef.current = null;
     }
+
+    // Cria UMA única instância de Audio. Sem play() silencioso prévio (causava duplicação).
     const audio = new Audio();
+    audio.preload = "auto";
     audioRef.current = audio;
-    // Inicia uma "play()" silenciosa pra capturar o user gesture (truque iOS/Safari)
-    try {
-      audio.muted = true;
-      const playPromise = audio.play();
-      if (playPromise) await playPromise.catch(() => {});
-      audio.pause();
-      audio.muted = false;
-    } catch {}
 
     setSpeaking(true);
     const ac = new AbortController();
@@ -105,19 +111,36 @@ export function useVoice(opts: { useElevenLabs?: boolean; useRemoteTTS?: boolean
       if (resp.status === 204) {
         console.warn("[useVoice] TTS indisponível (quota).");
         setSpeaking(false);
+        if (audioRef.current === audio) audioRef.current = null;
         return;
       }
       if (!resp.ok) {
         const errText = await resp.text().catch(() => "");
         throw new Error("TTS HTTP " + resp.status + " " + errText.slice(0, 200));
       }
+
+      // Se foi cancelado durante o fetch, descarta
+      if (audioRef.current !== audio) {
+        console.log("[useVoice] áudio substituído durante fetch, descartando");
+        return;
+      }
+
       const blob = await resp.blob();
       const url = URL.createObjectURL(blob);
       audio.src = url;
-      audio.onended = () => { setSpeaking(false); URL.revokeObjectURL(url); };
+      audio.onended = () => {
+        if (audioRef.current === audio) {
+          setSpeaking(false);
+          audioRef.current = null;
+        }
+        URL.revokeObjectURL(url);
+      };
       audio.onerror = (ev) => {
         console.warn("[useVoice] audio playback error:", ev);
-        setSpeaking(false);
+        if (audioRef.current === audio) {
+          setSpeaking(false);
+          audioRef.current = null;
+        }
         URL.revokeObjectURL(url);
       };
       await audio.play();
@@ -125,7 +148,10 @@ export function useVoice(opts: { useElevenLabs?: boolean; useRemoteTTS?: boolean
     } catch (e) {
       if ((e as Error)?.name === "AbortError") return;
       console.error("[useVoice] ElevenLabs falhou:", e);
-      setSpeaking(false);
+      if (audioRef.current === audio) {
+        setSpeaking(false);
+        audioRef.current = null;
+      }
     } finally {
       if (inflightRef.current === ac) inflightRef.current = null;
     }
