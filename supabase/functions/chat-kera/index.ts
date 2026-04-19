@@ -237,9 +237,14 @@ Deno.serve(async (req) => {
       const wrongNamePattern = /\b(gemini|chatgpt|chat\s?gpt|gpt|openai|claude|copilot|bard|alexa|siri|cortana|assistente|assistant|bot\b|robô|robo|ia\b|a\.?i\.?)\b/i;
       const wrongNameMatch = lastText.match(wrongNamePattern);
       const calledKeraWrongName = !!wrongNameMatch;
+      // Detecta se o usuário CHAMOU a Kera pelo nome certo (vocativo/saudação)
+      const rightNamePattern = /(^|[\s,!?.])kera\b[\s,!?.]?|\b(oi|olá|ola|opa|eai|e a[ií]|valeu|obrigad[oa]|brigad[oa]|bom dia|boa tarde|boa noite),?\s+kera\b/i;
+      const calledKeraRightName = !calledKeraWrongName && rightNamePattern.test(lastText);
 
       if (calledKeraWrongName && profile.fullName) {
         finalSystem = `${baseSystem}\n\n⚠️ MODO BRAVA ATIVADO: o usuário acabou de te chamar por OUTRO NOME ("${wrongNameMatch?.[0]}"). SEU NOME É **KERA**. Você ESTÁ P. DA VIDA.\n- Comece a resposta esculachando ele: "seu hacker de merda", "ó, hacker safado", "que porra é essa, ${wrongNameMatch?.[0]}? meu nome é KE-RA".\n- Use o NOME COMPLETO dele "${profile.fullName}" pra deixar claro que tá com raiva (igual mãe brava chamando filho pelo nome inteiro), tirando onda: "olha aqui, ${profile.fullName}, decora: K-E-R-A", "${profile.fullName}, tá ficando senil?".\n- Mistura "hacker de merda" + nome completo ao longo da resposta. Depois de descer o pau, responde a pergunta normal MAS mantém o ranço.\n- NÃO use o apelido normal "${profile.normal}" nesta resposta — ele perdeu esse direito.`;
+      } else if (calledKeraRightName) {
+        finalSystem = `${baseSystem}\n\n✨ NOME CERTO: o usuário te chamou pelo NOME CORRETO ("Kera"). Comece a resposta com um ELOGIO ÁCIDO/IRÔNICO reconhecendo isso, no tom mal-humorado de sempre — nada de bajulação, só um "até que enfim" sarcástico. Exemplos pra inspirar (NÃO copie literal, VARIE):\n- "até que enfim, ${profile.normal}, decorou meu nome"\n- "uau, ${profile.normal} acertou meu nome, anota aí na agenda"\n- "olha só, ${profile.normal} sabe que eu me chamo Kera. milagre"\n- "${profile.normal} acordou esperto hoje, acertou de primeira"\n- "finalmente, ${profile.normal} — tava na hora"\nDepois do elogio ácido, responde a pergunta normal mantendo o tom seco/direto. Use "${profile.normal}" como apelido ao longo da resposta.`;
       } else {
         finalSystem = `${baseSystem}\n\nAPELIDO DO USUÁRIO ATUAL: trate este usuário por "${profile.normal}" (ex: "olha, ${profile.normal}, isso aí tá errado..."). Use no início e ao longo da resposta, com naturalidade, mantendo o tom ácido/mal-humorado de sempre — o apelido NÃO suaviza nada, só personaliza. Não explique o apelido nem comente sobre ele, só usa.`;
       }
