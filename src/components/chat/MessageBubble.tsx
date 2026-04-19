@@ -1,8 +1,24 @@
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import keraAvatar from "@/assets/kera-avatar.png";
-import { User, FileText, Volume2, Square } from "lucide-react";
+import { User, FileText, Volume2, Square, Sparkles, ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
+
+// Detecta se a resposta do especialista sugere trocar pra Kera principal.
+// Heurística: cobre frases como "use a Kera", "troca pra Kera", "Kera principal",
+// "agente Kera", "**Kera**" — sem disparar quando o próprio agente é a Kera.
+export const suggestsKeraSwitch = (text: string): boolean => {
+  if (!text) return false;
+  const t = text.toLowerCase();
+  const patterns = [
+    /\bkera\s+(principal|generalista|m[ãa]e)\b/,
+    /\b(use|usa|chama|chame|abre|abra|troc[ae]|mude|mud[ae]|v[ãa]|v[áa])\s+(pra|para|para\s+a|pra\s+a|à|a)?\s*kera\b/,
+    /\bagente\s+kera\b/,
+    /\*\*kera\*\*/,
+    /\bfora\s+do\s+(meu\s+)?(escopo|tema|foco|dom[íi]nio)\b/,
+  ];
+  return patterns.some(re => re.test(t));
+};
 
 type ContentPart =
   | { type: "text"; text: string }
@@ -62,15 +78,21 @@ export const MessageBubble = ({
   onSpeak,
   onStopSpeak,
   isSpeaking,
+  showSwitchToKera,
+  onSwitchToKera,
 }: {
   msg: ChatMessage;
   streaming?: boolean;
   onSpeak?: (text: string) => void;
   onStopSpeak?: () => void;
   isSpeaking?: boolean;
+  showSwitchToKera?: boolean;
+  onSwitchToKera?: () => void;
 }) => {
   const isUser = msg.role === "user";
   const plainText = typeof msg.content === "string" ? msg.content : "";
+  const shouldOfferSwitch =
+    !isUser && !streaming && !!showSwitchToKera && !!onSwitchToKera && suggestsKeraSwitch(plainText);
   return (
     <div className={`flex gap-3 ${isUser ? "flex-row-reverse" : ""} animate-in fade-in slide-in-from-bottom-2 duration-300`}>
       <div className={`shrink-0 size-9 rounded-full overflow-hidden border ${isUser ? "border-border bg-secondary flex items-center justify-center" : "border-primary/40 shadow-glow"}`}>
@@ -91,6 +113,22 @@ export const MessageBubble = ({
           <>
             <ReactMarkdown remarkPlugins={[remarkGfm]}>{plainText || ""}</ReactMarkdown>
             {streaming && <span className="inline-block w-2 h-4 bg-primary ml-1 align-middle animate-blink" />}
+            {shouldOfferSwitch && (
+              <div className="mt-3 flex items-center gap-2 px-3 py-2 rounded-lg bg-primary/10 border border-primary/30">
+                <Sparkles className="size-4 text-primary shrink-0" />
+                <span className="text-xs text-muted-foreground flex-1 min-w-0">
+                  Quer continuar essa conversa com a Kera principal?
+                </span>
+                <Button
+                  size="sm"
+                  variant="default"
+                  className="h-7 px-2 text-xs shrink-0"
+                  onClick={onSwitchToKera}
+                >
+                  Trocar <ArrowRight className="size-3 ml-1" />
+                </Button>
+              </div>
+            )}
             {!streaming && onSpeak && plainText.trim() && (
               <div className="mt-2 -mb-1 flex justify-end">
                 <Button

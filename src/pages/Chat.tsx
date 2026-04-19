@@ -827,6 +827,12 @@ Por favor, analise: há perda de pacote? jitter alto sugere instabilidade de rot
                   }}
                   onStopSpeak={voice.stopSpeaking}
                   isSpeaking={voice.speaking && isLast && m.role === "assistant"}
+                  showSwitchToKera={agentKey !== DEFAULT_AGENT_KEY}
+                  onSwitchToKera={() => {
+                    setAgentKey(DEFAULT_AGENT_KEY);
+                    void newConversation(DEFAULT_AGENT_KEY);
+                    toast.success("Trocado pra Kera principal");
+                  }}
                 />
               );
             })}
