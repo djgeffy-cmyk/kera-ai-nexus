@@ -144,6 +144,12 @@ const Chat = () => {
     const hasAttach = attachments.length > 0;
     if ((!rawText && !hasAttach) || streaming || !userId) return;
 
+    // 🎨 Detecção de pedido de geração de imagem (sem anexos)
+    if (rawText && !hasAttach && isImageRequest(rawText)) {
+      await generateImageMessage(rawText);
+      return;
+    }
+
     let convId = currentId;
     if (!convId) {
       const titleSeed = rawText || (hasAttach ? `Anexo: ${attachments[0].name}` : "Nova conversa");
