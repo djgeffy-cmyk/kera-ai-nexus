@@ -15,6 +15,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import keraLogo from "@/assets/kera-logo.png";
 import keraAvatar from "@/assets/kera-avatar.png";
+import keraAvatarVideo from "@/assets/kera-avatar.mp4.asset.json";
 import { MessageBubble, type ChatMessage } from "@/components/chat/MessageBubble";
 import { PROVIDERS, getPreferredProvider, setPreferredProvider, type ProviderId } from "@/lib/providers";
 import { BUILTIN_AGENTS, getBuiltinAgent, DEFAULT_AGENT_KEY } from "@/lib/agents";
@@ -612,7 +613,16 @@ Por favor, analise: há perda de pacote? jitter alto sugere instabilidade de rot
           <div className="max-w-3xl mx-auto px-4 py-6 space-y-5">
             {messages.length === 0 && !streaming && (
               <div className="text-center pt-10 md:pt-20">
-                <img src={keraAvatar} alt="Avatar da Kera" className="size-28 md:size-36 mx-auto rounded-full object-cover object-top border border-primary/40 shadow-glow" />
+                <video
+                  src={keraAvatarVideo.url}
+                  poster={keraAvatar}
+                  autoPlay
+                  loop
+                  muted
+                  playsInline
+                  aria-label="Avatar animado da Kera"
+                  className="size-28 md:size-36 mx-auto rounded-full object-cover object-top border border-primary/40 shadow-glow bg-background"
+                />
                 <h2 className="font-display text-2xl md:text-3xl mt-6 text-glow">Olá, eu sou a {currentAgentName}</h2>
                 <p className="text-muted-foreground mt-2 max-w-md mx-auto">
                   {currentAgent && "description" in currentAgent ? currentAgent.description : "Sua IA truth-seeking. Direta. Honesta. Útil."}
