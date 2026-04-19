@@ -13,6 +13,7 @@ import { NetworkMetricsChart } from "@/components/admin/NetworkMetricsChart";
 import { PasswordResetRequests } from "@/components/admin/PasswordResetRequests";
 import { IpmEndpointsManager } from "@/components/admin/IpmEndpointsManager";
 import { KeraPromptEditor } from "@/components/admin/KeraPromptEditor";
+import { KeraVoiceSelector } from "@/components/admin/KeraVoiceSelector";
 
 type Status = Record<string, boolean>;
 
@@ -217,6 +218,8 @@ const Admin = () => {
         </section>
 
         <KeraPromptEditor />
+
+        <KeraVoiceSelector />
 
         <PasswordResetRequests />
 
