@@ -627,19 +627,6 @@ Por favor, analise: há perda de pacote? jitter alto sugere instabilidade de rot
                 <p className="text-muted-foreground mt-2 max-w-md mx-auto">
                   {currentAgent && "description" in currentAgent ? currentAgent.description : "Sua IA truth-seeking. Direta. Honesta. Útil."}
                 </p>
-                <div className="grid sm:grid-cols-2 gap-2 mt-8 max-w-xl mx-auto">
-                  {[
-                    "Explique RLS no Supabase com exemplo",
-                    "Resumo da Lei 14.133 para TI",
-                    "Como mitigar ataque CSRF em React",
-                    "Diferença entre MIT, Apache 2.0 e GPL",
-                  ].map(s => (
-                    <button key={s} onClick={() => setInput(s)}
-                      className="text-left text-sm p-3 panel border border-border hover:border-primary/50 rounded-xl transition">
-                      {s}
-                    </button>
-                  ))}
-                </div>
               </div>
             )}
             {messages.map((m, i) => (
