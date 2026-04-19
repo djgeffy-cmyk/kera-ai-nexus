@@ -24,8 +24,17 @@ const Auth = () => {
     });
   }, [navigate]);
 
+  const isEmailAllowed = (raw: string) => {
+    const e = raw.trim().toLowerCase();
+    return e === "dj.geffy@gmail.com" || e.endsWith("@guaramirim.sc.gov.br");
+  };
+
   const handle = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (mode === "signup" && !isEmailAllowed(email)) {
+      toast.error("Cadastro permitido apenas para emails @guaramirim.sc.gov.br.");
+      return;
+    }
     setLoading(true);
     try {
       if (mode === "signup") {
