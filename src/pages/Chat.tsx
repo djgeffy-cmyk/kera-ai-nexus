@@ -40,6 +40,7 @@ const Chat = () => {
   const [input, setInput] = useState("");
   const [streaming, setStreaming] = useState(false);
   const [userId, setUserId] = useState<string | null>(null);
+  const [isAdmin, setIsAdmin] = useState(false);
   const [provider, setProvider] = useState<ProviderId>(getPreferredProvider());
   const [voiceMode, setVoiceMode] = useState(false);
   const [hasElevenLabs, setHasElevenLabs] = useState(false);
@@ -56,7 +57,14 @@ const Chat = () => {
 
   useEffect(() => {
     document.title = "Kera AI — Chat";
-    supabase.auth.getUser().then(({ data }) => setUserId(data.user?.id ?? null));
+    supabase.auth.getUser().then(async ({ data }) => {
+      const uid = data.user?.id ?? null;
+      setUserId(uid);
+      if (uid) {
+        const { data: r } = await supabase.rpc("has_role", { _user_id: uid, _role: "admin" });
+        setIsAdmin(!!r);
+      }
+    });
     fetch(STATUS_URL).then(r => r.json()).then(s => setHasElevenLabs(!!s.elevenlabs)).catch(() => {});
     // garante carregamento das vozes
     if (typeof window !== "undefined") window.speechSynthesis?.getVoices();
@@ -489,9 +497,14 @@ Por favor, analise: há perda de pacote? jitter alto sugere instabilidade de rot
       </ScrollArea>
 
       <div className="p-3 border-t border-border space-y-1">
-        <Button variant="ghost" onClick={() => navigate("/admin")} className="w-full justify-start text-muted-foreground hover:text-foreground">
-          <Settings className="size-4 mr-2" /> Painel admin
+        <Button variant="ghost" onClick={() => navigate("/security")} className="w-full justify-start text-muted-foreground hover:text-foreground">
+          <ShieldCheck className="size-4 mr-2" /> Segurança (2FA)
         </Button>
+        {isAdmin && (
+          <Button variant="ghost" onClick={() => navigate("/admin")} className="w-full justify-start text-muted-foreground hover:text-foreground">
+            <Settings className="size-4 mr-2" /> Painel admin
+          </Button>
+        )}
         <Button variant="ghost" onClick={logout} className="w-full justify-start text-muted-foreground hover:text-foreground">
           <LogOut className="size-4 mr-2" /> Sair
         </Button>
