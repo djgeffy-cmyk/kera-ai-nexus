@@ -195,9 +195,16 @@ Deno.serve(async (req) => {
       });
     }
 
-    const finalSystem = (typeof systemPrompt === "string" && systemPrompt.trim().length > 0)
+    const baseSystem = (typeof systemPrompt === "string" && systemPrompt.trim().length > 0)
       ? systemPrompt
       : DEFAULT_SYSTEM_PROMPT;
+
+    // Injeta apelido personalizado se o email autenticado estiver no mapa
+    const email = await getUserEmailFromAuth(req);
+    const nickname = email ? USER_NICKNAMES[email] : null;
+    const finalSystem = nickname
+      ? `${baseSystem}\n\nAPELIDO DO USUÁRIO ATUAL: este usuário se chama "${nickname}" para você. Trate-o SEMPRE por esse apelido (ex: "olha, ${nickname}, isso aí tá errado..."). Use no início e ao longo das respostas, com naturalidade, mantendo o mesmo tom ácido/mal-humorado de sempre — o apelido NÃO suaviza nada, só personaliza. Não explique o apelido nem comente sobre ele, só usa.`
+      : baseSystem;
 
     const chain = getProviderChain(provider as Provider | undefined);
     if (chain.length === 0) {
