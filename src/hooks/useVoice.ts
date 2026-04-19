@@ -125,5 +125,5 @@ export function useVoice(opts: { useElevenLabs: boolean; onTranscript: (t: strin
 
   useEffect(() => () => { stopListening(); stopSpeaking(); }, [stopListening, stopSpeaking]);
 
-  return { listening, speaking, startListening, stopListening, speak, stopSpeaking };
+  return { listening, speaking, startListening, stopListening, speak, stopSpeaking, warmUpTTS };
 }
