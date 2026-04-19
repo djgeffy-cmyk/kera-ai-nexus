@@ -8,7 +8,7 @@ import { toast } from "sonner";
 import {
   Plus, LogOut, Send, MessageSquare, Trash2, Menu, Settings,
   Image as ImageIcon, LayoutGrid, FolderPlus, Mic, MicOff, Volume2, VolumeX, Bot, ChevronRight,
-  Paperclip, X, FileText, ShieldCheck,
+  Paperclip, X, FileText, ShieldCheck, Activity,
 } from "lucide-react";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -333,7 +333,69 @@ Por favor, analise estes resultados, classifique a severidade de cada item e ind
     }
   };
 
-  const Sidebar = () => (
+  const runNetworkTrace = async () => {
+    if (streaming) return;
+
+    // Extrai hosts de URLs cadastradas + alvos clássicos da IPM
+    const { data: targetRows } = await supabase
+      .from("monitor_targets")
+      .select("url,enabled")
+      .eq("enabled", true);
+
+    const hostsFromTargets = (targetRows || [])
+      .map(t => t.url.replace(/^https?:\/\//, "").replace(/\/.*$/, ""));
+
+    // Garante hosts críticos da IPM/Prefeitura no teste
+    const baseHosts = ["guaramirim.atende.net", "guaramirim.sc.gov.br"];
+    const hosts = Array.from(new Set([...baseHosts, ...hostsFromTargets])).slice(0, 8);
+
+    toast.info(`📡 Análise de rede em ${hosts.length} host(s)… (5 sondagens cada)`);
+    try {
+      const resp = await fetch(NETTRACE_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ hosts, count: 5 }),
+      });
+      if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+      const data = await resp.json();
+
+      type HostRes = {
+        host: string; resolvedIp?: string;
+        sent: number; received: number; lossPct: number;
+        minMs: number | null; avgMs: number | null; maxMs: number | null; jitterMs: number | null;
+        samples: { ok: boolean; ms: number | null; status: number | null; error?: string }[];
+      };
+
+      const blocks = (data.results as HostRes[]).map((r) => {
+        const lossFlag = r.lossPct === 0 ? "🟢" : r.lossPct < 20 ? "🟡" : r.lossPct < 50 ? "🟠" : "🔴";
+        const jitterFlag = (r.jitterMs ?? 0) < 30 ? "🟢" : (r.jitterMs ?? 0) < 80 ? "🟡" : "🔴";
+        const samplesLine = r.samples
+          .map((s, i) => s.ok ? `#${i + 1}: ${s.ms}ms (HTTP ${s.status})` : `#${i + 1}: TIMEOUT/${s.error ?? "erro"}`)
+          .join(" · ");
+        return `### ${r.host} ${r.resolvedIp ? `(\`${r.resolvedIp}\`)` : ""}
+- **Pacotes:** ${r.received}/${r.sent} recebidos · perda **${lossFlag} ${r.lossPct}%**
+- **Latência:** min ${r.minMs ?? "?"}ms · avg **${r.avgMs ?? "?"}ms** · max ${r.maxMs ?? "?"}ms
+- **Jitter:** ${jitterFlag} ${r.jitterMs ?? "?"}ms
+- **Amostras:** ${samplesLine}`;
+      }).join("\n\n");
+
+      const report = `📡 **Análise de Rede — Sentinela** — ${new Date(data.summary.checkedAt).toLocaleString("pt-BR")}
+
+**Método:** sondagem HTTPS HEAD x${data.summary.probesPerHost} por host (equivalente funcional a ping para serviços web).
+**Origem da medição:** ${data.summary.origin}
+
+> ⚠️ Esta medição parte da edge da Lovable Cloud, **não da rede interna da Prefeitura**. Para diagnóstico definitivo de perda de pacote da PMG → IPM, rode \`mtr -rwc 100 guaramirim.atende.net\` ou \`pathping\` num desktop dentro da rede municipal e cole o resultado aqui.
+
+${blocks}
+
+Por favor, analise: há perda de pacote? jitter alto sugere instabilidade de rota? alguma latência fora do padrão para um datacenter brasileiro? Sugira os próximos passos de diagnóstico.`;
+
+      await sendText(report);
+    } catch (e: unknown) {
+      const msg = e instanceof Error ? e.message : "erro";
+      toast.error(`Falha na análise de rede: ${msg}`);
+    }
+  };
     <aside className="h-full w-full md:w-72 panel border-r border-border flex flex-col">
       <div className="p-4 border-b border-border flex items-center gap-2">
         <img src={keraLogo} alt="Kera AI" className="h-8" />
