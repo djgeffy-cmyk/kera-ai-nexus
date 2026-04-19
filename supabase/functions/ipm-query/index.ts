@@ -115,6 +115,25 @@ async function scrapeWithFirecrawl(url: string, tipo: string): Promise<{ items: 
   }
 }
 
+// TTL padrão do cache (segundos). 6h = 21600. Pode ser sobrescrito por body.cache_ttl.
+const DEFAULT_CACHE_TTL = 6 * 60 * 60;
+
+function buildCacheKey(parts: {
+  tipo: string;
+  filtroStatus?: string;
+  endpointId?: string;
+  customUrl?: string;
+  path?: string;
+}): string {
+  return [
+    parts.tipo,
+    parts.filtroStatus ?? "",
+    parts.endpointId ?? "",
+    parts.customUrl ?? "",
+    parts.path ?? "",
+  ].join("::");
+}
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
@@ -125,11 +144,49 @@ Deno.serve(async (req) => {
     const endpointId: string | undefined = body.endpoint_id;
     const customUrl: string | undefined = body.url;
     const path: string | undefined = body.path; // path REST opcional
+    const skipCache: boolean = body.skip_cache === true || body.no_cache === true;
+    const cacheTtl: number = Number.isFinite(body.cache_ttl) ? Number(body.cache_ttl) : DEFAULT_CACHE_TTL;
 
     const supabase = createClient(
       Deno.env.get("SUPABASE_URL")!,
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
     );
+
+    const cacheKey = buildCacheKey({ tipo, filtroStatus, endpointId, customUrl, path });
+
+    // ─── 1) Tenta cache ───
+    if (!skipCache) {
+      const { data: cached } = await supabase
+        .from("ipm_query_cache")
+        .select("id, response, hit_count, created_at, expires_at")
+        .eq("cache_key", cacheKey)
+        .gt("expires_at", new Date().toISOString())
+        .maybeSingle();
+
+      if (cached) {
+        // Atualiza hit count + last_hit (fire-and-forget — não bloqueia resposta)
+        supabase
+          .from("ipm_query_cache")
+          .update({
+            hit_count: (cached.hit_count ?? 0) + 1,
+            last_hit_at: new Date().toISOString(),
+          })
+          .eq("id", cached.id)
+          .then(() => {});
+
+        const cachedResponse = cached.response as Record<string, unknown>;
+        return new Response(JSON.stringify({
+          ...cachedResponse,
+          cached: true,
+          cache_hit_count: (cached.hit_count ?? 0) + 1,
+          cached_at: cached.created_at,
+          cache_expires_at: cached.expires_at,
+        }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
+      }
+    }
+
+    // ─── 2) Sem cache: busca dados reais ───
+    let responsePayload: Record<string, unknown>;
 
     // Carrega endpoints ativos
     let query = supabase.from("ipm_endpoints").select("*").eq("enabled", true);
@@ -142,7 +199,7 @@ Deno.serve(async (req) => {
     // Se passou URL custom, usa direto via Firecrawl
     if (customUrl) {
       const r = await scrapeWithFirecrawl(customUrl, tipo);
-      return new Response(JSON.stringify({
+      responsePayload = {
         success: true,
         source: "scraping_direto",
         url: customUrl,
@@ -151,67 +208,91 @@ Deno.serve(async (req) => {
         items: r.items,
         raw_preview: r.raw_preview,
         error: r.error,
-      }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
-    }
-
-    if (list.length === 0) {
+      };
+    } else if (list.length === 0) {
+      // Não cacheia ausência de endpoints
       return new Response(JSON.stringify({
         success: false,
         error: "Nenhum endpoint IPM cadastrado/habilitado. Cadastre em /admin → APIs IPM.",
       }), { status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    } else {
+      const results: Array<Record<string, unknown>> = [];
+      for (const ep of list) {
+        // 1) Tentativa REST se for autenticado e tem path/inferência
+        if (ep.auth_type !== "none" && path) {
+          const json = await tryRestCall(ep, path);
+          if (json) {
+            results.push({
+              endpoint: ep.label,
+              base_url: ep.base_url,
+              kind: ep.kind,
+              source: "rest_api",
+              data: json,
+            });
+            continue;
+          }
+        }
+
+        // 2) Fallback: scraping com Firecrawl
+        const targetUrl = path && !path.startsWith("http")
+          ? `${ep.base_url.replace(/\/$/, "")}/${path.replace(/^\//, "")}`
+          : (path ?? ep.base_url);
+        const r = await scrapeWithFirecrawl(targetUrl, tipo);
+        let items = r.items;
+
+        if (filtroStatus && Array.isArray(items)) {
+          const f = filtroStatus.toLowerCase();
+          items = items.filter((it: any) =>
+            typeof it?.status === "string" && it.status.toLowerCase().includes(f)
+          );
+        }
+
+        results.push({
+          endpoint: ep.label,
+          base_url: ep.base_url,
+          kind: ep.kind,
+          source: "scraping",
+          url: targetUrl,
+          total: items.length,
+          items,
+          raw_preview: r.raw_preview,
+          error: r.error,
+        });
+      }
+
+      responsePayload = {
+        success: true,
+        tipo,
+        filtro_status: filtroStatus ?? null,
+        consulted_at: new Date().toISOString(),
+        results,
+      };
     }
 
-    const results: Array<Record<string, unknown>> = [];
-
-    for (const ep of list) {
-      // 1) Tentativa REST se for autenticado e tem path/inferência
-      if (ep.auth_type !== "none" && path) {
-        const json = await tryRestCall(ep, path);
-        if (json) {
-          results.push({
-            endpoint: ep.label,
-            base_url: ep.base_url,
-            kind: ep.kind,
-            source: "rest_api",
-            data: json,
-          });
-          continue;
-        }
-      }
-
-      // 2) Fallback: scraping com Firecrawl
-      const targetUrl = path && !path.startsWith("http")
-        ? `${ep.base_url.replace(/\/$/, "")}/${path.replace(/^\//, "")}`
-        : (path ?? ep.base_url);
-      const r = await scrapeWithFirecrawl(targetUrl, tipo);
-      let items = r.items;
-
-      if (filtroStatus && Array.isArray(items)) {
-        const f = filtroStatus.toLowerCase();
-        items = items.filter((it: any) =>
-          typeof it?.status === "string" && it.status.toLowerCase().includes(f)
-        );
-      }
-
-      results.push({
-        endpoint: ep.label,
-        base_url: ep.base_url,
-        kind: ep.kind,
-        source: "scraping",
-        url: targetUrl,
-        total: items.length,
-        items,
-        raw_preview: r.raw_preview,
-        error: r.error,
-      });
+    // ─── 3) Salva no cache (apenas se sucesso) ───
+    if (!skipCache && responsePayload.success === true) {
+      const expiresAt = new Date(Date.now() + cacheTtl * 1000).toISOString();
+      const { error: upErr } = await supabase
+        .from("ipm_query_cache")
+        .upsert({
+          cache_key: cacheKey,
+          tipo,
+          filtro_status: filtroStatus ?? null,
+          endpoint_id: endpointId ?? null,
+          url: customUrl ?? null,
+          path: path ?? null,
+          response: responsePayload,
+          hit_count: 0,
+          created_at: new Date().toISOString(),
+          last_hit_at: new Date().toISOString(),
+          expires_at: expiresAt,
+        }, { onConflict: "cache_key" });
+      if (upErr) console.warn("[ipm-query] cache upsert erro:", upErr.message);
     }
 
     return new Response(JSON.stringify({
-      success: true,
-      tipo,
-      filtro_status: filtroStatus ?? null,
-      consulted_at: new Date().toISOString(),
-      results,
+      ...responsePayload,
+      cached: false,
     }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
   } catch (e) {
     console.error("[ipm-query] erro:", e);
