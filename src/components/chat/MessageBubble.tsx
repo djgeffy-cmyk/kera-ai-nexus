@@ -1,7 +1,8 @@
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import keraAvatar from "@/assets/kera-avatar.png";
-import { User, FileText } from "lucide-react";
+import { User, FileText, Volume2, Square } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 type ContentPart =
   | { type: "text"; text: string }
@@ -55,8 +56,21 @@ const renderUserContent = (content: string | ContentPart[]) => {
   );
 };
 
-export const MessageBubble = ({ msg, streaming }: { msg: ChatMessage; streaming?: boolean }) => {
+export const MessageBubble = ({
+  msg,
+  streaming,
+  onSpeak,
+  onStopSpeak,
+  isSpeaking,
+}: {
+  msg: ChatMessage;
+  streaming?: boolean;
+  onSpeak?: (text: string) => void;
+  onStopSpeak?: () => void;
+  isSpeaking?: boolean;
+}) => {
   const isUser = msg.role === "user";
+  const plainText = typeof msg.content === "string" ? msg.content : "";
   return (
     <div className={`flex gap-3 ${isUser ? "flex-row-reverse" : ""} animate-in fade-in slide-in-from-bottom-2 duration-300`}>
       <div className={`shrink-0 size-9 rounded-full overflow-hidden border ${isUser ? "border-border bg-secondary flex items-center justify-center" : "border-primary/40 shadow-glow"}`}>
@@ -75,8 +89,26 @@ export const MessageBubble = ({ msg, streaming }: { msg: ChatMessage; streaming?
           renderUserContent(msg.content)
         ) : (
           <>
-            <ReactMarkdown remarkPlugins={[remarkGfm]}>{(typeof msg.content === "string" ? msg.content : "") || ""}</ReactMarkdown>
+            <ReactMarkdown remarkPlugins={[remarkGfm]}>{plainText || ""}</ReactMarkdown>
             {streaming && <span className="inline-block w-2 h-4 bg-primary ml-1 align-middle animate-blink" />}
+            {!streaming && onSpeak && plainText.trim() && (
+              <div className="mt-2 -mb-1 flex justify-end">
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  className="h-7 px-2 text-xs text-muted-foreground hover:text-primary"
+                  onClick={() => {
+                    if (isSpeaking) onStopSpeak?.();
+                    else onSpeak(plainText.replace(/```[\s\S]*?```/g, "(bloco de código)").replace(/[#*_`>]/g, ""));
+                  }}
+                  aria-label={isSpeaking ? "Parar áudio" : "Ouvir resposta"}
+                  title={isSpeaking ? "Parar" : "Ouvir com voz da Kera"}
+                >
+                  {isSpeaking ? <Square className="size-3.5 mr-1" /> : <Volume2 className="size-3.5 mr-1" />}
+                  {isSpeaking ? "Parar" : "Ouvir"}
+                </Button>
+              </div>
+            )}
           </>
         )}
       </div>
