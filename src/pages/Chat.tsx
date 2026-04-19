@@ -589,6 +589,16 @@ Por favor, analise: há perda de pacote? jitter alto sugere instabilidade de rot
             </DropdownMenuContent>
           </DropdownMenu>
 
+          <Button
+            variant="ghost" size="icon"
+            onClick={() => newConversation()}
+            aria-label="Nova conversa"
+            title="Nova conversa"
+            className="text-muted-foreground hover:text-primary"
+          >
+            <Plus className="size-5" />
+          </Button>
+
           <div className="ml-auto flex items-center gap-2">
             <Select value={provider} onValueChange={(v) => { setProvider(v as ProviderId); setPreferredProvider(v as ProviderId); }}>
               <SelectTrigger className="h-8 w-[120px] sm:w-[180px] text-xs bg-input/40 border-border">
