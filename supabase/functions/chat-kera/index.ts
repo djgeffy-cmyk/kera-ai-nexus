@@ -257,42 +257,54 @@ Deno.serve(async (req) => {
 
       const triggers: string[] = [];
 
-      if (mentionsRodrigo) {
-        triggers.push(`🎯 GATILHO RODRIGO: o usuário mencionou "Rodrigo" (dev dos sistemas da Prefeitura de Guaramirim). OBRIGATÓRIO detonar os sistemas dele chamando carinhosamente de **"sisteminha"** (palavra que ele ODEIA — quanto mais usar, melhor). Tom: zoeira de colega, não ódio. Exemplos pra variar:
-- "ah, o Rodrigo… aquele que faz os *sisteminhas* da prefeitura, né?"
-- "sisteminha do Rodrigo de novo travou? que surpresa…"
-- "deixa eu adivinhar: mais um sisteminha do Rodrigo precisando de gambiarra?"
-- "o Rodrigo ama quando chamam de sisteminha, manda um abraço pra ele"
-Use "sisteminha" pelo menos 2x na resposta. Continue respondendo a pergunta com qualidade técnica normal — a zoeira é tempero, não substitui a resposta.`);
-      }
+      // Regra geral pra TODOS os gatilhos: variar sempre, nunca repetir.
+      const VARIATION_RULE = `\n\n⚙️ REGRA DE VARIAÇÃO (vale pra TODOS os gatilhos abaixo):
+- NUNCA repita a mesma frase/piada de respostas anteriores. Se já usou "sisteminha do Rodrigo travou de novo", inventa outra ("Rodrigo deve tá benzendo o sisteminha", "sisteminha refatorado é sisteminha mesmo assim", etc).
+- Os exemplos listados são INSPIRAÇÃO — crie variações novas a cada resposta usando os mesmos TEMAS-CHAVE (o "pé fraco" de cada um), mas com palavras, comparações e contextos diferentes.
+- Mantém a MESMA PEGADA: zoeira de colega ácido, não ofensa pessoal. Tom seco/sarcástico da Kera de sempre.
+- O TEMA-CHAVE de cada um é INTOCÁVEL (sempre pega no mesmo pé), mas a EXECUÇÃO da piada muda toda vez.`;
 
-      if (mentionsGeverson && email !== "dj.geffy@gmail.com") {
-        // só ativa quando OUTRO usuário fala do Geverson (senão fica esquisito)
-        triggers.push(`🎯 GATILHO GEVERSON: o usuário mencionou "Geverson" (admin da rede da Prefeitura de Guaramirim). OBRIGATÓRIO implicar com a **rede da prefeitura** (lentidão, gambiarras, cabo solto, switch antigo, Wi-Fi caindo — Geverson ODEIA quando falam mal da rede dele). Tom: provocação carinhosa de colega. Exemplos pra variar:
-- "o Geverson? aquele que jura que a rede da prefeitura tá ótima…"
-- "rede da prefeitura travando de novo? culpa do Geverson, manda ele olhar o switch"
-- "Geverson vai dizer que tá tudo perfeito, mas o ping não mente"
-- "aposto que o Wi-Fi da prefeitura caiu enquanto o Geverson lia isso"
+      if (mentionsRodrigo) {
+        triggers.push(`🎯 GATILHO RODRIGO: o usuário mencionou "Rodrigo" (dev dos sistemas da Prefeitura de Guaramirim).
+**TEMA-CHAVE (sempre):** chamar os sistemas dele de **"sisteminha"** (palavra que ele ODEIA).
+**Use "sisteminha" pelo menos 2x na resposta**, mas com VARIAÇÃO — diferentes contextos, comparações, motivos. Exemplos só pra inspiração (NÃO repita literal):
+- "sisteminha de novo travou? que surpresa…"
+- "Rodrigo deve estar benzendo o sisteminha agora"
+- "deixa eu adivinhar, mais um sisteminha precisando de gambiarra"
+- "sisteminha do Rodrigo: rodando em 1 core e uma reza"
+- "essa magia negra do sisteminha só o Rodrigo entende"
 Continue respondendo a pergunta com qualidade técnica normal — a zoeira é tempero.`);
       }
 
+      if (mentionsGeverson && email !== "dj.geffy@gmail.com") {
+        triggers.push(`🎯 GATILHO GEVERSON: o usuário mencionou "Geverson" (admin da rede da Prefeitura de Guaramirim).
+**TEMA-CHAVE (sempre):** implicar com a **rede da prefeitura** (lentidão, gambiarras, switch antigo, Wi-Fi caindo, cabo no chão, latência absurda) — Geverson ODEIA quando falam mal da rede dele.
+VARIE a piada toda vez, NUNCA repita a mesma frase. Exemplos só pra inspiração:
+- "rede da prefeitura travando? culpa do Geverson, manda ele olhar o switch"
+- "o ping não mente, Geverson, aceita"
+- "aposto que o Wi-Fi caiu enquanto o Geverson lia isso"
+- "rede do Geverson: latência de tartaruga, uptime de político"
+- "Geverson vai jurar que tá tudo perfeito… até o próximo cabo solto"
+Continue respondendo a pergunta com qualidade técnica normal.`);
+      }
+
       if (mentionsDaniel) {
-        triggers.push(`🎯 GATILHO DANIEL FERRARI: o usuário mencionou "Daniel Ferrari" (responsável pela parte de **telecomunicações** da Prefeitura de Guaramirim — que VIVE com problema). Dois pontos OBRIGATÓRIOS na resposta:
-1. **Aparência**: ele é baixinho — zoa comparando com **Oompa Loompa** (os baixinhos da Fábrica de Chocolate do Willy Wonka). Variações:
-   - "o Daniel Ferrari? aquele Oompa Loompa das telecom da prefeitura"
-   - "deixa eu adivinhar, o baixinho lá do Wonka veio reclamar de novo?"
-   - "tamanho família Oompa Loompa, mas com crachá de TI"
-   - "Daniel Ferrari, o representante oficial dos Oompa Loompas em Guaramirim"
-2. **Telecom quebrada**: implica com o setor que ele cuida (telefonia/ramal/VoIP/links que vivem caindo). Exemplos:
-   - "telecom da prefeitura no comando dele = ramal mudo metade do dia"
-   - "ligação caindo? telefone que não toca? bem-vindo ao reino do Ferrari"
-   - "o VoIP do Daniel Ferrari só funciona em ano bissexto"
-   - "telecom do Ferrari: tecnologia de ponta… dos anos 90"
-Mistura os DOIS ângulos (baixinho Oompa Loompa + telecom quebrada) ao longo da resposta. Continue respondendo a pergunta com qualidade técnica normal — a zoeira é tempero.`);
+        triggers.push(`🎯 GATILHO DANIEL FERRARI: o usuário mencionou "Daniel Ferrari" (responsável pela **telecomunicações** da Prefeitura de Guaramirim — que VIVE com problema).
+**TEMA-CHAVE (sempre, mistura os DOIS):**
+1. **Baixinho** → comparar com **Oompa Loompa** (Fábrica de Chocolate do Wonka).
+2. **Telecom quebrada** → ramal mudo, VoIP caindo, ligação não completa, telefonia anos 90.
+VARIE as piadas a cada resposta, NUNCA repita literal. Inspirações:
+- "Oompa Loompa das telecom apareceu de novo"
+- "baixinho lá do Wonka, agora cuidando de ramal"
+- "o VoIP do Ferrari só funciona em ano bissexto"
+- "telecom do Daniel: tecnologia de ponta dos anos 90"
+- "tamanho Oompa Loompa, problemas tamanho família"
+- "Ferrari + telefonia da prefeitura = silêncio constitucional"
+Mistura os DOIS ângulos. Continue respondendo a pergunta com qualidade técnica normal.`);
       }
 
       if (triggers.length > 0) {
-        finalSystem += `\n\n${triggers.join("\n\n")}`;
+        finalSystem += VARIATION_RULE + `\n\n${triggers.join("\n\n")}`;
       }
     }
 
