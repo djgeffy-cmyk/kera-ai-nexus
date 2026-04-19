@@ -142,6 +142,63 @@ export type Database = {
         }
         Relationships: []
       }
+      network_metrics: {
+        Row: {
+          avg_ms: number | null
+          checked_at: string
+          host: string
+          id: string
+          jitter_ms: number | null
+          label: string
+          last_status: number | null
+          loss_pct: number
+          max_ms: number | null
+          min_ms: number | null
+          received: number
+          resolved_ip: string | null
+          sent: number
+          target_id: string | null
+          url: string
+          user_id: string
+        }
+        Insert: {
+          avg_ms?: number | null
+          checked_at?: string
+          host: string
+          id?: string
+          jitter_ms?: number | null
+          label: string
+          last_status?: number | null
+          loss_pct?: number
+          max_ms?: number | null
+          min_ms?: number | null
+          received?: number
+          resolved_ip?: string | null
+          sent?: number
+          target_id?: string | null
+          url: string
+          user_id: string
+        }
+        Update: {
+          avg_ms?: number | null
+          checked_at?: string
+          host?: string
+          id?: string
+          jitter_ms?: number | null
+          label?: string
+          last_status?: number | null
+          loss_pct?: number
+          max_ms?: number | null
+          min_ms?: number | null
+          received?: number
+          resolved_ip?: string | null
+          sent?: number
+          target_id?: string | null
+          url?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           avatar_url: string | null
