@@ -867,7 +867,19 @@ Por favor, analise: há perda de pacote? jitter alto sugere instabilidade de rot
                 <Paperclip className="size-5" />
               </Button>
               <Button
-                onClick={() => voice.listening ? voice.stopListening() : voice.startListening()}
+                onClick={() => {
+                  if (voice.listening) {
+                    voice.stopListening();
+                  } else {
+                    // Ativa modo voz automaticamente ao falar (responde com voz)
+                    if (!voiceMode) {
+                      setVoiceMode(true);
+                      try { localStorage.setItem("kera:voiceMode", "1"); } catch {}
+                      voice.warmUpTTS();
+                    }
+                    voice.startListening();
+                  }
+                }}
                 variant={voice.listening ? "default" : "ghost"}
                 size="icon"
                 className={`h-12 w-12 shrink-0 ${voice.listening ? "bg-destructive hover:bg-destructive/90 text-destructive-foreground animate-pulse" : ""}`}
