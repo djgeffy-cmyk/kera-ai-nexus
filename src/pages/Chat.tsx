@@ -896,6 +896,38 @@ Por favor, analise: há perda de pacote? jitter alto sugere instabilidade de rot
               </Button>
               <Button
                 onClick={() => {
+                  if (alwaysListen.isActive) {
+                    alwaysListen.stop();
+                    handsFreeRef.current = false;
+                  } else {
+                    // Liga modo voz pra Kera responder falando, e ativa o mic sempre aberto
+                    if (!voiceMode) {
+                      setVoiceMode(true);
+                      try { localStorage.setItem("kera:voiceMode", "1"); } catch {}
+                      voice.warmUpTTS();
+                    }
+                    alwaysListen.start();
+                  }
+                }}
+                variant={alwaysListen.isActive ? "default" : "ghost"}
+                size="icon"
+                className={`h-12 w-12 shrink-0 ${
+                  alwaysListen.status === "heard-wake"
+                    ? "bg-primary text-primary-foreground animate-pulse shadow-glow"
+                    : alwaysListen.status === "listening"
+                      ? "bg-accent/30 text-accent-foreground"
+                      : alwaysListen.status === "connecting"
+                        ? "opacity-70"
+                        : ""
+                }`}
+                aria-label="Modo sempre escutando (diga 'Kera' pra falar com ela)"
+                title="Modo sempre escutando — diga &quot;Kera&quot; pra ativar"
+                disabled={alwaysListen.status === "connecting"}
+              >
+                <Ear className="size-5" />
+              </Button>
+              <Button
+                onClick={() => {
                   if (voice.listening) {
                     // Parada manual desliga hands-free
                     handsFreeRef.current = false;
