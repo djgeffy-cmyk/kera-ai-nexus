@@ -5,11 +5,13 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { toast } from "sonner";
-import { Plus, LogOut, Send, MessageSquare, Trash2, Menu } from "lucide-react";
+import { Plus, LogOut, Send, MessageSquare, Trash2, Menu, Settings } from "lucide-react";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import keraLogo from "@/assets/kera-logo.png";
 import keraAvatar from "@/assets/kera-avatar.png";
 import { MessageBubble, type ChatMessage } from "@/components/chat/MessageBubble";
+import { PROVIDERS, getPreferredProvider, setPreferredProvider, type ProviderId } from "@/lib/providers";
 
 type Conversation = { id: string; title: string; updated_at: string };
 
@@ -23,6 +25,7 @@ const Chat = () => {
   const [input, setInput] = useState("");
   const [streaming, setStreaming] = useState(false);
   const [userId, setUserId] = useState<string | null>(null);
+  const [provider, setProvider] = useState<ProviderId>(getPreferredProvider());
   const scrollerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -115,7 +118,10 @@ const Chat = () => {
           "Content-Type": "application/json",
           ...(sess.session ? { Authorization: `Bearer ${sess.session.access_token}` } : {}),
         },
-        body: JSON.stringify({ messages: next.map(m => ({ role: m.role, content: m.content })) }),
+        body: JSON.stringify({
+          messages: next.map(m => ({ role: m.role, content: m.content })),
+          provider: provider === "auto" ? undefined : provider,
+        }),
       });
 
       if (!resp.ok || !resp.body) {
