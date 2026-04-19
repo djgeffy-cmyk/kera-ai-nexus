@@ -20,7 +20,6 @@ const Admin = () => {
   const [pref, setPref] = useState<ProviderId>(getPreferredProvider());
   const [voices, setVoices] = useState<SpeechSynthesisVoice[]>([]);
   const [voiceURI, setVoiceURI] = useState<string | null>(getPreferredVoiceURI());
-  const [genderFilter, setGenderFilter] = useState<"todas" | "feminina" | "masculina">("todas");
 
   useEffect(() => {
     document.title = "Kera AI — Painel Admin";
@@ -32,14 +31,16 @@ const Admin = () => {
     loadVoicesAsync().then(setVoices);
   }, []);
 
-  const ptVoices = useMemo(
+  // Apenas vozes femininas em português — a Kera é feminina
+  const femaleVoices = useMemo(
+    () => voices.filter(v => v.lang.toLowerCase().startsWith("pt") && classifyVoice(v) === "feminina"),
+    [voices]
+  );
+  const ptAll = useMemo(
     () => voices.filter(v => v.lang.toLowerCase().startsWith("pt")),
     [voices]
   );
-  const filteredVoices = useMemo(() => {
-    if (genderFilter === "todas") return ptVoices;
-    return ptVoices.filter(v => classifyVoice(v) === genderFilter);
-  }, [ptVoices, genderFilter]);
+  const displayVoices = femaleVoices.length > 0 ? femaleVoices : ptAll;
 
   const chooseVoice = (uri: string) => {
     setVoiceURI(uri);
