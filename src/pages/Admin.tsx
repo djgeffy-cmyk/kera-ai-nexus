@@ -158,33 +158,21 @@ const Admin = () => {
             <h2 className="font-display text-xl text-glow">Voz da Kera (navegador)</h2>
           </div>
           <p className="text-sm text-muted-foreground">
-            Escolha qual voz nativa do navegador a Kera vai usar quando ler as respostas em voz alta.
-            Disponíveis: <span className="text-foreground">{ptVoices.length}</span> vozes em português.
+            Escolha qual voz feminina do navegador a Kera vai usar ao ler as respostas em voz alta.
+            Disponíveis: <span className="text-foreground">{displayVoices.length}</span> vozes
+            {femaleVoices.length === 0 && ptAll.length > 0 && (
+              <span className="text-muted-foreground/80"> (nenhuma marcada como feminina — mostrando todas em PT)</span>
+            )}.
           </p>
 
-          <div className="flex gap-2 flex-wrap">
-            {(["todas", "feminina", "masculina"] as const).map(g => (
-              <Button
-                key={g}
-                size="sm"
-                variant={genderFilter === g ? "default" : "outline"}
-                onClick={() => setGenderFilter(g)}
-                className="capitalize"
-              >
-                {g}
-              </Button>
-            ))}
-          </div>
-
-          {filteredVoices.length === 0 ? (
+          {displayVoices.length === 0 ? (
             <p className="text-sm text-muted-foreground italic">
-              Nenhuma voz {genderFilter !== "todas" ? genderFilter : "em português"} encontrada neste navegador.
+              Nenhuma voz em português encontrada neste navegador.
             </p>
           ) : (
             <div className="grid gap-2 sm:grid-cols-2">
-              {filteredVoices.map(v => {
+              {displayVoices.map(v => {
                 const selected = voiceURI === v.voiceURI;
-                const gender = classifyVoice(v);
                 return (
                   <Card
                     key={v.voiceURI}
@@ -200,9 +188,7 @@ const Admin = () => {
                     </div>
                     <div className="flex-1 min-w-0">
                       <p className="text-sm font-medium truncate">{v.name}</p>
-                      <p className="text-xs text-muted-foreground">
-                        {v.lang} · <span className="capitalize">{gender}</span>
-                      </p>
+                      <p className="text-xs text-muted-foreground">{v.lang}</p>
                     </div>
                     <Button
                       size="icon"
