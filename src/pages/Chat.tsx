@@ -828,10 +828,23 @@ Por favor, analise: há perda de pacote? jitter alto sugere instabilidade de rot
                   onStopSpeak={voice.stopSpeaking}
                   isSpeaking={voice.speaking && isLast && m.role === "assistant"}
                   showSwitchToKera={agentKey !== DEFAULT_AGENT_KEY}
-                  onSwitchToKera={() => {
+                  onSwitchToKera={async () => {
+                    // Mantém a conversa atual — só troca o agente, pra Kera continuar de onde parou
                     setAgentKey(DEFAULT_AGENT_KEY);
-                    void newConversation(DEFAULT_AGENT_KEY);
-                    toast.success("Trocado pra Kera principal");
+                    if (currentId) {
+                      const { error } = await supabase
+                        .from("conversations")
+                        .update({ agent_key: DEFAULT_AGENT_KEY })
+                        .eq("id", currentId);
+                      if (error) {
+                        toast.error("Não rolou trocar de agente: " + error.message);
+                        return;
+                      }
+                      setConversations(prev =>
+                        prev.map(c => (c.id === currentId ? { ...c, agent_key: DEFAULT_AGENT_KEY } : c))
+                      );
+                    }
+                    toast.success("Kera assumiu — continua mandando que ela pega o fio da meada");
                   }}
                 />
               );
