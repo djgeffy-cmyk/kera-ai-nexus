@@ -213,9 +213,13 @@ Deno.serve(async (req) => {
       });
     }
 
-    const baseSystem = (typeof systemPrompt === "string" && systemPrompt.trim().length > 0)
-      ? systemPrompt
-      : DEFAULT_SYSTEM_PROMPT;
+    let baseSystem: string;
+    if (typeof systemPrompt === "string" && systemPrompt.trim().length > 0) {
+      baseSystem = systemPrompt;
+    } else {
+      const dbPrompt = await loadDbSystemPrompt();
+      baseSystem = dbPrompt ?? DEFAULT_SYSTEM_PROMPT;
+    }
 
     // Injeta apelido personalizado se o email autenticado estiver no mapa
     const email = await getUserEmailFromAuth(req);
