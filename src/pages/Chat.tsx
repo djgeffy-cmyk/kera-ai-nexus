@@ -28,12 +28,6 @@ const CHAT_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/chat-kera`;
 const STATUS_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/providers-status`;
 const MONITOR_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/monitor-urls`;
 
-const SENTINELA_TARGETS = [
-  "https://www.guaramirim.sc.gov.br",
-  "https://guaramirim.atende.net",
-  "https://mail.google.com",
-];
-
 const Chat = () => {
   const navigate = useNavigate();
   const [conversations, setConversations] = useState<Conversation[]>([]);
@@ -290,12 +284,28 @@ const Chat = () => {
 
   const runSentinelaCheck = async () => {
     if (streaming) return;
-    toast.info("🛡️ Sentinela verificando sistemas…");
+
+    // Busca alvos cadastrados pelo usuário no admin
+    const { data: targetRows, error: tErr } = await supabase
+      .from("monitor_targets")
+      .select("label,url,enabled")
+      .eq("enabled", true);
+
+    if (tErr) return toast.error(tErr.message);
+    if (!targetRows || targetRows.length === 0) {
+      toast.error("Nenhuma URL cadastrada. Vá em Painel admin → URLs do Sentinela para adicionar.");
+      return;
+    }
+
+    const urls = targetRows.map(t => t.url);
+    const labelByUrl = new Map(targetRows.map(t => [t.url, t.label]));
+
+    toast.info(`🛡️ Sentinela verificando ${urls.length} sistema(s)…`);
     try {
       const resp = await fetch(MONITOR_URL, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ urls: SENTINELA_TARGETS }),
+        body: JSON.stringify({ urls }),
       });
       if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
       const data = await resp.json();
@@ -303,7 +313,8 @@ const Chat = () => {
       const lines = data.results.map((r: { url: string; ok: boolean; status: number | null; statusText: string; latencyMs: number | null; server?: string; error?: string }) => {
         const flag = r.ok ? "🟢" : (r.status && r.status >= 500 ? "🔴" : "🟠");
         const statusInfo = r.status ? `${r.status} ${r.statusText}` : `ERRO: ${r.error ?? "sem resposta"}`;
-        return `- ${flag} **${r.url}** → ${statusInfo} · ${r.latencyMs ?? "?"}ms${r.server ? ` · server: ${r.server}` : ""}`;
+        const label = labelByUrl.get(r.url) ?? r.url;
+        return `- ${flag} **${label}** (${r.url}) → ${statusInfo} · ${r.latencyMs ?? "?"}ms${r.server ? ` · server: ${r.server}` : ""}`;
       }).join("\n");
 
       const report = `🛡️ **Relatório Sentinela** — ${new Date(data.summary.checkedAt).toLocaleString("pt-BR")}
