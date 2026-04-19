@@ -903,7 +903,10 @@ Por favor, analise: há perda de pacote? jitter alto sugere instabilidade de rot
                 ))}
               </div>
             )}
-            <div className="flex gap-2 items-end">
+            <div
+              className={`group relative rounded-2xl border bg-input/30 backdrop-blur-sm transition-all
+                ${streaming ? "border-primary/30" : "border-border/60 hover:border-border focus-within:border-primary/60 focus-within:shadow-[0_0_0_3px_hsl(var(--primary)/0.15)]"}`}
+            >
               <input
                 ref={fileInputRef}
                 type="file"
@@ -912,74 +915,7 @@ Por favor, analise: há perda de pacote? jitter alto sugere instabilidade de rot
                 className="hidden"
                 onChange={(e) => { if (e.target.files) addFiles(e.target.files); e.target.value = ""; }}
               />
-              <Button
-                onClick={() => fileInputRef.current?.click()}
-                variant="ghost"
-                size="icon"
-                className="h-12 w-12 shrink-0"
-                aria-label="Anexar arquivo"
-                disabled={streaming}
-              >
-                <Paperclip className="size-5" />
-              </Button>
-              <Button
-                onClick={() => {
-                  if (alwaysListen.isActive) {
-                    alwaysListen.stop();
-                    handsFreeRef.current = false;
-                  } else {
-                    // Liga modo voz pra Kera responder falando, e ativa o mic sempre aberto
-                    if (!voiceMode) {
-                      setVoiceMode(true);
-                      try { localStorage.setItem("kera:voiceMode", "1"); } catch {}
-                      voice.warmUpTTS();
-                    }
-                    alwaysListen.start();
-                  }
-                }}
-                variant={alwaysListen.isActive ? "default" : "ghost"}
-                size="icon"
-                className={`h-12 w-12 shrink-0 ${
-                  alwaysListen.status === "heard-wake"
-                    ? "bg-primary text-primary-foreground animate-pulse shadow-glow"
-                    : alwaysListen.status === "listening"
-                      ? "bg-accent/30 text-accent-foreground"
-                      : alwaysListen.status === "connecting"
-                        ? "opacity-70"
-                        : ""
-                }`}
-                aria-label="Modo sempre escutando (diga 'Kera' pra falar com ela)"
-                title="Modo sempre escutando — diga &quot;Kera&quot; pra ativar"
-                disabled={alwaysListen.status === "connecting"}
-              >
-                <Ear className="size-5" />
-              </Button>
-              <Button
-                onClick={() => {
-                  if (voice.listening) {
-                    // Parada manual desliga hands-free
-                    handsFreeRef.current = false;
-                    lastInputViaVoiceRef.current = false;
-                    voice.stopListening();
-                    voice.stopSpeaking();
-                  } else {
-                    // Ativa modo voz + hands-free automaticamente
-                    if (!voiceMode) {
-                      setVoiceMode(true);
-                      try { localStorage.setItem("kera:voiceMode", "1"); } catch {}
-                      voice.warmUpTTS();
-                    }
-                    handsFreeRef.current = true;
-                    voice.startListening();
-                  }
-                }}
-                variant={voice.listening ? "default" : "ghost"}
-                size="icon"
-                className={`h-12 w-12 shrink-0 ${voice.listening ? "bg-destructive hover:bg-destructive/90 text-destructive-foreground animate-pulse" : ""}`}
-                aria-label="Falar"
-              >
-                {voice.listening ? <MicOff className="size-5" /> : <Mic className="size-5" />}
-              </Button>
+
               <Textarea
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
@@ -989,21 +925,99 @@ Por favor, analise: há perda de pacote? jitter alto sugere instabilidade de rot
                   alwaysListen.status === "heard-wake"
                     ? "✨ Captou! processando..."
                     : alwaysListen.status === "listening"
-                      ? `👂 Escutando... diga "Kera" pra falar comigo${alwaysListen.partial ? ` — "${alwaysListen.partial}"` : ""}`
+                      ? `👂 Escutando... diga "Kera"${alwaysListen.partial ? ` — "${alwaysListen.partial}"` : ""}`
                       : voice.listening
                         ? "Ouvindo..."
-                        : `Pergunte algo à ${currentAgentName}... (cole um print com Ctrl+V)`
+                        : `Pergunte algo à ${currentAgentName}...`
                 }
                 rows={1}
-                className="resize-none min-h-[48px] max-h-40 bg-input/40 border-border focus-visible:ring-primary"
+                className="resize-none min-h-[56px] max-h-44 border-0 bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 px-4 pt-3.5 pb-12 text-base md:text-sm placeholder:text-muted-foreground/60"
               />
-              <Button
-                onClick={() => sendText()}
-                disabled={(!input.trim() && attachments.length === 0) || streaming}
-                className="bg-gradient-cyber text-primary-foreground shadow-glow hover:opacity-90 h-12 px-4"
-              >
-                <Send className="size-5" />
-              </Button>
+
+              {/* Toolbar inferior: ações à esquerda, enviar à direita */}
+              <div className="absolute bottom-1.5 left-1.5 right-1.5 flex items-center justify-between gap-1 pointer-events-none">
+                <div className="flex items-center gap-0.5 pointer-events-auto">
+                  <Button
+                    onClick={() => fileInputRef.current?.click()}
+                    variant="ghost"
+                    size="icon"
+                    className="h-9 w-9 rounded-full text-muted-foreground hover:text-foreground hover:bg-muted/50"
+                    aria-label="Anexar arquivo"
+                    disabled={streaming}
+                  >
+                    <Paperclip className="size-4" />
+                  </Button>
+                  <Button
+                    onClick={() => {
+                      if (alwaysListen.isActive) {
+                        alwaysListen.stop();
+                        handsFreeRef.current = false;
+                      } else {
+                        if (!voiceMode) {
+                          setVoiceMode(true);
+                          try { localStorage.setItem("kera:voiceMode", "1"); } catch {}
+                          voice.warmUpTTS();
+                        }
+                        alwaysListen.start();
+                      }
+                    }}
+                    variant="ghost"
+                    size="icon"
+                    className={`h-9 w-9 rounded-full transition ${
+                      alwaysListen.status === "heard-wake"
+                        ? "bg-primary text-primary-foreground animate-pulse shadow-glow"
+                        : alwaysListen.status === "listening"
+                          ? "bg-accent/30 text-accent-foreground"
+                          : alwaysListen.status === "connecting"
+                            ? "opacity-70"
+                            : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
+                    }`}
+                    aria-label="Modo sempre escutando"
+                    title="Modo sempre escutando — diga &quot;Kera&quot; pra ativar"
+                    disabled={alwaysListen.status === "connecting"}
+                  >
+                    <Ear className="size-4" />
+                  </Button>
+                  <Button
+                    onClick={() => {
+                      if (voice.listening) {
+                        handsFreeRef.current = false;
+                        lastInputViaVoiceRef.current = false;
+                        voice.stopListening();
+                        voice.stopSpeaking();
+                      } else {
+                        if (!voiceMode) {
+                          setVoiceMode(true);
+                          try { localStorage.setItem("kera:voiceMode", "1"); } catch {}
+                          voice.warmUpTTS();
+                        }
+                        handsFreeRef.current = true;
+                        voice.startListening();
+                      }
+                    }}
+                    variant="ghost"
+                    size="icon"
+                    className={`h-9 w-9 rounded-full transition ${
+                      voice.listening
+                        ? "bg-destructive hover:bg-destructive/90 text-destructive-foreground animate-pulse"
+                        : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
+                    }`}
+                    aria-label="Falar"
+                  >
+                    {voice.listening ? <MicOff className="size-4" /> : <Mic className="size-4" />}
+                  </Button>
+                </div>
+
+                <Button
+                  onClick={() => sendText()}
+                  disabled={(!input.trim() && attachments.length === 0) || streaming}
+                  size="icon"
+                  className="pointer-events-auto h-9 w-9 rounded-full bg-gradient-cyber text-primary-foreground shadow-glow hover:opacity-90 disabled:opacity-40 disabled:shadow-none transition"
+                  aria-label="Enviar mensagem"
+                >
+                  <Send className="size-4" />
+                </Button>
+              </div>
             </div>
           </div>
           <p className="text-[11px] text-muted-foreground text-center mt-2">
