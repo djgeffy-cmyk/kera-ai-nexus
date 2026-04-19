@@ -178,7 +178,7 @@ Deno.serve(async (req) => {
     const firstCfg = chain[0];
     const supportsTools = toolCapableProviders.some((p) => firstCfg.label.toLowerCase().includes(p === "openai" ? "openai" : p));
 
-    if (supportsTools) {
+    if (supportsTools && shouldProbeIpm(messages)) {
       try {
         const probe = await fetch(firstCfg.url, {
           method: "POST",
