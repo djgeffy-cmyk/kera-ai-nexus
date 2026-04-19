@@ -979,7 +979,11 @@ Por favor, analise: há perda de pacote? jitter alto sugere instabilidade de rot
             </div>
           </div>
           <p className="text-[11px] text-muted-foreground text-center mt-2">
-            {voiceMode ? "🔊 Modo voz ativo — respostas serão faladas" : "Anexe imagens (PNG/JPG) ou arquivos de texto · Cole prints com Ctrl+V"}
+            {alwaysListen.isActive
+              ? '👂 Modo sempre escutando ativo — diga "Kera" + sua pergunta'
+              : voiceMode
+                ? "🔊 Modo voz ativo — respostas serão faladas"
+                : "Anexe imagens (PNG/JPG) ou arquivos de texto · Cole prints com Ctrl+V"}
           </p>
         </div>
       </div>
