@@ -33,9 +33,16 @@ export function ElevenLabsQuotaCard() {
     setError(null);
     try {
       const r = await fetch(URL);
-      const j = await r.json();
+      const j = await r.json().catch(() => ({}));
       if (!r.ok) {
-        setError(j.error || `Erro ${r.status}`);
+        const detail = typeof j.detail === "string" ? j.detail : "";
+        if (r.status === 401 && detail.includes("user_read")) {
+          setError(
+            "A chave da ElevenLabs não tem a permissão 'User → Read'. Edite a chave em elevenlabs.io/app/settings/api-keys e marque essa permissão.",
+          );
+        } else {
+          setError(j.error || `Erro ${r.status}`);
+        }
         setData(null);
       } else {
         setData(j);
