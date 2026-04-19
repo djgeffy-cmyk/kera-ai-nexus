@@ -51,6 +51,40 @@ export function useAlwaysListening(opts: UseAlwaysListeningOptions) {
   // e o comando venha no próximo (silêncio rápido entre "kera" e o pedido).
   const recentBufferRef = useRef<string>("");
   const bufferTimerRef = useRef<number | null>(null);
+  const audioCtxRef = useRef<AudioContext | null>(null);
+
+  // Bip de confirmação tipo Alexa (dois tons rápidos subindo)
+  const playWakeBeep = useCallback(() => {
+    try {
+      const Ctx = (window.AudioContext || (window as any).webkitAudioContext);
+      if (!Ctx) return;
+      if (!audioCtxRef.current || audioCtxRef.current.state === "closed") {
+        audioCtxRef.current = new Ctx();
+      }
+      const ctx = audioCtxRef.current!;
+      if (ctx.state === "suspended") ctx.resume().catch(() => {});
+      const now = ctx.currentTime;
+
+      const playTone = (freq: number, start: number, dur: number) => {
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.type = "sine";
+        osc.frequency.value = freq;
+        gain.gain.setValueAtTime(0, start);
+        gain.gain.linearRampToValueAtTime(0.18, start + 0.01);
+        gain.gain.linearRampToValueAtTime(0.18, start + dur - 0.04);
+        gain.gain.linearRampToValueAtTime(0, start + dur);
+        osc.connect(gain).connect(ctx.destination);
+        osc.start(start);
+        osc.stop(start + dur);
+      };
+
+      playTone(880, now, 0.09);          // A5
+      playTone(1318.5, now + 0.1, 0.12); // E6 — sobe de tom (positivo)
+    } catch (e) {
+      console.warn("[AlwaysListen] beep failed:", e);
+    }
+  }, []);
 
   const flashStatus = useCallback((s: AlwaysListeningStatus, ms = 1200) => {
     setStatus(s);
