@@ -117,12 +117,15 @@ const Chat = () => {
   };
 
   const sendText = async (text?: string) => {
-    const content = (text ?? input).trim();
-    if (!content || streaming || !userId) return;
+    const rawText = (text ?? input).trim();
+    const hasAttach = attachments.length > 0;
+    if ((!rawText && !hasAttach) || streaming || !userId) return;
+
     let convId = currentId;
     if (!convId) {
+      const titleSeed = rawText || (hasAttach ? `Anexo: ${attachments[0].name}` : "Nova conversa");
       const { data, error } = await supabase
-        .from("conversations").insert({ user_id: userId, title: content.slice(0, 40), agent_key: agentKey })
+        .from("conversations").insert({ user_id: userId, title: titleSeed.slice(0, 40), agent_key: agentKey })
         .select().single();
       if (error) return toast.error(error.message);
       convId = data.id;
@@ -130,18 +133,22 @@ const Chat = () => {
       setConversations([data as Conversation, ...conversations]);
     }
 
-    const userMsg: ChatMessage = { role: "user", content };
+    const userContent = buildUserContent(rawText, attachments);
+    const userMsg: ChatMessage = { role: "user", content: userContent };
     const next = [...messages, userMsg];
     setMessages(next);
     setInput("");
+    setAttachments([]);
     setStreaming(true);
 
+    // Para o DB, content é text — serializa multimodal como JSON (pra reidratar depois).
+    const dbContent = typeof userContent === "string" ? userContent : JSON.stringify(userContent);
     await supabase.from("messages").insert({
-      conversation_id: convId, user_id: userId, role: "user", content: userMsg.content,
+      conversation_id: convId, user_id: userId, role: "user", content: dbContent,
     });
 
     if (messages.length === 0) {
-      const newTitle = content.slice(0, 50);
+      const newTitle = (rawText || `Anexo: ${attachments[0]?.name ?? "arquivo"}`).slice(0, 50);
       await supabase.from("conversations").update({ title: newTitle }).eq("id", convId);
       setConversations(prev => prev.map(c => c.id === convId ? { ...c, title: newTitle } : c));
     }
