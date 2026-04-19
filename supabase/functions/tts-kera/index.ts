@@ -22,36 +22,51 @@ async function ttsElevenLabs(opts: {
 }): Promise<Response> {
   const { apiKey, text, voiceId, modelId } = opts;
   const url = `https://api.elevenlabs.io/v1/text-to-speech/${voiceId}?output_format=mp3_44100_128`;
-  const upstream = await fetch(url, {
-    method: "POST",
-    headers: {
-      "xi-api-key": apiKey,
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      text: text.slice(0, 4000),
-      model_id: modelId,
-      voice_settings: {
-        stability: 0.45,
-        similarity_boost: 0.8,
-        style: 0.35,
-        use_speaker_boost: true,
-        speed: 1.0,
+
+  // Retry até 3x se for 429 concurrent_limit_exceeded (limite de 3 requisições paralelas)
+  let lastErr = "";
+  for (let attempt = 0; attempt < 3; attempt++) {
+    const upstream = await fetch(url, {
+      method: "POST",
+      headers: {
+        "xi-api-key": apiKey,
+        "Content-Type": "application/json",
       },
-    }),
-  });
-  if (!upstream.ok) {
+      body: JSON.stringify({
+        text: text.slice(0, 4000),
+        model_id: modelId,
+        voice_settings: {
+          stability: 0.45,
+          similarity_boost: 0.8,
+          style: 0.35,
+          use_speaker_boost: true,
+          speed: 1.0,
+        },
+      }),
+    });
+    if (upstream.ok) {
+      return new Response(upstream.body, {
+        headers: {
+          ...corsHeaders,
+          "Content-Type": "audio/mpeg",
+          "Cache-Control": "no-store",
+          "X-TTS-Provider": "elevenlabs",
+        },
+      });
+    }
     const t = await upstream.text();
-    throw new Error(`ElevenLabs ${upstream.status}: ${t.slice(0, 300)}`);
+    lastErr = `ElevenLabs ${upstream.status}: ${t.slice(0, 300)}`;
+    // Se for limite de concorrência, espera e tenta de novo
+    if (upstream.status === 429 && /concurrent_limit_exceeded|concurrent requests/i.test(t)) {
+      const wait = 800 * (attempt + 1); // 800ms, 1.6s, 2.4s
+      console.warn(`[ElevenLabs] concurrent limit, retry em ${wait}ms (tentativa ${attempt + 1}/3)`);
+      await new Promise((r) => setTimeout(r, wait));
+      continue;
+    }
+    // Outro tipo de erro: aborta
+    throw new Error(lastErr);
   }
-  return new Response(upstream.body, {
-    headers: {
-      ...corsHeaders,
-      "Content-Type": "audio/mpeg",
-      "Cache-Control": "no-store",
-      "X-TTS-Provider": "elevenlabs",
-    },
-  });
+  throw new Error(lastErr);
 }
 
 async function ttsOpenAI(opts: {
