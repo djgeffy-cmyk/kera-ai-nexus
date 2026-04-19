@@ -10,6 +10,7 @@ import { toast } from "sonner";
 import keraLogo from "@/assets/kera-logo.png";
 import { MonitorTargetsManager } from "@/components/admin/MonitorTargetsManager";
 import { NetworkMetricsChart } from "@/components/admin/NetworkMetricsChart";
+import { PasswordResetRequests } from "@/components/admin/PasswordResetRequests";
 
 type Status = Record<string, boolean>;
 
@@ -212,6 +213,8 @@ const Admin = () => {
             </Button>
           )}
         </section>
+
+        <PasswordResetRequests />
 
         <MonitorTargetsManager />
 
