@@ -16,6 +16,7 @@ import { KeraPromptEditor } from "@/components/admin/KeraPromptEditor";
 import { KeraVoiceSelector } from "@/components/admin/KeraVoiceSelector";
 import { KeraTriggersManager } from "@/components/admin/KeraTriggersManager";
 import { PronunciationFixesManager } from "@/components/admin/PronunciationFixesManager";
+import { ElevenLabsQuotaCard } from "@/components/admin/ElevenLabsQuotaCard";
 
 type Status = Record<string, boolean>;
 
@@ -222,6 +223,8 @@ const Admin = () => {
         <KeraPromptEditor />
 
         <KeraVoiceSelector />
+
+        <ElevenLabsQuotaCard />
 
         <PronunciationFixesManager />
 
