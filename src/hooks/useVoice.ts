@@ -66,65 +66,35 @@ export function useVoice(opts: { useElevenLabs?: boolean; useRemoteTTS?: boolean
     stopSpeaking();
     setSpeaking(true);
 
-    if (useRemote) {
-      try {
-        const resp = await fetch(TTS_URL, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ text }),
-        });
-        if (resp.status === 204) {
-          // Provedores TTS indisponíveis (quota). Silencia sem fallback robótico.
-          setSpeaking(false);
-          return;
-        }
-        if (!resp.ok) {
-          const errText = await resp.text().catch(() => "");
-          throw new Error("TTS HTTP " + resp.status + " " + errText.slice(0, 200));
-        }
-        const blob = await resp.blob();
-        const url = URL.createObjectURL(blob);
-        const audio = new Audio(url);
-        audioRef.current = audio;
-        audio.onended = () => { setSpeaking(false); URL.revokeObjectURL(url); };
-        audio.onerror = () => { setSpeaking(false); URL.revokeObjectURL(url); };
-        await audio.play();
-        console.log("[useVoice] TTS remoto tocando", { len: text.length });
-        return;
-      } catch (e) {
-        // Não cai pro Web Speech (voz robótica). Usuário prefere ficar em silêncio.
-        console.error("[useVoice] TTS remoto falhou (sem fallback robótico):", e);
+    // SEMPRE usa ElevenLabs (voz paga). Nunca cai pro Web Speech (voz robótica).
+    try {
+      const resp = await fetch(TTS_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ text }),
+      });
+      if (resp.status === 204) {
+        console.warn("[useVoice] TTS indisponível (quota). Silenciando.");
         setSpeaking(false);
         return;
       }
-    }
-
-    // Fallback / padrão: Web Speech
-    if (!("speechSynthesis" in window)) {
-      console.warn("[useVoice] speechSynthesis indisponível neste navegador");
-      setSpeaking(false);
-      return;
-    }
-    try {
-      const u = new SpeechSynthesisUtterance(text);
-      u.lang = lang;
-      u.rate = 1.05;
-      u.pitch = 1.05;
-      const { loadVoicesAsync, pickVoice } = await import("@/lib/nativeVoice");
-      const voices = await loadVoicesAsync();
-      const chosen = pickVoice(voices, lang);
-      if (chosen) u.voice = chosen;
-      u.onend = () => setSpeaking(false);
-      u.onerror = (ev) => { console.warn("[useVoice] utterance error:", ev); setSpeaking(false); };
-      // Garante que a fila esteja limpa antes de falar
-      window.speechSynthesis.cancel();
-      window.speechSynthesis.speak(u);
-      console.log("[useVoice] speak() iniciado", { lang, voice: chosen?.name, len: text.length });
+      if (!resp.ok) {
+        const errText = await resp.text().catch(() => "");
+        throw new Error("TTS HTTP " + resp.status + " " + errText.slice(0, 200));
+      }
+      const blob = await resp.blob();
+      const url = URL.createObjectURL(blob);
+      const audio = new Audio(url);
+      audioRef.current = audio;
+      audio.onended = () => { setSpeaking(false); URL.revokeObjectURL(url); };
+      audio.onerror = () => { setSpeaking(false); URL.revokeObjectURL(url); };
+      await audio.play();
+      console.log("[useVoice] ElevenLabs tocando", { len: text.length });
     } catch (e) {
-      console.error("[useVoice] erro ao iniciar TTS nativo:", e);
+      console.error("[useVoice] ElevenLabs falhou (sem fallback robótico):", e);
       setSpeaking(false);
     }
-  }, [useElevenLabs, lang, stopSpeaking]);
+  }, [stopSpeaking]);
 
   // "Warm-up" do TTS: deve ser chamado dentro de um clique do usuário para
   // destravar o speechSynthesis em navegadores mobile (iOS Safari).
