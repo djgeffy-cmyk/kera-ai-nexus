@@ -8,7 +8,7 @@ import { toast } from "sonner";
 import {
   Plus, LogOut, Send, MessageSquare, Trash2, Menu, Settings,
   Image as ImageIcon, LayoutGrid, FolderPlus, Mic, MicOff, Volume2, VolumeX, Bot, ChevronRight,
-  Paperclip, X, FileText, ShieldCheck, Activity, Download,
+  Paperclip, X, FileText, ShieldCheck, Activity, Download, Ear,
 } from "lucide-react";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -20,6 +20,7 @@ import { MessageBubble, type ChatMessage } from "@/components/chat/MessageBubble
 import { PROVIDERS, getPreferredProvider, setPreferredProvider, type ProviderId } from "@/lib/providers";
 import { BUILTIN_AGENTS, getBuiltinAgent, DEFAULT_AGENT_KEY } from "@/lib/agents";
 import { useVoice } from "@/hooks/useVoice";
+import { useAlwaysListening } from "@/hooks/useAlwaysListening";
 import { fileToAttachment, buildUserContent, type Attachment } from "@/lib/attachments";
 import { isImageRequest, extractImagePrompt } from "@/lib/imageDetect";
 import { exportConversationToPdf } from "@/lib/exportPdf";
@@ -61,6 +62,16 @@ const Chat = () => {
   const voice = useVoice({
     useRemoteTTS: hasRemoteTTS,
     onTranscript: (t) => { lastInputViaVoiceRef.current = true; setInput(t); setTimeout(() => sendText(t), 100); },
+  });
+
+  // Modo "sempre escutando" estilo Grok/Hey Google — mic aberto, dispara só quando ouve "Kera"
+  const alwaysListen = useAlwaysListening({
+    onCommand: (text) => {
+      lastInputViaVoiceRef.current = true;
+      setInput(text);
+      setTimeout(() => sendText(text), 50);
+    },
+    onError: (msg) => toast.error(msg),
   });
 
   // Hands-free: quando a Kera termina de falar, reabre o microfone automaticamente
@@ -885,6 +896,38 @@ Por favor, analise: há perda de pacote? jitter alto sugere instabilidade de rot
               </Button>
               <Button
                 onClick={() => {
+                  if (alwaysListen.isActive) {
+                    alwaysListen.stop();
+                    handsFreeRef.current = false;
+                  } else {
+                    // Liga modo voz pra Kera responder falando, e ativa o mic sempre aberto
+                    if (!voiceMode) {
+                      setVoiceMode(true);
+                      try { localStorage.setItem("kera:voiceMode", "1"); } catch {}
+                      voice.warmUpTTS();
+                    }
+                    alwaysListen.start();
+                  }
+                }}
+                variant={alwaysListen.isActive ? "default" : "ghost"}
+                size="icon"
+                className={`h-12 w-12 shrink-0 ${
+                  alwaysListen.status === "heard-wake"
+                    ? "bg-primary text-primary-foreground animate-pulse shadow-glow"
+                    : alwaysListen.status === "listening"
+                      ? "bg-accent/30 text-accent-foreground"
+                      : alwaysListen.status === "connecting"
+                        ? "opacity-70"
+                        : ""
+                }`}
+                aria-label="Modo sempre escutando (diga 'Kera' pra falar com ela)"
+                title="Modo sempre escutando — diga &quot;Kera&quot; pra ativar"
+                disabled={alwaysListen.status === "connecting"}
+              >
+                <Ear className="size-5" />
+              </Button>
+              <Button
+                onClick={() => {
                   if (voice.listening) {
                     // Parada manual desliga hands-free
                     handsFreeRef.current = false;
@@ -914,7 +957,15 @@ Por favor, analise: há perda de pacote? jitter alto sugere instabilidade de rot
                 onChange={(e) => setInput(e.target.value)}
                 onKeyDown={onKey}
                 onPaste={onPaste}
-                placeholder={voice.listening ? "Ouvindo..." : `Pergunte algo à ${currentAgentName}... (cole um print com Ctrl+V)`}
+                placeholder={
+                  alwaysListen.status === "heard-wake"
+                    ? "✨ Captou! processando..."
+                    : alwaysListen.status === "listening"
+                      ? `👂 Escutando... diga "Kera" pra falar comigo${alwaysListen.partial ? ` — "${alwaysListen.partial}"` : ""}`
+                      : voice.listening
+                        ? "Ouvindo..."
+                        : `Pergunte algo à ${currentAgentName}... (cole um print com Ctrl+V)`
+                }
                 rows={1}
                 className="resize-none min-h-[48px] max-h-40 bg-input/40 border-border focus-visible:ring-primary"
               />
@@ -928,7 +979,11 @@ Por favor, analise: há perda de pacote? jitter alto sugere instabilidade de rot
             </div>
           </div>
           <p className="text-[11px] text-muted-foreground text-center mt-2">
-            {voiceMode ? "🔊 Modo voz ativo — respostas serão faladas" : "Anexe imagens (PNG/JPG) ou arquivos de texto · Cole prints com Ctrl+V"}
+            {alwaysListen.isActive
+              ? '👂 Modo sempre escutando ativo — diga "Kera" + sua pergunta'
+              : voiceMode
+                ? "🔊 Modo voz ativo — respostas serão faladas"
+                : "Anexe imagens (PNG/JPG) ou arquivos de texto · Cole prints com Ctrl+V"}
           </p>
         </div>
       </div>
