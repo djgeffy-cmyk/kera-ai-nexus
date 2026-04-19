@@ -8,7 +8,7 @@ import { toast } from "sonner";
 import {
   Plus, LogOut, Send, MessageSquare, Trash2, Menu, Settings,
   Image as ImageIcon, LayoutGrid, FolderPlus, Mic, MicOff, Volume2, VolumeX, Bot, ChevronRight,
-  Paperclip, X, FileText, ShieldCheck, Activity,
+  Paperclip, X, FileText, ShieldCheck, Activity, Download,
 } from "lucide-react";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -21,6 +21,8 @@ import { PROVIDERS, getPreferredProvider, setPreferredProvider, type ProviderId 
 import { BUILTIN_AGENTS, getBuiltinAgent, DEFAULT_AGENT_KEY } from "@/lib/agents";
 import { useVoice } from "@/hooks/useVoice";
 import { fileToAttachment, buildUserContent, type Attachment } from "@/lib/attachments";
+import { isImageRequest, extractImagePrompt } from "@/lib/imageDetect";
+import { exportConversationToPdf } from "@/lib/exportPdf";
 
 type Conversation = { id: string; title: string; updated_at: string; agent_key: string };
 type CustomAgent = { id: string; name: string; system_prompt: string; description: string | null };
@@ -29,6 +31,7 @@ const CHAT_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/chat-kera`;
 const STATUS_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/providers-status`;
 const MONITOR_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/monitor-urls`;
 const NETTRACE_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/network-trace`;
+const IMAGE_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/generate-image`;
 
 const Chat = () => {
   const navigate = useNavigate();
