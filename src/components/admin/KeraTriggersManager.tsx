@@ -223,6 +223,38 @@ export const KeraTriggersManager = () => {
     load();
   };
 
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
+    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }),
+  );
+
+  const handleDragEnd = async (event: DragEndEvent) => {
+    const { active, over } = event;
+    if (!over || active.id === over.id) return;
+    const oldIndex = items.findIndex((i) => i.id === active.id);
+    const newIndex = items.findIndex((i) => i.id === over.id);
+    if (oldIndex < 0 || newIndex < 0) return;
+
+    const reordered = arrayMove(items, oldIndex, newIndex);
+    // Optimistic update + reatribui sort_order sequencial (10, 20, 30...)
+    const withNewOrder = reordered.map((it, idx) => ({ ...it, sort_order: (idx + 1) * 10 }));
+    setItems(withNewOrder);
+
+    // Persiste em paralelo
+    const updates = await Promise.all(
+      withNewOrder.map((it) =>
+        supabase.from("kera_triggers").update({ sort_order: it.sort_order }).eq("id", it.id),
+      ),
+    );
+    const failed = updates.find((r) => r.error);
+    if (failed?.error) {
+      toast.error("Falha ao reordenar: " + failed.error.message);
+      load();
+    } else {
+      toast.success("Ordem atualizada.");
+    }
+  };
+
   const editingDraft = editingId !== null;
 
   return (
