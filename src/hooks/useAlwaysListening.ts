@@ -16,10 +16,9 @@ import { supabase } from "@/integrations/supabase/client";
 
 const SCRIBE_TOKEN_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/scribe-token`;
 
-// Regex pra wake word "kera" (com variações comuns que o STT pode gerar)
-// - "kera" / "kéra" / "queira" (STT às vezes confunde)
-// - precisa estar em borda de palavra
-const WAKE_WORD_REGEX = /\b(kera|kéra|quera|queira|cara)\b[\s,!?:.\-]*/i;
+// Regex pra wake word "kera" — STT em PT-BR comumente erra pra:
+// kera, kéra, kerá, quera, queira, kara, kará, cara, kerra, querra, que era
+const WAKE_WORD_REGEX = /\b(k[eéê]r+[aá]|qu?er+[aá]|qu?eira|c[aá]r[aá]|kerr?[aá]|querr?[aá]|que\s?era)\b[\s,!?:.\-]*/i;
 
 export type AlwaysListeningStatus =
   | "idle"
@@ -65,6 +64,7 @@ export function useAlwaysListening(opts: UseAlwaysListeningOptions) {
     const clean = text.trim();
     if (!clean) return;
     setLastHeard(clean);
+    console.log("[AlwaysListen] Committed:", clean);
 
     // Modo sem wake word — dispara direto
     if (noWakeWordRef.current) {
@@ -78,26 +78,28 @@ export function useAlwaysListening(opts: UseAlwaysListeningOptions) {
     const match = combined.match(WAKE_WORD_REGEX);
 
     if (match) {
+      console.log("[AlwaysListen] ✓ Wake word match:", match[0], "in:", combined);
       // Pega o texto APÓS a wake word
       const idx = combined.search(WAKE_WORD_REGEX);
       const afterWake = combined.slice(idx + match[0].length).trim();
       recentBufferRef.current = ""; // limpa buffer
       if (afterWake.length >= 2) {
         // Tem comando — dispara
+        console.log("[AlwaysListen] → Sending command:", afterWake);
         onCommandRef.current(afterWake);
         flashStatus("heard-wake");
       } else {
         // Só falou "kera" sem comando — guarda buffer pra próxima frase ser o comando
+        console.log("[AlwaysListen] Wake word sem comando, aguardando próxima frase");
         recentBufferRef.current = match[0];
         flashStatus("heard-wake");
-        // Limpa o buffer depois de 8s se nada vier
         window.setTimeout(() => {
           if (recentBufferRef.current === match[0]) recentBufferRef.current = "";
         }, 8000);
       }
     } else {
+      console.log("[AlwaysListen] ✗ No wake word in:", combined);
       // Não tem wake word — guarda só os últimos 60 chars como contexto curto
-      // (pode ter wake word vindo no próximo commit)
       const tail = clean.slice(-60);
       recentBufferRef.current = tail;
       window.setTimeout(() => {
@@ -109,7 +111,13 @@ export function useAlwaysListening(opts: UseAlwaysListeningOptions) {
   const scribe = useScribe({
     modelId: "scribe_v2_realtime",
     commitStrategy: CommitStrategy.VAD,
+    languageCode: "por", // ISO 639-3 — português, evita STT tentar inglês
+    onSessionStarted: () => console.log("[AlwaysListen] Session started"),
+    onConnect: () => console.log("[AlwaysListen] WebSocket connected"),
+    onDisconnect: () => console.log("[AlwaysListen] WebSocket disconnected"),
+    onError: (e) => console.error("[AlwaysListen] Scribe error:", e),
     onPartialTranscript: (data: { text: string }) => {
+      console.log("[AlwaysListen] Partial:", data.text);
       setPartial(data.text);
     },
     onCommittedTranscript: (data: { text: string }) => {
