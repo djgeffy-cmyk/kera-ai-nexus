@@ -66,6 +66,24 @@ async function getUserEmailFromAuth(req: Request): Promise<string | null> {
   }
 }
 
+async function loadDbSystemPrompt(): Promise<string | null> {
+  try {
+    const supaUrl = Deno.env.get("SUPABASE_URL");
+    const service = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+    if (!supaUrl || !service) return null;
+    const r = await fetch(
+      `${supaUrl}/rest/v1/kera_settings?singleton=eq.true&select=system_prompt&limit=1`,
+      { headers: { apikey: service, Authorization: `Bearer ${service}` } },
+    );
+    if (!r.ok) return null;
+    const rows = await r.json();
+    const sp = rows?.[0]?.system_prompt;
+    return typeof sp === "string" && sp.trim().length > 0 ? sp : null;
+  } catch {
+    return null;
+  }
+}
+
 type Provider = "lovable" | "openai" | "groq" | "openrouter" | "gemini" | "xai";
 
 interface ProviderConfig {
