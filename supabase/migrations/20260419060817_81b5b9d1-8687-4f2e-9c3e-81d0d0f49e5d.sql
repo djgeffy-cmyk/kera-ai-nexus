@@ -1,0 +1,2 @@
+ALTER TABLE public.kera_settings 
+ADD COLUMN IF NOT EXISTS voice_id TEXT NOT NULL DEFAULT 'EXAVITQu4vr4xnSDxMaL';

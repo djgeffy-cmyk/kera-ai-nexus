@@ -171,6 +171,7 @@ export type Database = {
           system_prompt: string
           updated_at: string
           updated_by: string | null
+          voice_id: string
         }
         Insert: {
           id?: string
@@ -178,6 +179,7 @@ export type Database = {
           system_prompt?: string
           updated_at?: string
           updated_by?: string | null
+          voice_id?: string
         }
         Update: {
           id?: string
@@ -185,6 +187,7 @@ export type Database = {
           system_prompt?: string
           updated_at?: string
           updated_by?: string | null
+          voice_id?: string
         }
         Relationships: []
       }
