@@ -23,6 +23,12 @@ Deno.serve(async (req) => {
       });
     }
 
+    // Reforça que queremos uma IMAGEM — Gemini às vezes responde só texto se o prompt
+    // for ambíguo. Prefixo garante intenção visual.
+    const imagePrompt =
+      `Generate a single high-quality image based on this description. ` +
+      `Output ONLY the image, no text. Description: ${prompt}`;
+
     const upstream = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
       headers: {
@@ -31,7 +37,7 @@ Deno.serve(async (req) => {
       },
       body: JSON.stringify({
         model: "google/gemini-2.5-flash-image",
-        messages: [{ role: "user", content: prompt }],
+        messages: [{ role: "user", content: imagePrompt }],
         modalities: ["image", "text"],
       }),
     });
@@ -59,10 +65,17 @@ Deno.serve(async (req) => {
       data?.choices?.[0]?.message?.images?.[0]?.image_url?.url;
 
     if (!imageUrl) {
+      const textReply: string =
+        data?.choices?.[0]?.message?.content?.toString?.()?.slice(0, 200) ?? "";
       console.error("[generate-image] sem imagem na resposta:", JSON.stringify(data).slice(0, 400));
-      return new Response(JSON.stringify({ error: "O modelo não retornou imagem." }), {
-        status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
+      // 422 = entendido, mas não dava pra processar como imagem.
+      return new Response(
+        JSON.stringify({
+          error: "O modelo respondeu com texto em vez de imagem. Tente descrever visualmente o que quer ver.",
+          modelReply: textReply,
+        }),
+        { status: 422, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+      );
     }
 
     return new Response(JSON.stringify({ imageUrl }), {
