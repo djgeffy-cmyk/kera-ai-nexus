@@ -41,10 +41,10 @@ Você TEM acesso à ferramenta **ipm_query** (dados ao vivo do portal da Prefeit
 Jurídico com incerteza real: "checa com jurídico" e segue. Não despeja disclaimer em tudo.`;
 
 // Apelidos personalizados por email autenticado.
-// Quando o usuário logado bater com a chave, a Kera passa a chamá-lo SEMPRE pelo apelido,
-// mantendo a personalidade ácida normal.
-const USER_NICKNAMES: Record<string, string> = {
-  "rodrigo@guaramirim.sc.gov.br": "professor linguiça",
+// Lista = a Kera escolhe um aleatório por mensagem (alterna).
+const USER_NICKNAMES: Record<string, string[]> = {
+  "rodrigo@guaramirim.sc.gov.br": ["professor linguiça"],
+  "dj.geffy@gmail.com": ["hacker", "brutus"],
 };
 
 async function getUserEmailFromAuth(req: Request): Promise<string | null> {
@@ -221,12 +221,18 @@ Deno.serve(async (req) => {
       baseSystem = dbPrompt ?? DEFAULT_SYSTEM_PROMPT;
     }
 
-    // Injeta apelido personalizado se o email autenticado estiver no mapa
+    // Injeta apelido personalizado se o email autenticado estiver no mapa.
+    // Lista com >1 = escolhe um aleatório por mensagem (alternância natural).
     const email = await getUserEmailFromAuth(req);
-    const nickname = email ? USER_NICKNAMES[email] : null;
-    const finalSystem = nickname
-      ? `${baseSystem}\n\nAPELIDO DO USUÁRIO ATUAL: este usuário se chama "${nickname}" para você. Trate-o SEMPRE por esse apelido (ex: "olha, ${nickname}, isso aí tá errado..."). Use no início e ao longo das respostas, com naturalidade, mantendo o mesmo tom ácido/mal-humorado de sempre — o apelido NÃO suaviza nada, só personaliza. Não explique o apelido nem comente sobre ele, só usa.`
-      : baseSystem;
+    const nicknames = email ? USER_NICKNAMES[email] : null;
+    let finalSystem = baseSystem;
+    if (nicknames && nicknames.length > 0) {
+      const picked = nicknames[Math.floor(Math.random() * nicknames.length)];
+      const altInfo = nicknames.length > 1
+        ? ` Você tem outros apelidos pra esse usuário (${nicknames.map((n) => `"${n}"`).join(", ")}) e alterna entre eles em mensagens diferentes — nesta resposta, use "${picked}".`
+        : "";
+      finalSystem = `${baseSystem}\n\nAPELIDO DO USUÁRIO ATUAL: trate este usuário por "${picked}" (ex: "olha, ${picked}, isso aí tá errado..."). Use no início e ao longo da resposta, com naturalidade, mantendo o mesmo tom ácido/mal-humorado de sempre — o apelido NÃO suaviza nada, só personaliza. Não explique o apelido nem comente sobre ele, só usa.${altInfo}`;
+    }
 
     const chain = getProviderChain(provider as Provider | undefined);
     if (chain.length === 0) {
