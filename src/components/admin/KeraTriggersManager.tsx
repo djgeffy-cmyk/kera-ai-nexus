@@ -45,6 +45,7 @@ type Trigger = {
   excluded_emails: string[];
   enabled: boolean;
   sort_order: number;
+  intensity: Intensity;
 };
 
 type Draft = Omit<Trigger, "id"> & { id?: string };
@@ -58,6 +59,7 @@ const emptyDraft = (): Draft => ({
   excluded_emails: [],
   enabled: true,
   sort_order: 100,
+  intensity: "medio",
 });
 
 export const KeraTriggersManager = () => {
