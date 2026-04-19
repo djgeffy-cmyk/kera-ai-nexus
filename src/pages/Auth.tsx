@@ -153,8 +153,8 @@ const Auth = () => {
 
       <Card className="panel relative w-full max-w-md p-7 sm:p-8 border-primary/30 shadow-glow z-10">
         <div className="flex flex-col items-center mb-5">
-          <div className="size-20 rounded-full overflow-hidden border-2 border-primary/60 shadow-glow mb-3">
-            <img src={keraHero} alt="Kera AI" className="w-full h-full object-cover scale-150 -translate-y-2" />
+          <div className="size-24 rounded-full overflow-hidden border-2 border-primary/60 shadow-glow mb-3 bg-background">
+            <img src={keraHero} alt="Kera AI" className="w-full h-full object-contain" />
           </div>
           <h1 className="font-display text-2xl text-glow text-center">
             {mode === "signin" && "Acesse a Kera"}
