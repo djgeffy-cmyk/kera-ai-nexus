@@ -197,6 +197,7 @@ export type Database = {
           enabled: boolean
           excluded_emails: string[]
           id: string
+          intensity: string
           keywords: string
           name: string
           regex_pattern: string | null
@@ -211,6 +212,7 @@ export type Database = {
           enabled?: boolean
           excluded_emails?: string[]
           id?: string
+          intensity?: string
           keywords: string
           name: string
           regex_pattern?: string | null
@@ -225,6 +227,7 @@ export type Database = {
           enabled?: boolean
           excluded_emails?: string[]
           id?: string
+          intensity?: string
           keywords?: string
           name?: string
           regex_pattern?: string | null

@@ -85,6 +85,7 @@ async function loadDbSystemPrompt(): Promise<string | null> {
 }
 
 // ===== Gatilhos editáveis (tabela kera_triggers) =====
+type TriggerIntensity = "leve" | "medio" | "pesado";
 type DbTrigger = {
   id: string;
   name: string;
@@ -95,7 +96,15 @@ type DbTrigger = {
   excluded_emails: string[];
   enabled: boolean;
   sort_order: number;
+  intensity: TriggerIntensity;
 };
+
+const INTENSITY_INSTRUCTIONS: Record<TriggerIntensity, string> = {
+  leve: "🌶️ INTENSIDADE LEVE: zoeira sutil, 1 alfinetada curta no tema-chave e segue. Tom de cutucada de colega, sem peso, sem palavrão. Não insiste, não repete a piada na mesma resposta.",
+  medio: "🌶️🌶️ INTENSIDADE MÉDIA: zoeira clara mas equilibrada, 1-2 piadas com o tema-chave ao longo da resposta. Tom ácido normal da Kera, palavrão leve permitido se couber. Não vira o foco — a resposta técnica continua sendo o principal.",
+  pesado: "🌶️🌶️🌶️ INTENSIDADE PESADA: esculacha sem dó. Várias piadas pesadas com o tema-chave (3+), comparações brutais, palavrão liberado, sarcasmo no talo. Pode até ABRIR a resposta com a esculhambação antes de responder o que o usuário perguntou. Mantém zoeira de colega (não ódio pessoal), mas no volume máximo.",
+};
+
 
 async function loadDbTriggers(): Promise<DbTrigger[]> {
   try {
@@ -308,6 +317,7 @@ Deno.serve(async (req) => {
 
     const dbTriggers = await loadDbTriggers();
     const matchedTriggers: string[] = [];
+    const matchedIntensities = new Set<TriggerIntensity>();
     for (const t of dbTriggers) {
       // Filtro por escopo: "global" sempre roda; "agent:<key>" só roda se bater
       if (t.scope && t.scope !== "global") {
@@ -321,15 +331,28 @@ Deno.serve(async (req) => {
       if (!re) continue;
       if (!re.test(lastTextForTriggers)) continue;
 
-      matchedTriggers.push(`🎯 GATILHO ${t.name.toUpperCase()}: o usuário mencionou "${t.name}".\n${t.theme}\n\nContinue respondendo à pergunta com qualidade técnica normal — a zoeira é tempero, não substitui a resposta.`);
+      const intensity: TriggerIntensity =
+        t.intensity === "leve" || t.intensity === "pesado" ? t.intensity : "medio";
+      matchedIntensities.add(intensity);
+      const intensityTag =
+        intensity === "leve" ? "[LEVE]" : intensity === "pesado" ? "[PESADO]" : "[MÉDIO]";
+      matchedTriggers.push(
+        `🎯 GATILHO ${t.name.toUpperCase()} ${intensityTag}: o usuário mencionou "${t.name}".\n${t.theme}\n\nAplique este gatilho na intensidade ${intensity.toUpperCase()} (ver regra acima). Continue respondendo à pergunta com qualidade técnica normal — a zoeira é tempero, não substitui a resposta.`,
+      );
     }
 
     if (matchedTriggers.length > 0) {
+      const intensityRules = Array.from(matchedIntensities)
+        .map((i) => INTENSITY_INSTRUCTIONS[i])
+        .join("\n");
       const VARIATION_RULE = `\n\n⚙️ REGRA DE VARIAÇÃO (vale pra TODOS os gatilhos abaixo):
 - NUNCA repita a mesma frase/piada de respostas anteriores. Os exemplos listados são INSPIRAÇÃO — varia toda vez.
 - Use os mesmos TEMAS-CHAVE (o "pé fraco" de cada um), mas com palavras, comparações e contextos diferentes.
 - Mantém a mesma pegada: zoeira de colega ácido, não ofensa pessoal. Tom seco/sarcástico da Kera de sempre.
-- O TEMA-CHAVE é INTOCÁVEL (sempre pega no mesmo pé), mas a EXECUÇÃO da piada muda toda vez.`;
+- O TEMA-CHAVE é INTOCÁVEL (sempre pega no mesmo pé), mas a EXECUÇÃO da piada muda toda vez.
+
+📊 NÍVEIS DE INTENSIDADE (cada gatilho abaixo tem o seu — respeite):
+${intensityRules}`;
       finalSystem += VARIATION_RULE + `\n\n${matchedTriggers.join("\n\n")}`;
     }
 

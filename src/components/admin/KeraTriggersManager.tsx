@@ -7,8 +7,16 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
-import { Target, Plus, Trash2, Save, X, Power, FlaskConical, ChevronDown, ChevronUp } from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Target, Plus, Trash2, Save, X, Power, FlaskConical, ChevronDown, ChevronUp, Flame } from "lucide-react";
 import { toast } from "sonner";
+
+type Intensity = "leve" | "medio" | "pesado";
+const INTENSITY_META: Record<Intensity, { label: string; emoji: string; className: string }> = {
+  leve: { label: "Leve", emoji: "🌶️", className: "bg-emerald-500/15 text-emerald-400 border-emerald-500/30" },
+  medio: { label: "Médio", emoji: "🌶️🌶️", className: "bg-amber-500/15 text-amber-400 border-amber-500/30" },
+  pesado: { label: "Pesado", emoji: "🌶️🌶️🌶️", className: "bg-red-500/15 text-red-400 border-red-500/30" },
+};
 
 // Mesma lógica do edge function chat-kera (mantém em sincronia)
 const escapeRegExp = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
@@ -37,6 +45,7 @@ type Trigger = {
   excluded_emails: string[];
   enabled: boolean;
   sort_order: number;
+  intensity: Intensity;
 };
 
 type Draft = Omit<Trigger, "id"> & { id?: string };
@@ -50,6 +59,7 @@ const emptyDraft = (): Draft => ({
   excluded_emails: [],
   enabled: true,
   sort_order: 100,
+  intensity: "medio",
 });
 
 export const KeraTriggersManager = () => {
@@ -97,7 +107,11 @@ export const KeraTriggersManager = () => {
     if (error) {
       toast.error("Erro ao carregar gatilhos: " + error.message);
     } else {
-      setItems((data ?? []) as Trigger[]);
+      const normalized = ((data ?? []) as any[]).map((row) => ({
+        ...row,
+        intensity: (["leve", "medio", "pesado"].includes(row.intensity) ? row.intensity : "medio") as Intensity,
+      })) as Trigger[];
+      setItems(normalized);
     }
     setLoading(false);
   };
@@ -118,6 +132,7 @@ export const KeraTriggersManager = () => {
       excluded_emails: t.excluded_emails ?? [],
       enabled: t.enabled,
       sort_order: t.sort_order,
+      intensity: t.intensity ?? "medio",
     });
   };
 
@@ -154,8 +169,9 @@ export const KeraTriggersManager = () => {
       excluded_emails: draft.excluded_emails ?? [],
       enabled: draft.enabled,
       sort_order: draft.sort_order || 100,
+      intensity: draft.intensity ?? "medio",
       updated_by: userData.user?.id ?? null,
-    };
+    } as any;
 
     let error;
     if (editingId === "new") {
@@ -279,6 +295,9 @@ export const KeraTriggersManager = () => {
               <Card key={trigger.id} className="p-3 border-primary/30 bg-primary/5">
                 <div className="flex items-center gap-2 flex-wrap mb-1">
                   <Badge>{trigger.name}</Badge>
+                  <Badge variant="outline" className={`text-xs ${INTENSITY_META[trigger.intensity ?? "medio"].className}`}>
+                    {INTENSITY_META[trigger.intensity ?? "medio"].emoji} {INTENSITY_META[trigger.intensity ?? "medio"].label}
+                  </Badge>
                   <Badge variant="outline" className="text-xs">{trigger.scope}</Badge>
                 </div>
                 <p className="text-xs font-mono text-muted-foreground break-all">
@@ -397,12 +416,33 @@ export const KeraTriggersManager = () => {
             </div>
           </div>
 
-          <div className="flex items-center gap-2">
-            <Switch
-              checked={draft.enabled}
-              onCheckedChange={(v) => setDraft({ ...draft, enabled: v })}
-            />
-            <Label className="text-xs">Ativo</Label>
+          <div className="grid gap-3 sm:grid-cols-[1fr_auto] items-end">
+            <div>
+              <Label className="text-xs flex items-center gap-1">
+                <Flame className="size-3.5" />
+                Intensidade da zoeira
+              </Label>
+              <Select
+                value={draft.intensity}
+                onValueChange={(v) => setDraft({ ...draft, intensity: v as Intensity })}
+              >
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="leve">🌶️ Leve — alfinetada sutil, 1 piada</SelectItem>
+                  <SelectItem value="medio">🌶️🌶️ Médio — equilibrado, 1-2 piadas</SelectItem>
+                  <SelectItem value="pesado">🌶️🌶️🌶️ Pesado — esculacha sem dó</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="flex items-center gap-2 pb-2">
+              <Switch
+                checked={draft.enabled}
+                onCheckedChange={(v) => setDraft({ ...draft, enabled: v })}
+              />
+              <Label className="text-xs">Ativo</Label>
+            </div>
           </div>
 
           <div className="flex justify-end gap-2 pt-2">
@@ -428,6 +468,9 @@ export const KeraTriggersManager = () => {
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 flex-wrap">
                     <h3 className="font-medium">{t.name}</h3>
+                    <Badge variant="outline" className={`text-xs ${INTENSITY_META[t.intensity ?? "medio"].className}`}>
+                      {INTENSITY_META[t.intensity ?? "medio"].emoji} {INTENSITY_META[t.intensity ?? "medio"].label}
+                    </Badge>
                     <Badge variant="outline" className="text-xs">{t.scope}</Badge>
                     {!t.enabled && <Badge variant="secondary" className="text-xs">desativado</Badge>}
                     {t.excluded_emails?.length > 0 && (
