@@ -169,8 +169,9 @@ export const KeraTriggersManager = () => {
       excluded_emails: draft.excluded_emails ?? [],
       enabled: draft.enabled,
       sort_order: draft.sort_order || 100,
+      intensity: draft.intensity ?? "medio",
       updated_by: userData.user?.id ?? null,
-    };
+    } as any;
 
     let error;
     if (editingId === "new") {
