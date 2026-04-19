@@ -84,6 +84,54 @@ async function loadDbSystemPrompt(): Promise<string | null> {
   }
 }
 
+// ===== Gatilhos editáveis (tabela kera_triggers) =====
+type DbTrigger = {
+  id: string;
+  name: string;
+  keywords: string;
+  regex_pattern: string | null;
+  theme: string;
+  scope: string; // "global" | "agent:<key>"
+  excluded_emails: string[];
+  enabled: boolean;
+  sort_order: number;
+};
+
+async function loadDbTriggers(): Promise<DbTrigger[]> {
+  try {
+    const supaUrl = Deno.env.get("SUPABASE_URL");
+    const service = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+    if (!supaUrl || !service) return [];
+    const r = await fetch(
+      `${supaUrl}/rest/v1/kera_triggers?enabled=eq.true&select=*&order=sort_order.asc`,
+      { headers: { apikey: service, Authorization: `Bearer ${service}` } },
+    );
+    if (!r.ok) return [];
+    return (await r.json()) as DbTrigger[];
+  } catch {
+    return [];
+  }
+}
+
+// Constrói regex a partir do trigger (regex_pattern customizado OU lista de keywords)
+function triggerRegex(t: DbTrigger): RegExp | null {
+  try {
+    if (t.regex_pattern && t.regex_pattern.trim().length > 0) {
+      return new RegExp(t.regex_pattern, "i");
+    }
+    const parts = t.keywords
+      .split(",")
+      .map((s) => s.trim())
+      .filter(Boolean)
+      .map((s) => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"))
+      .map((s) => `\\b${s}\\b`);
+    if (parts.length === 0) return null;
+    return new RegExp(parts.join("|"), "i");
+  } catch {
+    return null;
+  }
+}
+
 type Provider = "lovable" | "openai" | "groq" | "openrouter" | "gemini" | "xai";
 
 interface ProviderConfig {
