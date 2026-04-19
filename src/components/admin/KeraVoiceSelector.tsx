@@ -18,6 +18,18 @@ const PRESET_VOICES = [
   { id: "SAz9YHcvj6GT2YYXdXww", name: "River", desc: "Andrógina, calma" },
 ];
 
+// Vozes temáticas / personagens (Voice Library oficial da ElevenLabs)
+const CHARACTER_VOICES = [
+  { id: "kPtEHAvRnjUJFv7SK9WI", emoji: "👾", name: "Glitch", desc: "Robô futurista, estilo cyberpunk" },
+  { id: "e79twtVS2278lVZZQiAD", emoji: "🧝", name: "The Elf", desc: "Élfica mística, fantasia/anime" },
+  { id: "h6u4tPKmcPlxUdZOaVpH", emoji: "🦌", name: "The Reindeer", desc: "Doce e infantil, fofa" },
+  { id: "SAhdygBsjizE9aIj39dz", emoji: "🤶", name: "Mrs Claus", desc: "Acolhedora, maternal" },
+  { id: "MDLAMJ0jxkpYkjXbmG4t", emoji: "🎅", name: "Santa", desc: "Grave, alegre, narrador" },
+  { id: "iP95p4xoKVk53GoZ742B", emoji: "🎙️", name: "Chris", desc: "Narrador americano sério" },
+  { id: "nPczCjzI2devNBz1zQrb", emoji: "📻", name: "Brian", desc: "Locutor profundo, documentário" },
+  { id: "cjVigY5qzO86Huf0OWal", emoji: "🕴️", name: "Eric", desc: "Vilão calmo, suspense" },
+];
+
 const TTS_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/tts-kera`;
 const SAMPLE_TEXT =
   "Oi, eu sou a Kera. Essa é a minha voz agora. Se não gostar, me troca aí no painel.";
