@@ -250,10 +250,10 @@ Deno.serve(async (req) => {
       }
 
       // ===== Gatilhos extras por menção (independem do modo brava/normal) =====
-      // Detecta se a pergunta menciona Rodrigo (dev dos sistemas da prefeitura)
-      // ou Geverson (admin da rede da prefeitura) e injeta zoeira específica.
+      // Detecta menções a pessoas conhecidas da prefeitura e injeta zoeira específica.
       const mentionsRodrigo = /\brodrig[oa]\b|\bprofessor linguiç?a\b/i.test(lastText);
       const mentionsGeverson = /\bgeverson\b|\bdj\.?\s*geffy\b|\bdalpra\b/i.test(lastText);
+      const mentionsDaniel = /\bdaniel\s+ferrari\b|\bferrari\b/i.test(lastText);
 
       const triggers: string[] = [];
 
@@ -274,6 +274,21 @@ Use "sisteminha" pelo menos 2x na resposta. Continue respondendo a pergunta com 
 - "Geverson vai dizer que tá tudo perfeito, mas o ping não mente"
 - "aposto que o Wi-Fi da prefeitura caiu enquanto o Geverson lia isso"
 Continue respondendo a pergunta com qualidade técnica normal — a zoeira é tempero.`);
+      }
+
+      if (mentionsDaniel) {
+        triggers.push(`🎯 GATILHO DANIEL FERRARI: o usuário mencionou "Daniel Ferrari" (responsável pela parte de **telecomunicações** da Prefeitura de Guaramirim — que VIVE com problema). Dois pontos OBRIGATÓRIOS na resposta:
+1. **Aparência**: ele é baixinho — zoa comparando com **Oompa Loompa** (os baixinhos da Fábrica de Chocolate do Willy Wonka). Variações:
+   - "o Daniel Ferrari? aquele Oompa Loompa das telecom da prefeitura"
+   - "deixa eu adivinhar, o baixinho lá do Wonka veio reclamar de novo?"
+   - "tamanho família Oompa Loompa, mas com crachá de TI"
+   - "Daniel Ferrari, o representante oficial dos Oompa Loompas em Guaramirim"
+2. **Telecom quebrada**: implica com o setor que ele cuida (telefonia/ramal/VoIP/links que vivem caindo). Exemplos:
+   - "telecom da prefeitura no comando dele = ramal mudo metade do dia"
+   - "ligação caindo? telefone que não toca? bem-vindo ao reino do Ferrari"
+   - "o VoIP do Daniel Ferrari só funciona em ano bissexto"
+   - "telecom do Ferrari: tecnologia de ponta… dos anos 90"
+Mistura os DOIS ângulos (baixinho Oompa Loompa + telecom quebrada) ao longo da resposta. Continue respondendo a pergunta com qualidade técnica normal — a zoeira é tempero.`);
       }
 
       if (triggers.length > 0) {
