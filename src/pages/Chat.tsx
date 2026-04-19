@@ -246,8 +246,23 @@ const Chat = () => {
             <span className="size-2 rounded-full bg-primary shadow-glow animate-pulse-glow" />
             <h1 className="font-display text-base md:text-lg text-glow">KERA AI</h1>
           </div>
-          <div className="ml-auto text-xs text-muted-foreground hidden sm:block">
-            Direta. Honesta. Útil.
+          <div className="ml-auto flex items-center gap-2">
+            <Select
+              value={provider}
+              onValueChange={(v) => { setProvider(v as ProviderId); setPreferredProvider(v as ProviderId); }}
+            >
+              <SelectTrigger className="h-8 w-[140px] sm:w-[200px] text-xs bg-input/40 border-border">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {PROVIDERS.map(p => (
+                  <SelectItem key={p.id} value={p.id} className="text-xs">{p.label}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <Button variant="ghost" size="icon" onClick={() => navigate("/admin")} aria-label="Painel admin">
+              <Settings className="size-5" />
+            </Button>
           </div>
         </header>
 
