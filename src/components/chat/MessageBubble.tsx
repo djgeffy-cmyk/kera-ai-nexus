@@ -1,12 +1,58 @@
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import keraAvatar from "@/assets/kera-avatar.png";
-import { User } from "lucide-react";
+import { User, FileText } from "lucide-react";
+
+type ContentPart =
+  | { type: "text"; text: string }
+  | { type: "image_url"; image_url: { url: string } };
 
 export type ChatMessage = {
   id?: string;
   role: "user" | "assistant";
-  content: string;
+  content: string | ContentPart[];
+};
+
+const renderUserContent = (content: string | ContentPart[]) => {
+  if (typeof content === "string") {
+    // Detecta blocos "--- Anexo: nome ---" para mostrar como chip
+    const parts = content.split(/\n\n--- Anexo: (.+?) ---\n```\n([\s\S]*?)\n```/);
+    if (parts.length === 1) return <p className="whitespace-pre-wrap">{content}</p>;
+    const elements: React.ReactNode[] = [];
+    for (let i = 0; i < parts.length; i++) {
+      if (i % 3 === 0) {
+        if (parts[i].trim()) elements.push(<p key={`t${i}`} className="whitespace-pre-wrap">{parts[i]}</p>);
+      } else if (i % 3 === 1) {
+        const name = parts[i];
+        const preview = (parts[i + 1] || "").slice(0, 80);
+        elements.push(
+          <div key={`f${i}`} className="mt-2 flex items-center gap-2 px-3 py-2 rounded-lg bg-background/50 border border-border text-xs">
+            <FileText className="size-4 text-primary shrink-0" />
+            <div className="min-w-0">
+              <p className="font-medium truncate">{name}</p>
+              <p className="text-muted-foreground truncate">{preview}…</p>
+            </div>
+          </div>
+        );
+      }
+    }
+    return <div className="space-y-1">{elements}</div>;
+  }
+
+  const text = content.find(c => c.type === "text") as Extract<ContentPart, { type: "text" }> | undefined;
+  const images = content.filter(c => c.type === "image_url") as Extract<ContentPart, { type: "image_url" }>[];
+  return (
+    <div className="space-y-2">
+      {images.length > 0 && (
+        <div className={`grid gap-2 ${images.length > 1 ? "grid-cols-2" : "grid-cols-1"}`}>
+          {images.map((img, i) => (
+            <img key={i} src={img.image_url.url} alt={`anexo ${i + 1}`} className="rounded-lg max-h-64 w-full object-cover border border-border" />
+          ))}
+        </div>
+      )}
+      {text?.text && <p className="whitespace-pre-wrap">{text.text}</p>}
+    </div>
+  );
 };
 
 export const MessageBubble = ({ msg, streaming }: { msg: ChatMessage; streaming?: boolean }) => {
@@ -26,10 +72,10 @@ export const MessageBubble = ({ msg, streaming }: { msg: ChatMessage; streaming?
           : "panel border border-primary/15 rounded-tl-sm prose-kera"
       }`}>
         {isUser ? (
-          <p className="whitespace-pre-wrap">{msg.content}</p>
+          renderUserContent(msg.content)
         ) : (
           <>
-            <ReactMarkdown remarkPlugins={[remarkGfm]}>{msg.content || ""}</ReactMarkdown>
+            <ReactMarkdown remarkPlugins={[remarkGfm]}>{(typeof msg.content === "string" ? msg.content : "") || ""}</ReactMarkdown>
             {streaming && <span className="inline-block w-2 h-4 bg-primary ml-1 align-middle animate-blink" />}
           </>
         )}
