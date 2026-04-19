@@ -884,14 +884,19 @@ Por favor, analise: há perda de pacote? jitter alto sugere instabilidade de rot
               <Button
                 onClick={() => {
                   if (voice.listening) {
+                    // Parada manual desliga hands-free
+                    handsFreeRef.current = false;
+                    lastInputViaVoiceRef.current = false;
                     voice.stopListening();
+                    voice.stopSpeaking();
                   } else {
-                    // Ativa modo voz automaticamente ao falar (responde com voz)
+                    // Ativa modo voz + hands-free automaticamente
                     if (!voiceMode) {
                       setVoiceMode(true);
                       try { localStorage.setItem("kera:voiceMode", "1"); } catch {}
                       voice.warmUpTTS();
                     }
+                    handsFreeRef.current = true;
                     voice.startListening();
                   }
                 }}
