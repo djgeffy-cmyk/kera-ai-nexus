@@ -1,10 +1,11 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, Check, X, KeyRound, ExternalLink } from "lucide-react";
+import { ArrowLeft, Check, X, KeyRound, ExternalLink, Volume2, Play } from "lucide-react";
 import { PROVIDERS, SECRET_NAMES, getPreferredProvider, setPreferredProvider, type ProviderId } from "@/lib/providers";
+import { loadVoicesAsync, getPreferredVoiceURI, setPreferredVoiceURI, classifyVoice } from "@/lib/nativeVoice";
 import { toast } from "sonner";
 import keraLogo from "@/assets/kera-logo.png";
 
@@ -17,6 +18,9 @@ const Admin = () => {
   const [status, setStatus] = useState<Status>({});
   const [loading, setLoading] = useState(true);
   const [pref, setPref] = useState<ProviderId>(getPreferredProvider());
+  const [voices, setVoices] = useState<SpeechSynthesisVoice[]>([]);
+  const [voiceURI, setVoiceURI] = useState<string | null>(getPreferredVoiceURI());
+  const [genderFilter, setGenderFilter] = useState<"todas" | "feminina" | "masculina">("todas");
 
   useEffect(() => {
     document.title = "Kera AI — Painel Admin";
@@ -25,7 +29,34 @@ const Admin = () => {
       .then(setStatus)
       .catch(() => toast.error("Não foi possível carregar status dos provedores."))
       .finally(() => setLoading(false));
+    loadVoicesAsync().then(setVoices);
   }, []);
+
+  const ptVoices = useMemo(
+    () => voices.filter(v => v.lang.toLowerCase().startsWith("pt")),
+    [voices]
+  );
+  const filteredVoices = useMemo(() => {
+    if (genderFilter === "todas") return ptVoices;
+    return ptVoices.filter(v => classifyVoice(v) === genderFilter);
+  }, [ptVoices, genderFilter]);
+
+  const chooseVoice = (uri: string) => {
+    setVoiceURI(uri);
+    setPreferredVoiceURI(uri);
+    const v = voices.find(x => x.voiceURI === uri);
+    toast.success(`Voz: ${v?.name ?? "padrão"}`);
+  };
+
+  const previewVoice = (v: SpeechSynthesisVoice) => {
+    window.speechSynthesis.cancel();
+    const u = new SpeechSynthesisUtterance("Olá, eu sou a Kera. Esta é a minha voz.");
+    u.voice = v;
+    u.lang = v.lang;
+    u.rate = 1.05;
+    u.pitch = 1.05;
+    window.speechSynthesis.speak(u);
+  };
 
   const choose = (id: ProviderId) => {
     setPref(id);
