@@ -790,8 +790,8 @@ Por favor, analise: há perda de pacote? jitter alto sugere instabilidade de rot
           </div>
         </header>
 
-        <div ref={scrollerRef} className="flex-1 overflow-y-auto scrollbar-thin">
-          <div className="max-w-3xl mx-auto px-4 py-6 space-y-5">
+        <div ref={scrollerRef} className="flex-1 overflow-y-auto overflow-x-hidden scrollbar-thin">
+          <div className="max-w-3xl mx-auto px-3 md:px-4 py-6 space-y-5">
             {messages.length === 0 && !streaming && (
               <div className="text-center pt-10 md:pt-20">
                 <video
