@@ -319,6 +319,7 @@ Por favor, analise estes resultados, classifique a severidade de cada item e ind
     }
   };
 
+  const Sidebar = () => (
     <aside className="h-full w-full md:w-72 panel border-r border-border flex flex-col">
       <div className="p-4 border-b border-border flex items-center gap-2">
         <img src={keraLogo} alt="Kera AI" className="h-8" />
