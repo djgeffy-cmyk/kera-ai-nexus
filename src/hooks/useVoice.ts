@@ -68,23 +68,33 @@ export function useVoice(opts: { useElevenLabs?: boolean; useRemoteTTS?: boolean
   const speak = useCallback(async (text: string) => {
     if (!text.trim()) return;
 
-    // Se já tem requisição em andamento, ignora (evita empilhar chamadas paralelas)
+    // Se já tem requisição em andamento, ignora
     if (inflightRef.current) {
-      console.log("[useVoice] já tem TTS em andamento, ignorando nova chamada");
+      console.log("[useVoice] já tem TTS em andamento, ignorando");
       return;
     }
 
-    // Para áudio anterior se estiver tocando
+    // CRÍTICO: cria o <audio> element AGORA (dentro do gesto do usuário)
+    // pra desbloquear o autoplay. Setamos a src depois quando o fetch completar.
     if (audioRef.current) {
       audioRef.current.pause();
       audioRef.current = null;
     }
-    setSpeaking(true);
+    const audio = new Audio();
+    audioRef.current = audio;
+    // Inicia uma "play()" silenciosa pra capturar o user gesture (truque iOS/Safari)
+    try {
+      audio.muted = true;
+      const playPromise = audio.play();
+      if (playPromise) await playPromise.catch(() => {});
+      audio.pause();
+      audio.muted = false;
+    } catch {}
 
+    setSpeaking(true);
     const ac = new AbortController();
     inflightRef.current = ac;
 
-    // SEMPRE usa ElevenLabs (voz paga). Nunca cai pro Web Speech (voz robótica).
     try {
       const resp = await fetch(TTS_URL, {
         method: "POST",
@@ -93,7 +103,7 @@ export function useVoice(opts: { useElevenLabs?: boolean; useRemoteTTS?: boolean
         signal: ac.signal,
       });
       if (resp.status === 204) {
-        console.warn("[useVoice] TTS indisponível (quota). Silenciando.");
+        console.warn("[useVoice] TTS indisponível (quota).");
         setSpeaking(false);
         return;
       }
@@ -103,8 +113,7 @@ export function useVoice(opts: { useElevenLabs?: boolean; useRemoteTTS?: boolean
       }
       const blob = await resp.blob();
       const url = URL.createObjectURL(blob);
-      const audio = new Audio(url);
-      audioRef.current = audio;
+      audio.src = url;
       audio.onended = () => { setSpeaking(false); URL.revokeObjectURL(url); };
       audio.onerror = (ev) => {
         console.warn("[useVoice] audio playback error:", ev);
@@ -112,10 +121,10 @@ export function useVoice(opts: { useElevenLabs?: boolean; useRemoteTTS?: boolean
         URL.revokeObjectURL(url);
       };
       await audio.play();
-      console.log("[useVoice] ElevenLabs tocando", { len: text.length, provider: resp.headers.get("X-TTS-Provider") });
+      console.log("[useVoice] ElevenLabs tocando", { len: text.length, bytes: blob.size });
     } catch (e) {
       if ((e as Error)?.name === "AbortError") return;
-      console.error("[useVoice] ElevenLabs falhou (sem fallback robótico):", e);
+      console.error("[useVoice] ElevenLabs falhou:", e);
       setSpeaking(false);
     } finally {
       if (inflightRef.current === ac) inflightRef.current = null;
