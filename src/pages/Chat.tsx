@@ -695,20 +695,20 @@ Por favor, analise: há perda de pacote? jitter alto sugere instabilidade de rot
             </div>
           </div>
         )}
-        <header className="h-14 border-b border-border panel flex items-center px-3 md:px-6 gap-3">
+        <header className="h-14 border-b border-border panel flex items-center px-2 md:px-6 gap-1.5 md:gap-3 overflow-hidden">
           <Sheet>
             <SheetTrigger asChild>
-              <Button variant="ghost" size="icon" className="md:hidden"><Menu className="size-5" /></Button>
+              <Button variant="ghost" size="icon" className="md:hidden shrink-0 h-9 w-9"><Menu className="size-5" /></Button>
             </SheetTrigger>
             <SheetContent side="left" className="p-0 w-72 bg-transparent border-r-0"><Sidebar /></SheetContent>
           </Sheet>
 
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <button className="flex items-center gap-2 hover:bg-secondary/60 px-2 py-1 rounded-lg transition">
-                <span className="size-2 rounded-full bg-primary shadow-glow animate-pulse-glow" />
-                <h1 className="font-display text-base md:text-lg text-glow">{currentAgentName.toUpperCase()}</h1>
-                <ChevronRight className="size-4 rotate-90 text-muted-foreground" />
+              <button className="flex items-center gap-1.5 md:gap-2 hover:bg-secondary/60 px-1.5 md:px-2 py-1 rounded-lg transition min-w-0 max-w-[42vw] md:max-w-none">
+                <span className="size-2 rounded-full bg-primary shadow-glow animate-pulse-glow shrink-0" />
+                <h1 className="font-display text-sm md:text-lg text-glow truncate">{currentAgentName.toUpperCase()}</h1>
+                <ChevronRight className="size-4 rotate-90 text-muted-foreground shrink-0" />
               </button>
             </DropdownMenuTrigger>
             <DropdownMenuContent className="w-64 bg-card border-border">
@@ -744,7 +744,7 @@ Por favor, analise: há perda de pacote? jitter alto sugere instabilidade de rot
             onClick={() => newConversation()}
             aria-label="Nova conversa"
             title="Nova conversa"
-            className="text-muted-foreground hover:text-primary"
+            className="text-muted-foreground hover:text-primary shrink-0 h-9 w-9"
           >
             <Plus className="size-5" />
           </Button>
@@ -755,14 +755,14 @@ Por favor, analise: há perda de pacote? jitter alto sugere instabilidade de rot
             aria-label="Exportar conversa em PDF"
             title="Exportar PDF"
             disabled={!messages.length || streaming}
-            className="text-muted-foreground hover:text-primary"
+            className="text-muted-foreground hover:text-primary shrink-0 h-9 w-9"
           >
             <Download className="size-5" />
           </Button>
 
-          <div className="ml-auto flex items-center gap-2">
+          <div className="ml-auto flex items-center gap-1.5 md:gap-2 shrink-0">
             <Select value={provider} onValueChange={(v) => { setProvider(v as ProviderId); setPreferredProvider(v as ProviderId); }}>
-              <SelectTrigger className="h-8 w-[120px] sm:w-[180px] text-xs bg-input/40 border-border">
+              <SelectTrigger className="h-8 w-[92px] sm:w-[140px] md:w-[180px] text-xs bg-input/40 border-border px-2">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -776,7 +776,6 @@ Por favor, analise: há perda de pacote? jitter alto sugere instabilidade de rot
                 setVoiceMode(next);
                 try { localStorage.setItem("kera:voiceMode", next ? "1" : "0"); } catch {}
                 if (next) {
-                  // destrava TTS em mobile (precisa rodar dentro do gesto do usuário)
                   voice.warmUpTTS();
                   toast.success("Modo voz ativado — Kera vai falar as respostas");
                 } else {
@@ -784,7 +783,7 @@ Por favor, analise: há perda de pacote? jitter alto sugere instabilidade de rot
                 }
               }}
               aria-label="Modo voz"
-              className={voiceMode ? "text-primary" : ""}
+              className={`shrink-0 h-9 w-9 ${voiceMode ? "text-primary" : ""}`}
             >
               {voiceMode ? <Volume2 className="size-5" /> : <VolumeX className="size-5" />}
             </Button>
