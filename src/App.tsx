@@ -9,6 +9,7 @@ import Admin from "./pages/Admin.tsx";
 import Agents from "./pages/Agents.tsx";
 import NotFound from "./pages/NotFound.tsx";
 import { ProtectedRoute } from "./components/ProtectedRoute";
+import Footer from "./components/Footer";
 
 const queryClient = new QueryClient();
 
@@ -25,6 +26,7 @@ const App = () => (
           <Route path="/agents" element={<ProtectedRoute><Agents /></ProtectedRoute>} />
           <Route path="*" element={<NotFound />} />
         </Routes>
+        <Footer />
       </BrowserRouter>
     </TooltipProvider>
   </QueryClientProvider>
