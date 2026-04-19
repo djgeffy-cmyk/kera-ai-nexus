@@ -47,9 +47,12 @@ const Chat = () => {
   const [userId, setUserId] = useState<string | null>(null);
   const [isAdmin, setIsAdmin] = useState(false);
   const [provider, setProvider] = useState<ProviderId>(getPreferredProvider());
-  const [voiceMode, setVoiceMode] = useState<boolean>(() => {
-    try { return localStorage.getItem("kera:voiceMode") === "1"; } catch { return false; }
-  });
+  // Modo voz NÃO persiste — sempre começa desligado a cada sessão para evitar
+  // que a Kera fale sozinha sem o usuário pedir.
+  const [voiceMode, setVoiceMode] = useState<boolean>(false);
+  useEffect(() => {
+    try { localStorage.removeItem("kera:voiceMode"); } catch {}
+  }, []);
   const [hasRemoteTTS, setHasRemoteTTS] = useState(false);
   const [attachments, setAttachments] = useState<Attachment[]>([]);
   const [dragging, setDragging] = useState(false);
