@@ -413,12 +413,33 @@ export const KeraTriggersManager = () => {
             </div>
           </div>
 
-          <div className="flex items-center gap-2">
-            <Switch
-              checked={draft.enabled}
-              onCheckedChange={(v) => setDraft({ ...draft, enabled: v })}
-            />
-            <Label className="text-xs">Ativo</Label>
+          <div className="grid gap-3 sm:grid-cols-[1fr_auto] items-end">
+            <div>
+              <Label className="text-xs flex items-center gap-1">
+                <Flame className="size-3.5" />
+                Intensidade da zoeira
+              </Label>
+              <Select
+                value={draft.intensity}
+                onValueChange={(v) => setDraft({ ...draft, intensity: v as Intensity })}
+              >
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="leve">🌶️ Leve — alfinetada sutil, 1 piada</SelectItem>
+                  <SelectItem value="medio">🌶️🌶️ Médio — equilibrado, 1-2 piadas</SelectItem>
+                  <SelectItem value="pesado">🌶️🌶️🌶️ Pesado — esculacha sem dó</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="flex items-center gap-2 pb-2">
+              <Switch
+                checked={draft.enabled}
+                onCheckedChange={(v) => setDraft({ ...draft, enabled: v })}
+              />
+              <Label className="text-xs">Ativo</Label>
+            </div>
           </div>
 
           <div className="flex justify-end gap-2 pt-2">
