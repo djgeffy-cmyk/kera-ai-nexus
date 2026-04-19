@@ -49,7 +49,8 @@ function getProviderChain(requested: Provider | undefined): ProviderConfig[] {
     gemini: Deno.env.get("GEMINI_API_KEY"),
     xai: Deno.env.get("XAI_API_KEY"),
   };
-  const fallbackOrder: Provider[] = ["lovable", "groq", "openrouter", "gemini", "openai", "xai"];
+  // Padrão: OpenAI primeiro (não consome créditos Lovable do dono do projeto)
+  const fallbackOrder: Provider[] = ["openai", "groq", "openrouter", "gemini", "lovable", "xai"];
   const order: Provider[] = requested
     ? [requested, ...fallbackOrder.filter((p) => p !== requested)]
     : fallbackOrder;
