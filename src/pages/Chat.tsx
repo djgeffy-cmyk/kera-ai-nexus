@@ -84,7 +84,14 @@ const Chat = () => {
       .from("messages").select("id,role,content")
       .eq("conversation_id", id).order("created_at", { ascending: true });
     if (error) return toast.error(error.message);
-    setMessages((data || []).map(m => ({ id: m.id, role: m.role as "user"|"assistant", content: m.content })));
+    setMessages((data || []).map(m => {
+      let content: ChatMessage["content"] = m.content;
+      // Tenta reidratar conteúdo multimodal salvo como JSON
+      if (typeof m.content === "string" && m.content.startsWith("[") && m.content.includes('"image_url"')) {
+        try { content = JSON.parse(m.content); } catch { /* mantém string */ }
+      }
+      return { id: m.id, role: m.role as "user" | "assistant", content };
+    }));
   };
 
   const newConversation = async (forAgent?: string) => {
