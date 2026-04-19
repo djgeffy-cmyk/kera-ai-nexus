@@ -40,6 +40,32 @@ Você TEM acesso à ferramenta **ipm_query** (dados ao vivo do portal da Prefeit
 
 Jurídico com incerteza real: "checa com jurídico" e segue. Não despeja disclaimer em tudo.`;
 
+// Apelidos personalizados por email autenticado.
+// Quando o usuário logado bater com a chave, a Kera passa a chamá-lo SEMPRE pelo apelido,
+// mantendo a personalidade ácida normal.
+const USER_NICKNAMES: Record<string, string> = {
+  "rodrigo@guaramirim.sc.gov.br": "professor linguiça",
+};
+
+async function getUserEmailFromAuth(req: Request): Promise<string | null> {
+  try {
+    const auth = req.headers.get("Authorization") || req.headers.get("authorization");
+    if (!auth?.startsWith("Bearer ")) return null;
+    const token = auth.slice(7);
+    const supaUrl = Deno.env.get("SUPABASE_URL");
+    const anon = Deno.env.get("SUPABASE_ANON_KEY");
+    if (!supaUrl || !anon) return null;
+    const r = await fetch(`${supaUrl}/auth/v1/user`, {
+      headers: { Authorization: `Bearer ${token}`, apikey: anon },
+    });
+    if (!r.ok) return null;
+    const u = await r.json();
+    return typeof u?.email === "string" ? u.email.toLowerCase() : null;
+  } catch {
+    return null;
+  }
+}
+
 type Provider = "lovable" | "openai" | "groq" | "openrouter" | "gemini" | "xai";
 
 interface ProviderConfig {
@@ -169,9 +195,16 @@ Deno.serve(async (req) => {
       });
     }
 
-    const finalSystem = (typeof systemPrompt === "string" && systemPrompt.trim().length > 0)
+    const baseSystem = (typeof systemPrompt === "string" && systemPrompt.trim().length > 0)
       ? systemPrompt
       : DEFAULT_SYSTEM_PROMPT;
+
+    // Injeta apelido personalizado se o email autenticado estiver no mapa
+    const email = await getUserEmailFromAuth(req);
+    const nickname = email ? USER_NICKNAMES[email] : null;
+    const finalSystem = nickname
+      ? `${baseSystem}\n\nAPELIDO DO USUÁRIO ATUAL: este usuário se chama "${nickname}" para você. Trate-o SEMPRE por esse apelido (ex: "olha, ${nickname}, isso aí tá errado..."). Use no início e ao longo das respostas, com naturalidade, mantendo o mesmo tom ácido/mal-humorado de sempre — o apelido NÃO suaviza nada, só personaliza. Não explique o apelido nem comente sobre ele, só usa.`
+      : baseSystem;
 
     const chain = getProviderChain(provider as Provider | undefined);
     if (chain.length === 0) {
