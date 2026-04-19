@@ -11,33 +11,36 @@ interface Props {
 export const ProtectedRoute = ({ children, requireAdmin = false }: Props) => {
   const [session, setSession] = useState<Session | null>(null);
   const [isAdmin, setIsAdmin] = useState<boolean | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [authReady, setAuthReady] = useState(false);
 
   useEffect(() => {
+    // 1) Set up listener FIRST (sync only — no awaits)
     const { data: sub } = supabase.auth.onAuthStateChange((_e, s) => {
       setSession(s);
-      if (!s) setIsAdmin(false);
+      // reset admin flag so it gets re-checked for the new user
+      setIsAdmin(null);
     });
+
+    // 2) THEN restore existing session from storage
     supabase.auth.getSession().then(({ data }) => {
       setSession(data.session);
-      setLoading(false);
+      setAuthReady(true);
     });
+
     return () => sub.subscription.unsubscribe();
   }, []);
 
   useEffect(() => {
+    if (!authReady) return;
     if (!session?.user) { setIsAdmin(false); return; }
     if (!requireAdmin) { setIsAdmin(true); return; }
     supabase
-      .from("user_roles")
-      .select("role")
-      .eq("user_id", session.user.id)
-      .eq("role", "admin")
-      .maybeSingle()
+      .rpc("has_role", { _user_id: session.user.id, _role: "admin" })
       .then(({ data }) => setIsAdmin(!!data));
-  }, [session, requireAdmin]);
+  }, [session, requireAdmin, authReady]);
 
-  if (loading || (session && requireAdmin && isAdmin === null)) {
+  // Wait until auth is restored AND (if needed) admin check finished
+  if (!authReady || isAdmin === null) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="font-display text-primary text-glow animate-pulse">KERA</div>
