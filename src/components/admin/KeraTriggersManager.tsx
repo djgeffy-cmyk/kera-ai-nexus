@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -8,8 +8,25 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Target, Plus, Trash2, Save, X, Power, FlaskConical, ChevronDown, ChevronUp, Flame } from "lucide-react";
+import { Target, Plus, Trash2, Save, X, Power, FlaskConical, ChevronDown, ChevronUp, Flame, GripVertical } from "lucide-react";
 import { toast } from "sonner";
+import {
+  DndContext,
+  closestCenter,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  type DragEndEvent,
+} from "@dnd-kit/core";
+import {
+  arrayMove,
+  SortableContext,
+  sortableKeyboardCoordinates,
+  useSortable,
+  verticalListSortingStrategy,
+} from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
 
 type Intensity = "leve" | "medio" | "pesado";
 const INTENSITY_META: Record<Intensity, { label: string; emoji: string; className: string }> = {
@@ -204,6 +221,38 @@ export const KeraTriggersManager = () => {
       .eq("id", t.id);
     if (error) return toast.error("Falha: " + error.message);
     load();
+  };
+
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
+    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }),
+  );
+
+  const handleDragEnd = async (event: DragEndEvent) => {
+    const { active, over } = event;
+    if (!over || active.id === over.id) return;
+    const oldIndex = items.findIndex((i) => i.id === active.id);
+    const newIndex = items.findIndex((i) => i.id === over.id);
+    if (oldIndex < 0 || newIndex < 0) return;
+
+    const reordered = arrayMove(items, oldIndex, newIndex);
+    // Optimistic update + reatribui sort_order sequencial (10, 20, 30...)
+    const withNewOrder = reordered.map((it, idx) => ({ ...it, sort_order: (idx + 1) * 10 }));
+    setItems(withNewOrder);
+
+    // Persiste em paralelo
+    const updates = await Promise.all(
+      withNewOrder.map((it) =>
+        supabase.from("kera_triggers").update({ sort_order: it.sort_order }).eq("id", it.id),
+      ),
+    );
+    const failed = updates.find((r) => r.error);
+    if (failed?.error) {
+      toast.error("Falha ao reordenar: " + failed.error.message);
+      load();
+    } else {
+      toast.success("Ordem atualizada.");
+    }
   };
 
   const editingDraft = editingId !== null;
@@ -461,63 +510,106 @@ export const KeraTriggersManager = () => {
       ) : items.length === 0 ? (
         <p className="text-sm text-muted-foreground italic">Nenhum gatilho cadastrado.</p>
       ) : (
-        <div className="space-y-2">
-          {items.map((t) => (
-            <Card key={t.id} className={`p-3 ${!t.enabled ? "opacity-50" : ""}`}>
-              <div className="flex items-start justify-between gap-3">
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2 flex-wrap">
-                    <h3 className="font-medium">{t.name}</h3>
-                    <Badge variant="outline" className={`text-xs ${INTENSITY_META[t.intensity ?? "medio"].className}`}>
-                      {INTENSITY_META[t.intensity ?? "medio"].emoji} {INTENSITY_META[t.intensity ?? "medio"].label}
-                    </Badge>
-                    <Badge variant="outline" className="text-xs">{t.scope}</Badge>
-                    {!t.enabled && <Badge variant="secondary" className="text-xs">desativado</Badge>}
-                    {t.excluded_emails?.length > 0 && (
-                      <Badge variant="outline" className="text-xs">
-                        excl: {t.excluded_emails.length}
-                      </Badge>
-                    )}
-                  </div>
-                  <p className="text-xs text-muted-foreground mt-1 truncate">
-                    <span className="text-foreground/70">keywords:</span> {t.keywords}
-                  </p>
-                  {t.regex_pattern && (
-                    <p className="text-xs text-muted-foreground mt-0.5 truncate font-mono">
-                      <span className="text-foreground/70">regex:</span> {t.regex_pattern}
-                    </p>
-                  )}
-                  <p className="text-xs text-muted-foreground mt-1 line-clamp-2">
-                    {t.theme.replace(/[*#`]/g, "")}
-                  </p>
-                </div>
-                <div className="flex gap-1 shrink-0">
-                  <Button
-                    size="icon"
-                    variant="ghost"
-                    onClick={() => toggleEnabled(t)}
-                    title={t.enabled ? "Desativar" : "Ativar"}
-                    className="size-8"
-                  >
-                    <Power className={`size-4 ${t.enabled ? "text-primary" : "text-muted-foreground"}`} />
-                  </Button>
-                  <Button size="sm" variant="ghost" onClick={() => startEdit(t)}>
-                    Editar
-                  </Button>
-                  <Button
-                    size="icon"
-                    variant="ghost"
-                    onClick={() => remove(t.id, t.name)}
-                    className="size-8 text-destructive"
-                  >
-                    <Trash2 className="size-4" />
-                  </Button>
-                </div>
-              </div>
-            </Card>
-          ))}
-        </div>
+        <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+          <SortableContext items={items.map((i) => i.id)} strategy={verticalListSortingStrategy}>
+            <div className="space-y-2">
+              {items.map((t) => (
+                <SortableTriggerCard
+                  key={t.id}
+                  trigger={t}
+                  onEdit={() => startEdit(t)}
+                  onToggle={() => toggleEnabled(t)}
+                  onRemove={() => remove(t.id, t.name)}
+                />
+              ))}
+            </div>
+          </SortableContext>
+        </DndContext>
       )}
     </section>
+  );
+};
+
+// ===== Card sortable (extraído pra usar useSortable) =====
+type SortableTriggerCardProps = {
+  trigger: Trigger;
+  onEdit: () => void;
+  onToggle: () => void;
+  onRemove: () => void;
+};
+
+const SortableTriggerCard = ({ trigger: t, onEdit, onToggle, onRemove }: SortableTriggerCardProps) => {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: t.id });
+  const style: React.CSSProperties = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.5 : 1,
+    zIndex: isDragging ? 10 : "auto",
+  };
+
+  return (
+    <div ref={setNodeRef} style={style}>
+      <Card className={`p-3 ${!t.enabled ? "opacity-50" : ""} ${isDragging ? "ring-2 ring-primary" : ""}`}>
+        <div className="flex items-start justify-between gap-2">
+          <button
+            type="button"
+            className="shrink-0 cursor-grab active:cursor-grabbing touch-none p-1 -ml-1 mt-0.5 text-muted-foreground hover:text-foreground"
+            aria-label="Arrastar pra reordenar"
+            {...attributes}
+            {...listeners}
+          >
+            <GripVertical className="size-4" />
+          </button>
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-2 flex-wrap">
+              <h3 className="font-medium">{t.name}</h3>
+              <Badge variant="outline" className={`text-xs ${INTENSITY_META[t.intensity ?? "medio"].className}`}>
+                {INTENSITY_META[t.intensity ?? "medio"].emoji} {INTENSITY_META[t.intensity ?? "medio"].label}
+              </Badge>
+              <Badge variant="outline" className="text-xs">{t.scope}</Badge>
+              {!t.enabled && <Badge variant="secondary" className="text-xs">desativado</Badge>}
+              {t.excluded_emails?.length > 0 && (
+                <Badge variant="outline" className="text-xs">
+                  excl: {t.excluded_emails.length}
+                </Badge>
+              )}
+            </div>
+            <p className="text-xs text-muted-foreground mt-1 truncate">
+              <span className="text-foreground/70">keywords:</span> {t.keywords}
+            </p>
+            {t.regex_pattern && (
+              <p className="text-xs text-muted-foreground mt-0.5 truncate font-mono">
+                <span className="text-foreground/70">regex:</span> {t.regex_pattern}
+              </p>
+            )}
+            <p className="text-xs text-muted-foreground mt-1 line-clamp-2">
+              {t.theme.replace(/[*#`]/g, "")}
+            </p>
+          </div>
+          <div className="flex gap-1 shrink-0">
+            <Button
+              size="icon"
+              variant="ghost"
+              onClick={onToggle}
+              title={t.enabled ? "Desativar" : "Ativar"}
+              className="size-8"
+            >
+              <Power className={`size-4 ${t.enabled ? "text-primary" : "text-muted-foreground"}`} />
+            </Button>
+            <Button size="sm" variant="ghost" onClick={onEdit}>
+              Editar
+            </Button>
+            <Button
+              size="icon"
+              variant="ghost"
+              onClick={onRemove}
+              className="size-8 text-destructive"
+            >
+              <Trash2 className="size-4" />
+            </Button>
+          </div>
+        </div>
+      </Card>
+    </div>
   );
 };
