@@ -54,11 +54,26 @@ const Chat = () => {
   const dragCounter = useRef(0);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const scrollerRef = useRef<HTMLDivElement>(null);
+  const handsFreeRef = useRef(false);
+  const lastInputViaVoiceRef = useRef(false);
 
   const voice = useVoice({
     useRemoteTTS: hasRemoteTTS,
-    onTranscript: (t) => { setInput(t); setTimeout(() => sendText(t), 100); },
+    onTranscript: (t) => { lastInputViaVoiceRef.current = true; setInput(t); setTimeout(() => sendText(t), 100); },
   });
+
+  // Hands-free: quando a Kera termina de falar, reabre o microfone automaticamente
+  useEffect(() => {
+    if (!handsFreeRef.current) return;
+    if (voice.speaking || voice.listening || streaming) return;
+    if (!lastInputViaVoiceRef.current) return;
+    const t = setTimeout(() => {
+      if (handsFreeRef.current && !voice.listening && !voice.speaking) {
+        try { voice.startListening(); } catch {}
+      }
+    }, 600);
+    return () => clearTimeout(t);
+  }, [voice.speaking, voice.listening, streaming, voice]);
 
   useEffect(() => {
     document.title = "Kera AI — Chat";
@@ -869,14 +884,19 @@ Por favor, analise: há perda de pacote? jitter alto sugere instabilidade de rot
               <Button
                 onClick={() => {
                   if (voice.listening) {
+                    // Parada manual desliga hands-free
+                    handsFreeRef.current = false;
+                    lastInputViaVoiceRef.current = false;
                     voice.stopListening();
+                    voice.stopSpeaking();
                   } else {
-                    // Ativa modo voz automaticamente ao falar (responde com voz)
+                    // Ativa modo voz + hands-free automaticamente
                     if (!voiceMode) {
                       setVoiceMode(true);
                       try { localStorage.setItem("kera:voiceMode", "1"); } catch {}
                       voice.warmUpTTS();
                     }
+                    handsFreeRef.current = true;
                     voice.startListening();
                   }
                 }}
