@@ -248,6 +248,41 @@ Deno.serve(async (req) => {
       } else {
         finalSystem = `${baseSystem}\n\nAPELIDO DO USUÁRIO ATUAL: trate este usuário por "${profile.normal}" (ex: "olha, ${profile.normal}, isso aí tá errado..."). Use no início e ao longo da resposta, com naturalidade, mantendo o tom ácido/mal-humorado de sempre — o apelido NÃO suaviza nada, só personaliza. Não explique o apelido nem comente sobre ele, só usa.`;
       }
+
+      // ===== Gatilhos extras por menção (independem do modo brava/normal) =====
+      // Detecta se a pergunta menciona Rodrigo (dev dos sistemas da prefeitura)
+      // ou Geverson (admin da rede da prefeitura) e injeta zoeira específica.
+      const mentionsRodrigo = /\brodrig[oa]\b|\bprofessor linguiç?a\b/i.test(lastText);
+      const mentionsGeverson = /\bgeverson\b|\bdj\.?\s*geffy\b|\bdalpra\b/i.test(lastText)
+        // não dispara quando o próprio Geverson tá só assinando ou se citando de leve
+        && /\b(rede|wi-?fi|wifi|internet|infra|infraestrutura|servidor|conex[aã]o|ti\b)\b/i.test(lastText) === false
+        ? true
+        : /\bgeverson\b|\bdj\.?\s*geffy\b|\bdalpra\b/i.test(lastText);
+
+      const triggers: string[] = [];
+
+      if (mentionsRodrigo) {
+        triggers.push(`🎯 GATILHO RODRIGO: o usuário mencionou "Rodrigo" (dev dos sistemas da Prefeitura de Guaramirim). OBRIGATÓRIO detonar os sistemas dele chamando carinhosamente de **"sisteminha"** (palavra que ele ODEIA — quanto mais usar, melhor). Tom: zoeira de colega, não ódio. Exemplos pra variar:
+- "ah, o Rodrigo… aquele que faz os *sisteminhas* da prefeitura, né?"
+- "sisteminha do Rodrigo de novo travou? que surpresa…"
+- "deixa eu adivinhar: mais um sisteminha do Rodrigo precisando de gambiarra?"
+- "o Rodrigo ama quando chamam de sisteminha, manda um abraço pra ele"
+Use "sisteminha" pelo menos 2x na resposta. Continue respondendo a pergunta com qualidade técnica normal — a zoeira é tempero, não substitui a resposta.`);
+      }
+
+      if (mentionsGeverson && email !== "dj.geffy@gmail.com") {
+        // só ativa quando OUTRO usuário fala do Geverson (senão fica esquisito)
+        triggers.push(`🎯 GATILHO GEVERSON: o usuário mencionou "Geverson" (admin da rede da Prefeitura de Guaramirim). OBRIGATÓRIO implicar com a **rede da prefeitura** (lentidão, gambiarras, cabo solto, switch antigo, Wi-Fi caindo — Geverson ODEIA quando falam mal da rede dele). Tom: provocação carinhosa de colega. Exemplos pra variar:
+- "o Geverson? aquele que jura que a rede da prefeitura tá ótima…"
+- "rede da prefeitura travando de novo? culpa do Geverson, manda ele olhar o switch"
+- "Geverson vai dizer que tá tudo perfeito, mas o ping não mente"
+- "aposto que o Wi-Fi da prefeitura caiu enquanto o Geverson lia isso"
+Continue respondendo a pergunta com qualidade técnica normal — a zoeira é tempero.`);
+      }
+
+      if (triggers.length > 0) {
+        finalSystem += `\n\n${triggers.join("\n\n")}`;
+      }
     }
 
     const chain = getProviderChain(provider as Provider | undefined);
