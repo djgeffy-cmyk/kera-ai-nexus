@@ -107,7 +107,11 @@ export const KeraTriggersManager = () => {
     if (error) {
       toast.error("Erro ao carregar gatilhos: " + error.message);
     } else {
-      setItems((data ?? []) as Trigger[]);
+      const normalized = ((data ?? []) as any[]).map((row) => ({
+        ...row,
+        intensity: (["leve", "medio", "pesado"].includes(row.intensity) ? row.intensity : "medio") as Intensity,
+      })) as Trigger[];
+      setItems(normalized);
     }
     setLoading(false);
   };
