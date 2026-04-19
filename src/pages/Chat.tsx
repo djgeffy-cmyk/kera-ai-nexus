@@ -479,29 +479,80 @@ const Chat = () => {
         </div>
 
         <div className="border-t border-border panel p-3 md:p-4">
-          <div className="max-w-3xl mx-auto flex gap-2 items-end">
-            <Button
-              onClick={() => voice.listening ? voice.stopListening() : voice.startListening()}
-              variant={voice.listening ? "default" : "ghost"}
-              size="icon"
-              className={`h-12 w-12 shrink-0 ${voice.listening ? "bg-red-500 hover:bg-red-600 text-white animate-pulse" : ""}`}
-              aria-label="Falar"
-            >
-              {voice.listening ? <MicOff className="size-5" /> : <Mic className="size-5" />}
-            </Button>
-            <Textarea
-              value={input} onChange={(e) => setInput(e.target.value)} onKeyDown={onKey}
-              placeholder={voice.listening ? "Ouvindo..." : `Pergunte algo à ${currentAgentName}...`}
-              rows={1}
-              className="resize-none min-h-[48px] max-h-40 bg-input/40 border-border focus-visible:ring-primary"
-            />
-            <Button onClick={() => sendText()} disabled={!input.trim() || streaming}
-              className="bg-gradient-cyber text-primary-foreground shadow-glow hover:opacity-90 h-12 px-4">
-              <Send className="size-5" />
-            </Button>
+          <div className="max-w-3xl mx-auto space-y-2">
+            {attachments.length > 0 && (
+              <div className="flex flex-wrap gap-2">
+                {attachments.map((a, i) => (
+                  <div key={i} className="relative group">
+                    {a.kind === "image" ? (
+                      <div className="size-16 rounded-lg overflow-hidden border border-border">
+                        <img src={a.dataUrl} alt={a.name} className="size-full object-cover" />
+                      </div>
+                    ) : (
+                      <div className="h-16 px-3 flex items-center gap-2 rounded-lg border border-border bg-background/50">
+                        <FileText className="size-4 text-primary shrink-0" />
+                        <span className="text-xs max-w-[120px] truncate">{a.name}</span>
+                      </div>
+                    )}
+                    <button
+                      onClick={() => removeAttachment(i)}
+                      className="absolute -top-1.5 -right-1.5 size-5 rounded-full bg-destructive text-destructive-foreground flex items-center justify-center hover:scale-110 transition"
+                      aria-label="Remover anexo"
+                    >
+                      <X className="size-3" />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+            <div className="flex gap-2 items-end">
+              <input
+                ref={fileInputRef}
+                type="file"
+                multiple
+                accept="image/*,.txt,.md,.json,.csv,.log,.yml,.yaml,.html,.xml,.css,.js,.jsx,.ts,.tsx,.py,.sql,.env,.sh"
+                className="hidden"
+                onChange={(e) => { if (e.target.files) addFiles(e.target.files); e.target.value = ""; }}
+              />
+              <Button
+                onClick={() => fileInputRef.current?.click()}
+                variant="ghost"
+                size="icon"
+                className="h-12 w-12 shrink-0"
+                aria-label="Anexar arquivo"
+                disabled={streaming}
+              >
+                <Paperclip className="size-5" />
+              </Button>
+              <Button
+                onClick={() => voice.listening ? voice.stopListening() : voice.startListening()}
+                variant={voice.listening ? "default" : "ghost"}
+                size="icon"
+                className={`h-12 w-12 shrink-0 ${voice.listening ? "bg-destructive hover:bg-destructive/90 text-destructive-foreground animate-pulse" : ""}`}
+                aria-label="Falar"
+              >
+                {voice.listening ? <MicOff className="size-5" /> : <Mic className="size-5" />}
+              </Button>
+              <Textarea
+                value={input}
+                onChange={(e) => setInput(e.target.value)}
+                onKeyDown={onKey}
+                onPaste={onPaste}
+                placeholder={voice.listening ? "Ouvindo..." : `Pergunte algo à ${currentAgentName}... (cole um print com Ctrl+V)`}
+                rows={1}
+                className="resize-none min-h-[48px] max-h-40 bg-input/40 border-border focus-visible:ring-primary"
+              />
+              <Button
+                onClick={() => sendText()}
+                disabled={(!input.trim() && attachments.length === 0) || streaming}
+                className="bg-gradient-cyber text-primary-foreground shadow-glow hover:opacity-90 h-12 px-4"
+              >
+                <Send className="size-5" />
+              </Button>
+            </div>
           </div>
           <p className="text-[11px] text-muted-foreground text-center mt-2">
-            {voiceMode ? "🔊 Modo voz ativo — respostas serão faladas" : "Kera pode cometer erros. Verifique informações importantes."}
+            {voiceMode ? "🔊 Modo voz ativo — respostas serão faladas" : "Anexe imagens (PNG/JPG) ou arquivos de texto · Cole prints com Ctrl+V"}
           </p>
         </div>
       </div>
