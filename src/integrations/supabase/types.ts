@@ -164,6 +164,30 @@ export type Database = {
         }
         Relationships: []
       }
+      kera_settings: {
+        Row: {
+          id: string
+          singleton: boolean
+          system_prompt: string
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          id?: string
+          singleton?: boolean
+          system_prompt?: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          id?: string
+          singleton?: boolean
+          system_prompt?: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: []
+      }
       licitacoes_alerts: {
         Row: {
           created_at: string
