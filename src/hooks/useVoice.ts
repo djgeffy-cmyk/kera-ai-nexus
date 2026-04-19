@@ -164,7 +164,7 @@ export function useVoice(opts: { useElevenLabs?: boolean; useRemoteTTS?: boolean
 
     const audio = new Audio();
     audio.preload = "auto";
-    audio.playsInline = true;
+    audio.setAttribute("playsinline", "true");
     audioRef.current = audio;
 
     setSpeaking(true);
