@@ -957,7 +957,15 @@ Por favor, analise: há perda de pacote? jitter alto sugere instabilidade de rot
                 onChange={(e) => setInput(e.target.value)}
                 onKeyDown={onKey}
                 onPaste={onPaste}
-                placeholder={voice.listening ? "Ouvindo..." : `Pergunte algo à ${currentAgentName}... (cole um print com Ctrl+V)`}
+                placeholder={
+                  alwaysListen.status === "heard-wake"
+                    ? "✨ Captou! processando..."
+                    : alwaysListen.status === "listening"
+                      ? `👂 Escutando... diga "Kera" pra falar comigo${alwaysListen.partial ? ` — "${alwaysListen.partial}"` : ""}`
+                      : voice.listening
+                        ? "Ouvindo..."
+                        : `Pergunte algo à ${currentAgentName}... (cole um print com Ctrl+V)`
+                }
                 rows={1}
                 className="resize-none min-h-[48px] max-h-40 bg-input/40 border-border focus-visible:ring-primary"
               />
