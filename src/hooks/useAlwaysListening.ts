@@ -108,7 +108,7 @@ export function useAlwaysListening(opts: UseAlwaysListeningOptions) {
 
   const scribe = useScribe({
     modelId: "scribe_v2_realtime",
-    commitStrategy: "vad",
+    commitStrategy: CommitStrategy.VAD,
     onPartialTranscript: (data: { text: string }) => {
       setPartial(data.text);
     },
