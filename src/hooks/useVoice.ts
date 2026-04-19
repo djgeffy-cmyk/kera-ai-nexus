@@ -81,23 +81,47 @@ export function useVoice(opts: { useElevenLabs: boolean; onTranscript: (t: strin
         await audio.play();
         return;
       } catch (e) {
-        console.warn("ElevenLabs falhou, fallback Web Speech:", e);
+        console.warn("[useVoice] ElevenLabs falhou, fallback Web Speech:", e);
       }
     }
 
     // Fallback / padrão: Web Speech
-    const u = new SpeechSynthesisUtterance(text);
-    u.lang = lang;
-    u.rate = 1.05;
-    u.pitch = 1.05;
-    const { loadVoicesAsync, pickVoice } = await import("@/lib/nativeVoice");
-    const voices = await loadVoicesAsync();
-    const chosen = pickVoice(voices, lang);
-    if (chosen) u.voice = chosen;
-    u.onend = () => setSpeaking(false);
-    u.onerror = () => setSpeaking(false);
-    window.speechSynthesis.speak(u);
+    if (!("speechSynthesis" in window)) {
+      console.warn("[useVoice] speechSynthesis indisponível neste navegador");
+      setSpeaking(false);
+      return;
+    }
+    try {
+      const u = new SpeechSynthesisUtterance(text);
+      u.lang = lang;
+      u.rate = 1.05;
+      u.pitch = 1.05;
+      const { loadVoicesAsync, pickVoice } = await import("@/lib/nativeVoice");
+      const voices = await loadVoicesAsync();
+      const chosen = pickVoice(voices, lang);
+      if (chosen) u.voice = chosen;
+      u.onend = () => setSpeaking(false);
+      u.onerror = (ev) => { console.warn("[useVoice] utterance error:", ev); setSpeaking(false); };
+      // Garante que a fila esteja limpa antes de falar
+      window.speechSynthesis.cancel();
+      window.speechSynthesis.speak(u);
+      console.log("[useVoice] speak() iniciado", { lang, voice: chosen?.name, len: text.length });
+    } catch (e) {
+      console.error("[useVoice] erro ao iniciar TTS nativo:", e);
+      setSpeaking(false);
+    }
   }, [useElevenLabs, lang, stopSpeaking]);
+
+  // "Warm-up" do TTS: deve ser chamado dentro de um clique do usuário para
+  // destravar o speechSynthesis em navegadores mobile (iOS Safari).
+  const warmUpTTS = useCallback(() => {
+    try {
+      if (!("speechSynthesis" in window)) return;
+      const u = new SpeechSynthesisUtterance(" ");
+      u.volume = 0;
+      window.speechSynthesis.speak(u);
+    } catch {}
+  }, []);
 
   useEffect(() => () => { stopListening(); stopSpeaking(); }, [stopListening, stopSpeaking]);
 
