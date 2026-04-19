@@ -45,10 +45,14 @@ async function ttsElevenLabs(opts: {
       }),
     });
     if (upstream.ok) {
-      return new Response(upstream.body, {
+      // Bufferiza o áudio inteiro antes de responder (evita "connection closed before message completed")
+      const audioBuf = await upstream.arrayBuffer();
+      console.log(`[ElevenLabs] OK voice=${voiceId} bytes=${audioBuf.byteLength}`);
+      return new Response(audioBuf, {
         headers: {
           ...corsHeaders,
           "Content-Type": "audio/mpeg",
+          "Content-Length": String(audioBuf.byteLength),
           "Cache-Control": "no-store",
           "X-TTS-Provider": "elevenlabs",
         },
@@ -101,10 +105,12 @@ async function ttsOpenAI(opts: {
     const t = await upstream.text();
     throw new Error(`OpenAI ${upstream.status}: ${t.slice(0, 300)}`);
   }
-  return new Response(upstream.body, {
+  const audioBuf = await upstream.arrayBuffer();
+  return new Response(audioBuf, {
     headers: {
       ...corsHeaders,
       "Content-Type": "audio/mpeg",
+      "Content-Length": String(audioBuf.byteLength),
       "Cache-Control": "no-store",
       "X-TTS-Provider": "openai",
     },
