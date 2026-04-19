@@ -54,7 +54,8 @@ export const KeraVoiceSelector = () => {
       const v = (data as { voice_id?: string } | null)?.voice_id ?? PRESET_VOICES[0].id;
       setSavedId(v);
       setSelectedId(v);
-      if (!PRESET_VOICES.some((p) => p.id === v)) setCustomId(v);
+      const inLists = PRESET_VOICES.some((p) => p.id === v) || CHARACTER_VOICES.some((c) => c.id === v);
+      if (!inLists) setCustomId(v);
       setLoading(false);
     })();
   }, []);
@@ -148,43 +149,93 @@ export const KeraVoiceSelector = () => {
         <p className="text-sm text-muted-foreground">Carregando...</p>
       ) : (
         <Card className="p-3 space-y-4">
-          <div className="grid gap-2">
-            {PRESET_VOICES.map((v) => {
-              const active = selectedId === v.id && !customId.trim();
-              const isPlaying = previewing === v.id;
-              return (
-                <div
-                  key={v.id}
-                  className={`flex items-center justify-between gap-2 p-2 rounded-md border ${
-                    active ? "border-primary bg-primary/5" : "border-border"
-                  }`}
-                >
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setSelectedId(v.id);
-                      setCustomId("");
-                    }}
-                    className="flex-1 text-left"
+          <div>
+            <h3 className="text-xs font-display uppercase tracking-wider text-muted-foreground mb-2">
+              🎭 Personagens
+            </h3>
+            <div className="grid gap-2 sm:grid-cols-2">
+              {CHARACTER_VOICES.map((v) => {
+                const active = selectedId === v.id && !customId.trim();
+                const isPlaying = previewing === v.id;
+                return (
+                  <div
+                    key={v.id}
+                    className={`flex items-center justify-between gap-2 p-2 rounded-md border ${
+                      active ? "border-primary bg-primary/5" : "border-border"
+                    }`}
                   >
-                    <div className="font-medium text-sm">
-                      {v.name}
-                      {savedId === v.id && (
-                        <span className="ml-2 text-xs text-primary">• ativa</span>
-                      )}
-                    </div>
-                    <div className="text-xs text-muted-foreground">{v.desc}</div>
-                  </button>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => (isPlaying ? stopPreview() : preview(v.id))}
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setSelectedId(v.id);
+                        setCustomId("");
+                      }}
+                      className="flex-1 text-left min-w-0"
+                    >
+                      <div className="font-medium text-sm flex items-center gap-1.5">
+                        <span>{v.emoji}</span>
+                        <span className="truncate">{v.name}</span>
+                        {savedId === v.id && (
+                          <span className="ml-1 text-xs text-primary shrink-0">• ativa</span>
+                        )}
+                      </div>
+                      <div className="text-xs text-muted-foreground truncate">{v.desc}</div>
+                    </button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => (isPlaying ? stopPreview() : preview(v.id))}
+                    >
+                      {isPlaying ? <Square className="size-4" /> : <Play className="size-4" />}
+                    </Button>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+
+          <div className="pt-3 border-t border-border">
+            <h3 className="text-xs font-display uppercase tracking-wider text-muted-foreground mb-2">
+              👩 Vozes femininas (padrão Kera)
+            </h3>
+            <div className="grid gap-2">
+              {PRESET_VOICES.map((v) => {
+                const active = selectedId === v.id && !customId.trim();
+                const isPlaying = previewing === v.id;
+                return (
+                  <div
+                    key={v.id}
+                    className={`flex items-center justify-between gap-2 p-2 rounded-md border ${
+                      active ? "border-primary bg-primary/5" : "border-border"
+                    }`}
                   >
-                    {isPlaying ? <Square className="size-4" /> : <Play className="size-4" />}
-                  </Button>
-                </div>
-              );
-            })}
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setSelectedId(v.id);
+                        setCustomId("");
+                      }}
+                      className="flex-1 text-left"
+                    >
+                      <div className="font-medium text-sm">
+                        {v.name}
+                        {savedId === v.id && (
+                          <span className="ml-2 text-xs text-primary">• ativa</span>
+                        )}
+                      </div>
+                      <div className="text-xs text-muted-foreground">{v.desc}</div>
+                    </button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => (isPlaying ? stopPreview() : preview(v.id))}
+                    >
+                      {isPlaying ? <Square className="size-4" /> : <Play className="size-4" />}
+                    </Button>
+                  </div>
+                );
+              })}
+            </div>
           </div>
 
           <div className="space-y-2 pt-2 border-t border-border">
