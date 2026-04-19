@@ -11,3 +11,6 @@ verify_jwt = false
 
 [functions.monitor-urls]
 verify_jwt = false
+
+[functions.network-trace]
+verify_jwt = false

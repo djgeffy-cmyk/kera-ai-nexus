@@ -8,7 +8,7 @@ import { toast } from "sonner";
 import {
   Plus, LogOut, Send, MessageSquare, Trash2, Menu, Settings,
   Image as ImageIcon, LayoutGrid, FolderPlus, Mic, MicOff, Volume2, VolumeX, Bot, ChevronRight,
-  Paperclip, X, FileText, ShieldCheck,
+  Paperclip, X, FileText, ShieldCheck, Activity,
 } from "lucide-react";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -27,6 +27,7 @@ type CustomAgent = { id: string; name: string; system_prompt: string; descriptio
 const CHAT_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/chat-kera`;
 const STATUS_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/providers-status`;
 const MONITOR_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/monitor-urls`;
+const NETTRACE_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/network-trace`;
 
 const Chat = () => {
   const navigate = useNavigate();
@@ -332,6 +333,70 @@ Por favor, analise estes resultados, classifique a severidade de cada item e ind
     }
   };
 
+  const runNetworkTrace = async () => {
+    if (streaming) return;
+
+    // Extrai hosts de URLs cadastradas + alvos clássicos da IPM
+    const { data: targetRows } = await supabase
+      .from("monitor_targets")
+      .select("url,enabled")
+      .eq("enabled", true);
+
+    const hostsFromTargets = (targetRows || [])
+      .map(t => t.url.replace(/^https?:\/\//, "").replace(/\/.*$/, ""));
+
+    // Garante hosts críticos da IPM/Prefeitura no teste
+    const baseHosts = ["guaramirim.atende.net", "guaramirim.sc.gov.br"];
+    const hosts = Array.from(new Set([...baseHosts, ...hostsFromTargets])).slice(0, 8);
+
+    toast.info(`📡 Análise de rede em ${hosts.length} host(s)… (5 sondagens cada)`);
+    try {
+      const resp = await fetch(NETTRACE_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ hosts, count: 5 }),
+      });
+      if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+      const data = await resp.json();
+
+      type HostRes = {
+        host: string; resolvedIp?: string;
+        sent: number; received: number; lossPct: number;
+        minMs: number | null; avgMs: number | null; maxMs: number | null; jitterMs: number | null;
+        samples: { ok: boolean; ms: number | null; status: number | null; error?: string }[];
+      };
+
+      const blocks = (data.results as HostRes[]).map((r) => {
+        const lossFlag = r.lossPct === 0 ? "🟢" : r.lossPct < 20 ? "🟡" : r.lossPct < 50 ? "🟠" : "🔴";
+        const jitterFlag = (r.jitterMs ?? 0) < 30 ? "🟢" : (r.jitterMs ?? 0) < 80 ? "🟡" : "🔴";
+        const samplesLine = r.samples
+          .map((s, i) => s.ok ? `#${i + 1}: ${s.ms}ms (HTTP ${s.status})` : `#${i + 1}: TIMEOUT/${s.error ?? "erro"}`)
+          .join(" · ");
+        return `### ${r.host} ${r.resolvedIp ? `(\`${r.resolvedIp}\`)` : ""}
+- **Pacotes:** ${r.received}/${r.sent} recebidos · perda **${lossFlag} ${r.lossPct}%**
+- **Latência:** min ${r.minMs ?? "?"}ms · avg **${r.avgMs ?? "?"}ms** · max ${r.maxMs ?? "?"}ms
+- **Jitter:** ${jitterFlag} ${r.jitterMs ?? "?"}ms
+- **Amostras:** ${samplesLine}`;
+      }).join("\n\n");
+
+      const report = `📡 **Análise de Rede — Sentinela** — ${new Date(data.summary.checkedAt).toLocaleString("pt-BR")}
+
+**Método:** sondagem HTTPS HEAD x${data.summary.probesPerHost} por host (equivalente funcional a ping para serviços web).
+**Origem da medição:** ${data.summary.origin}
+
+> ⚠️ Esta medição parte da edge da Lovable Cloud, **não da rede interna da Prefeitura**. Para diagnóstico definitivo de perda de pacote da PMG → IPM, rode \`mtr -rwc 100 guaramirim.atende.net\` ou \`pathping\` num desktop dentro da rede municipal e cole o resultado aqui.
+
+${blocks}
+
+Por favor, analise: há perda de pacote? jitter alto sugere instabilidade de rota? alguma latência fora do padrão para um datacenter brasileiro? Sugira os próximos passos de diagnóstico.`;
+
+      await sendText(report);
+    } catch (e: unknown) {
+      const msg = e instanceof Error ? e.message : "erro";
+      toast.error(`Falha na análise de rede: ${msg}`);
+    }
+  };
+
   const Sidebar = () => (
     <aside className="h-full w-full md:w-72 panel border-r border-border flex flex-col">
       <div className="p-4 border-b border-border flex items-center gap-2">
@@ -576,7 +641,7 @@ Por favor, analise estes resultados, classifique a severidade de cada item e ind
         <div className="border-t border-border panel p-3 md:p-4">
           <div className="max-w-3xl mx-auto space-y-2">
             {isSentinela && (
-              <div className="flex justify-center">
+              <div className="flex flex-wrap justify-center gap-2">
                 <Button
                   onClick={runSentinelaCheck}
                   disabled={streaming}
@@ -585,7 +650,17 @@ Por favor, analise estes resultados, classifique a severidade de cada item e ind
                   className="border-emerald-500/40 text-emerald-400 hover:bg-emerald-500/10 hover:text-emerald-300 gap-2"
                 >
                   <ShieldCheck className="size-4" />
-                  Verificar status dos sistemas (Prefeitura + IPM + Webmail)
+                  Verificar status (HTTP)
+                </Button>
+                <Button
+                  onClick={runNetworkTrace}
+                  disabled={streaming}
+                  variant="outline"
+                  size="sm"
+                  className="border-cyan-500/40 text-cyan-400 hover:bg-cyan-500/10 hover:text-cyan-300 gap-2"
+                >
+                  <Activity className="size-4" />
+                  Análise de rede (ping/jitter/perda)
                 </Button>
               </div>
             )}
