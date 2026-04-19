@@ -8,7 +8,8 @@ import { Card } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { toast } from "sonner";
 import { ShieldCheck, KeyRound, Mail } from "lucide-react";
-import keraHero from "@/assets/kera-hero.jpg";
+import keraAvatar from "@/assets/kera-avatar.png";
+import keraAvatarVideo from "@/assets/kera-avatar.mp4.asset.json";
 
 type Mode = "signin" | "signup" | "totp";
 
@@ -135,13 +136,18 @@ const Auth = () => {
 
   return (
     <main className="relative min-h-screen flex items-center justify-center p-4 overflow-hidden">
-      {/* Fundo Kera */}
-      <div
+      {/* Vídeo Kera de fundo */}
+      <video
         aria-hidden
-        className="absolute inset-0 bg-cover bg-center"
-        style={{ backgroundImage: `url(${keraHero})` }}
+        autoPlay
+        loop
+        muted
+        playsInline
+        className="absolute inset-0 w-full h-full object-cover"
+        src={keraAvatarVideo.url}
+        poster={keraAvatar}
       />
-      <div aria-hidden className="absolute inset-0 bg-background/75 backdrop-blur-sm" />
+      <div aria-hidden className="absolute inset-0 bg-background/70 backdrop-blur-sm" />
       <div
         aria-hidden
         className="absolute inset-0"
@@ -154,7 +160,7 @@ const Auth = () => {
       <Card className="panel relative w-full max-w-md p-7 sm:p-8 border-primary/30 shadow-glow z-10">
         <div className="flex flex-col items-center mb-5">
           <div className="size-24 rounded-full overflow-hidden border-2 border-primary/60 shadow-glow mb-3 bg-background">
-            <img src={keraHero} alt="Kera AI" className="w-full h-full object-contain" />
+            <img src={keraAvatar} alt="Kera AI" className="w-full h-full object-cover" />
           </div>
           <h1 className="font-display text-2xl text-glow text-center">
             {mode === "signin" && "Acesse a Kera"}
