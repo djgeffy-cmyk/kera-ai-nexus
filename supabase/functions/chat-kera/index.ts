@@ -23,8 +23,25 @@ interface ProviderConfig {
   label: string;
 }
 
-function resolveProvider(requested: Provider | undefined): ProviderConfig | { error: string; status: number } {
-  const keys = {
+function buildConfig(p: Provider, key: string): ProviderConfig {
+  switch (p) {
+    case "lovable":
+      return { url: "https://ai.gateway.lovable.dev/v1/chat/completions", apiKey: key, model: "google/gemini-3-flash-preview", label: "Lovable AI (Gemini 3 Flash)" };
+    case "openai":
+      return { url: "https://api.openai.com/v1/chat/completions", apiKey: key, model: "gpt-4o-mini", label: "OpenAI GPT-4o mini" };
+    case "groq":
+      return { url: "https://api.groq.com/openai/v1/chat/completions", apiKey: key, model: "llama-3.3-70b-versatile", label: "Groq Llama 3.3 70B" };
+    case "openrouter":
+      return { url: "https://openrouter.ai/api/v1/chat/completions", apiKey: key, model: "meta-llama/llama-3.3-70b-instruct:free", label: "OpenRouter Llama 3.3 (free)" };
+    case "gemini":
+      return { url: "https://generativelanguage.googleapis.com/v1beta/openai/chat/completions", apiKey: key, model: "gemini-2.0-flash", label: "Google Gemini 2.0 Flash" };
+    case "xai":
+      return { url: "https://api.x.ai/v1/chat/completions", apiKey: key, model: "grok-2-latest", label: "xAI Grok 2" };
+  }
+}
+
+function getProviderChain(requested: Provider | undefined): ProviderConfig[] {
+  const keys: Record<Provider, string | undefined> = {
     lovable: Deno.env.get("LOVABLE_API_KEY"),
     openai: Deno.env.get("OPENAI_API_KEY"),
     groq: Deno.env.get("GROQ_API_KEY"),
@@ -32,32 +49,19 @@ function resolveProvider(requested: Provider | undefined): ProviderConfig | { er
     gemini: Deno.env.get("GEMINI_API_KEY"),
     xai: Deno.env.get("XAI_API_KEY"),
   };
-
-  // Se o usuário pediu um provider específico, tenta usar
+  const fallbackOrder: Provider[] = ["lovable", "groq", "openrouter", "gemini", "openai", "xai"];
   const order: Provider[] = requested
-    ? [requested, "lovable", "openai", "groq", "openrouter", "gemini", "xai"]
-    : ["lovable", "openai", "groq", "openrouter", "gemini", "xai"];
-
+    ? [requested, ...fallbackOrder.filter((p) => p !== requested)]
+    : fallbackOrder;
+  const seen = new Set<Provider>();
+  const chain: ProviderConfig[] = [];
   for (const p of order) {
+    if (seen.has(p)) continue;
+    seen.add(p);
     const key = keys[p];
-    if (!key) continue;
-    switch (p) {
-      case "lovable":
-        return { url: "https://ai.gateway.lovable.dev/v1/chat/completions", apiKey: key, model: "google/gemini-3-flash-preview", label: "Lovable AI (Gemini 3 Flash)" };
-      case "openai":
-        return { url: "https://api.openai.com/v1/chat/completions", apiKey: key, model: "gpt-4o-mini", label: "OpenAI GPT-4o mini" };
-      case "groq":
-        return { url: "https://api.groq.com/openai/v1/chat/completions", apiKey: key, model: "llama-3.3-70b-versatile", label: "Groq Llama 3.3 70B" };
-      case "openrouter":
-        return { url: "https://openrouter.ai/api/v1/chat/completions", apiKey: key, model: "meta-llama/llama-3.3-70b-instruct:free", label: "OpenRouter Llama 3.3 (free)" };
-      case "gemini":
-        // Gemini direto usa endpoint compatível OpenAI
-        return { url: "https://generativelanguage.googleapis.com/v1beta/openai/chat/completions", apiKey: key, model: "gemini-2.0-flash", label: "Google Gemini 2.0 Flash" };
-      case "xai":
-        return { url: "https://api.x.ai/v1/chat/completions", apiKey: key, model: "grok-2-latest", label: "xAI Grok 2" };
-    }
+    if (key) chain.push(buildConfig(p, key));
   }
-  return { error: "Nenhuma chave de IA configurada. Adicione no painel admin.", status: 500 };
+  return chain;
 }
 
 Deno.serve(async (req) => {
