@@ -54,19 +54,31 @@ export function useVoice(opts: { useElevenLabs?: boolean; useRemoteTTS?: boolean
 
   // ---------- TTS ----------
   const stopSpeaking = useCallback(() => {
-    inflightRef.current?.abort();
-    inflightRef.current = null;
+    // NÃO aborta fetch em andamento (causava "connection closed").
+    // Só para o áudio que já está tocando.
     window.speechSynthesis?.cancel();
     if (audioRef.current) {
       audioRef.current.pause();
       audioRef.current.src = "";
+      audioRef.current = null;
     }
     setSpeaking(false);
   }, []);
 
   const speak = useCallback(async (text: string) => {
     if (!text.trim()) return;
-    stopSpeaking();
+
+    // Se já tem requisição em andamento, ignora (evita empilhar chamadas paralelas)
+    if (inflightRef.current) {
+      console.log("[useVoice] já tem TTS em andamento, ignorando nova chamada");
+      return;
+    }
+
+    // Para áudio anterior se estiver tocando
+    if (audioRef.current) {
+      audioRef.current.pause();
+      audioRef.current = null;
+    }
     setSpeaking(true);
 
     const ac = new AbortController();
@@ -94,9 +106,13 @@ export function useVoice(opts: { useElevenLabs?: boolean; useRemoteTTS?: boolean
       const audio = new Audio(url);
       audioRef.current = audio;
       audio.onended = () => { setSpeaking(false); URL.revokeObjectURL(url); };
-      audio.onerror = () => { setSpeaking(false); URL.revokeObjectURL(url); };
+      audio.onerror = (ev) => {
+        console.warn("[useVoice] audio playback error:", ev);
+        setSpeaking(false);
+        URL.revokeObjectURL(url);
+      };
       await audio.play();
-      console.log("[useVoice] ElevenLabs tocando", { len: text.length });
+      console.log("[useVoice] ElevenLabs tocando", { len: text.length, provider: resp.headers.get("X-TTS-Provider") });
     } catch (e) {
       if ((e as Error)?.name === "AbortError") return;
       console.error("[useVoice] ElevenLabs falhou (sem fallback robótico):", e);
@@ -104,7 +120,7 @@ export function useVoice(opts: { useElevenLabs?: boolean; useRemoteTTS?: boolean
     } finally {
       if (inflightRef.current === ac) inflightRef.current = null;
     }
-  }, [stopSpeaking]);
+  }, []);
 
   // "Warm-up" do TTS: deve ser chamado dentro de um clique do usuário para
   // destravar o speechSynthesis em navegadores mobile (iOS Safari).
