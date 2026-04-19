@@ -48,7 +48,7 @@ const Chat = () => {
   const [voiceMode, setVoiceMode] = useState<boolean>(() => {
     try { return localStorage.getItem("kera:voiceMode") === "1"; } catch { return false; }
   });
-  const [hasElevenLabs, setHasElevenLabs] = useState(false);
+  const [hasRemoteTTS, setHasRemoteTTS] = useState(false);
   const [attachments, setAttachments] = useState<Attachment[]>([]);
   const [dragging, setDragging] = useState(false);
   const dragCounter = useRef(0);
@@ -56,7 +56,7 @@ const Chat = () => {
   const scrollerRef = useRef<HTMLDivElement>(null);
 
   const voice = useVoice({
-    useElevenLabs: hasElevenLabs,
+    useRemoteTTS: hasRemoteTTS,
     onTranscript: (t) => { setInput(t); setTimeout(() => sendText(t), 100); },
   });
 
@@ -70,7 +70,7 @@ const Chat = () => {
         setIsAdmin(!!r);
       }
     });
-    fetch(STATUS_URL).then(r => r.json()).then(s => setHasElevenLabs(!!s.elevenlabs)).catch(() => {});
+    fetch(STATUS_URL).then(r => r.json()).then(s => setHasRemoteTTS(!!(s.tts ?? s.openai ?? s.elevenlabs))).catch(() => {});
     // garante carregamento das vozes
     if (typeof window !== "undefined") window.speechSynthesis?.getVoices();
   }, []);

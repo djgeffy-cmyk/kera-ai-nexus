@@ -15,8 +15,10 @@ type SR = {
 
 const TTS_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/tts-kera`;
 
-export function useVoice(opts: { useElevenLabs: boolean; onTranscript: (t: string) => void; lang?: string }) {
-  const { useElevenLabs, onTranscript, lang = "pt-BR" } = opts;
+export function useVoice(opts: { useElevenLabs?: boolean; useRemoteTTS?: boolean; onTranscript: (t: string) => void; lang?: string }) {
+  const { useElevenLabs, useRemoteTTS, onTranscript, lang = "pt-BR" } = opts;
+  // Compat: aceita "useElevenLabs" (antigo) ou "useRemoteTTS" (novo). Se qualquer um for true, usa o backend.
+  const useRemote = useRemoteTTS ?? useElevenLabs ?? false;
   const [listening, setListening] = useState(false);
   const [speaking, setSpeaking] = useState(false);
   const recRef = useRef<SR | null>(null);
@@ -64,14 +66,17 @@ export function useVoice(opts: { useElevenLabs: boolean; onTranscript: (t: strin
     stopSpeaking();
     setSpeaking(true);
 
-    if (useElevenLabs) {
+    if (useRemote) {
       try {
         const resp = await fetch(TTS_URL, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ text }),
         });
-        if (!resp.ok) throw new Error("TTS HTTP " + resp.status);
+        if (!resp.ok) {
+          const errText = await resp.text().catch(() => "");
+          throw new Error("TTS HTTP " + resp.status + " " + errText.slice(0, 200));
+        }
         const blob = await resp.blob();
         const url = URL.createObjectURL(blob);
         const audio = new Audio(url);
@@ -79,9 +84,10 @@ export function useVoice(opts: { useElevenLabs: boolean; onTranscript: (t: strin
         audio.onended = () => { setSpeaking(false); URL.revokeObjectURL(url); };
         audio.onerror = () => { setSpeaking(false); URL.revokeObjectURL(url); };
         await audio.play();
+        console.log("[useVoice] OpenAI TTS tocando", { len: text.length });
         return;
       } catch (e) {
-        console.warn("[useVoice] ElevenLabs falhou, fallback Web Speech:", e);
+        console.warn("[useVoice] TTS remoto falhou, fallback Web Speech:", e);
       }
     }
 

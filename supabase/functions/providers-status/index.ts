@@ -8,14 +8,18 @@ const corsHeaders = {
 Deno.serve((req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
+  const hasOpenAI = !!Deno.env.get("OPENAI_API_KEY");
+  const hasEleven = !!Deno.env.get("ELEVENLABS_API_KEY");
   const status = {
     lovable: !!Deno.env.get("LOVABLE_API_KEY"),
-    openai: !!Deno.env.get("OPENAI_API_KEY"),
+    openai: hasOpenAI,
     groq: !!Deno.env.get("GROQ_API_KEY"),
     openrouter: !!Deno.env.get("OPENROUTER_API_KEY"),
     gemini: !!Deno.env.get("GEMINI_API_KEY"),
     xai: !!Deno.env.get("XAI_API_KEY"),
-    elevenlabs: !!Deno.env.get("ELEVENLABS_API_KEY"),
+    elevenlabs: hasEleven,
+    // TTS natural disponível se OpenAI ou ElevenLabs estiverem configurados
+    tts: hasOpenAI || hasEleven,
   };
 
   return new Response(JSON.stringify(status), {
