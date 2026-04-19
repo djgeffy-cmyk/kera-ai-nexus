@@ -144,13 +144,23 @@ Deno.serve(async (req) => {
 
     // Fallback ou rota direta: OpenAI
     if (wantOpenAI || (OPENAI_KEY && !wantEleven) || OPENAI_KEY) {
-      return await ttsOpenAI({
-        apiKey: OPENAI_KEY!,
-        text,
-        voice: (provider === "openai" ? voice : undefined) || OPENAI_DEFAULT_VOICE,
-        model: (provider === "openai" ? model : undefined) || OPENAI_DEFAULT_MODEL,
-        instructions,
-      });
+      try {
+        return await ttsOpenAI({
+          apiKey: OPENAI_KEY!,
+          text,
+          voice: (provider === "openai" ? voice : undefined) || OPENAI_DEFAULT_VOICE,
+          model: (provider === "openai" ? model : undefined) || OPENAI_DEFAULT_MODEL,
+          instructions,
+        });
+      } catch (err) {
+        const msg = err instanceof Error ? err.message : String(err);
+        // Se OpenAI estourou quota e ElevenLabs já falhou antes, devolve 204 silencioso
+        if (/\b429\b|insufficient_quota|exceeded your current quota/i.test(msg)) {
+          console.warn("[tts-kera] Todos provedores indisponíveis (quota). Retornando 204.");
+          return new Response(null, { status: 204, headers: corsHeaders });
+        }
+        throw err;
+      }
     }
 
     return new Response(JSON.stringify({ error: "Nenhum provedor disponível" }), {
@@ -159,7 +169,11 @@ Deno.serve(async (req) => {
     });
   } catch (e) {
     console.error("tts-kera error", e);
-    return new Response(JSON.stringify({ error: e instanceof Error ? e.message : "Erro" }), {
+    const msg = e instanceof Error ? e.message : "Erro";
+    if (/\b429\b|insufficient_quota|exceeded your current quota/i.test(msg)) {
+      return new Response(null, { status: 204, headers: corsHeaders });
+    }
+    return new Response(JSON.stringify({ error: msg }), {
       status: 500,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
