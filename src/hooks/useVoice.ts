@@ -73,6 +73,11 @@ export function useVoice(opts: { useElevenLabs?: boolean; useRemoteTTS?: boolean
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ text }),
         });
+        if (resp.status === 204) {
+          // Provedores TTS indisponíveis (quota). Silencia sem fallback robótico.
+          setSpeaking(false);
+          return;
+        }
         if (!resp.ok) {
           const errText = await resp.text().catch(() => "");
           throw new Error("TTS HTTP " + resp.status + " " + errText.slice(0, 200));
