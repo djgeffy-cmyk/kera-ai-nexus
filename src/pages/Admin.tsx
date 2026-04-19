@@ -8,6 +8,7 @@ import { PROVIDERS, SECRET_NAMES, getPreferredProvider, setPreferredProvider, ty
 import { loadVoicesAsync, getPreferredVoiceURI, setPreferredVoiceURI, classifyVoice } from "@/lib/nativeVoice";
 import { toast } from "sonner";
 import keraLogo from "@/assets/kera-logo.png";
+import { MonitorTargetsManager } from "@/components/admin/MonitorTargetsManager";
 
 type Status = Record<string, boolean>;
 
@@ -210,6 +211,8 @@ const Admin = () => {
             </Button>
           )}
         </section>
+
+        <MonitorTargetsManager />
       </main>
     </div>
   );
