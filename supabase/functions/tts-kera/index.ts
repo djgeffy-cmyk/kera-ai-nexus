@@ -113,9 +113,30 @@ Deno.serve(async (req) => {
     const payload = await req.json().catch(() => ({}));
     const text: string = payload?.text;
     const provider: string | undefined = payload?.provider; // "elevenlabs" | "openai" | undefined (auto)
-    const voice: string | undefined = payload?.voice;
+    let voice: string | undefined = payload?.voice;
     const model: string | undefined = payload?.model;
     const instructions: string | undefined = payload?.instructions;
+
+    // Se não veio voice no payload, busca configuração salva no banco (kera_settings.voice_id)
+    if (!voice) {
+      try {
+        const SUPABASE_URL = Deno.env.get("SUPABASE_URL");
+        const SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+        if (SUPABASE_URL && SERVICE_KEY) {
+          const r = await fetch(
+            `${SUPABASE_URL}/rest/v1/kera_settings?singleton=eq.true&select=voice_id&limit=1`,
+            { headers: { apikey: SERVICE_KEY, Authorization: `Bearer ${SERVICE_KEY}` } },
+          );
+          if (r.ok) {
+            const rows = await r.json();
+            const v = rows?.[0]?.voice_id;
+            if (typeof v === "string" && v.trim()) voice = v.trim();
+          }
+        }
+      } catch (e) {
+        console.warn("[tts-kera] não foi possível ler voice_id do banco:", e);
+      }
+    }
 
     if (typeof text !== "string" || !text.trim()) {
       return new Response(JSON.stringify({ error: "text é obrigatório" }), {
