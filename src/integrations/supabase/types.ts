@@ -525,6 +525,45 @@ export type Database = {
         }
         Relationships: []
       }
+      pronunciation_fixes: {
+        Row: {
+          case_sensitive: boolean
+          created_at: string
+          enabled: boolean
+          id: string
+          notes: string | null
+          replacement: string
+          updated_at: string
+          updated_by: string | null
+          whole_word: boolean
+          word: string
+        }
+        Insert: {
+          case_sensitive?: boolean
+          created_at?: string
+          enabled?: boolean
+          id?: string
+          notes?: string | null
+          replacement: string
+          updated_at?: string
+          updated_by?: string | null
+          whole_word?: boolean
+          word: string
+        }
+        Update: {
+          case_sensitive?: boolean
+          created_at?: string
+          enabled?: boolean
+          id?: string
+          notes?: string | null
+          replacement?: string
+          updated_at?: string
+          updated_by?: string | null
+          whole_word?: boolean
+          word?: string
+        }
+        Relationships: []
+      }
       user_roles: {
         Row: {
           created_at: string
