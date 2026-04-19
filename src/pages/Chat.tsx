@@ -931,6 +931,13 @@ Por favor, analise: há perda de pacote? jitter alto sugere instabilidade de rot
           </p>
         </div>
       </div>
+      {voiceMode && (
+        <VoiceStatusIndicator
+          listening={voice.listening}
+          thinking={streaming && !voice.speaking}
+          speaking={voice.speaking}
+        />
+      )}
     </div>
   );
 };
