@@ -93,7 +93,7 @@ const Admin = () => {
                         )}
                       </div>
                       <p className="text-xs text-muted-foreground mt-1">{p.description}</p>
-                      {p.help && p.id !== "auto" && p.id !== "lovable" && !configured && (
+                      {p.help && p.id !== "lovable" && !configured && p.id !== "auto" as string && (
                         <p className="text-xs text-muted-foreground/80 mt-2 flex items-center gap-1">
                           <KeyRound className="size-3" /> {p.help}
                           <ExternalLink className="size-3" />
