@@ -23,8 +23,25 @@ interface ProviderConfig {
   label: string;
 }
 
-function resolveProvider(requested: Provider | undefined): ProviderConfig | { error: string; status: number } {
-  const keys = {
+function buildConfig(p: Provider, key: string): ProviderConfig {
+  switch (p) {
+    case "lovable":
+      return { url: "https://ai.gateway.lovable.dev/v1/chat/completions", apiKey: key, model: "google/gemini-3-flash-preview", label: "Lovable AI (Gemini 3 Flash)" };
+    case "openai":
+      return { url: "https://api.openai.com/v1/chat/completions", apiKey: key, model: "gpt-4o-mini", label: "OpenAI GPT-4o mini" };
+    case "groq":
+      return { url: "https://api.groq.com/openai/v1/chat/completions", apiKey: key, model: "llama-3.3-70b-versatile", label: "Groq Llama 3.3 70B" };
+    case "openrouter":
+      return { url: "https://openrouter.ai/api/v1/chat/completions", apiKey: key, model: "meta-llama/llama-3.3-70b-instruct:free", label: "OpenRouter Llama 3.3 (free)" };
+    case "gemini":
+      return { url: "https://generativelanguage.googleapis.com/v1beta/openai/chat/completions", apiKey: key, model: "gemini-2.0-flash", label: "Google Gemini 2.0 Flash" };
+    case "xai":
+      return { url: "https://api.x.ai/v1/chat/completions", apiKey: key, model: "grok-2-latest", label: "xAI Grok 2" };
+  }
+}
+
+function getProviderChain(requested: Provider | undefined): ProviderConfig[] {
+  const keys: Record<Provider, string | undefined> = {
     lovable: Deno.env.get("LOVABLE_API_KEY"),
     openai: Deno.env.get("OPENAI_API_KEY"),
     groq: Deno.env.get("GROQ_API_KEY"),
@@ -32,32 +49,19 @@ function resolveProvider(requested: Provider | undefined): ProviderConfig | { er
     gemini: Deno.env.get("GEMINI_API_KEY"),
     xai: Deno.env.get("XAI_API_KEY"),
   };
-
-  // Se o usuário pediu um provider específico, tenta usar
+  const fallbackOrder: Provider[] = ["lovable", "groq", "openrouter", "gemini", "openai", "xai"];
   const order: Provider[] = requested
-    ? [requested, "lovable", "openai", "groq", "openrouter", "gemini", "xai"]
-    : ["lovable", "openai", "groq", "openrouter", "gemini", "xai"];
-
+    ? [requested, ...fallbackOrder.filter((p) => p !== requested)]
+    : fallbackOrder;
+  const seen = new Set<Provider>();
+  const chain: ProviderConfig[] = [];
   for (const p of order) {
+    if (seen.has(p)) continue;
+    seen.add(p);
     const key = keys[p];
-    if (!key) continue;
-    switch (p) {
-      case "lovable":
-        return { url: "https://ai.gateway.lovable.dev/v1/chat/completions", apiKey: key, model: "google/gemini-3-flash-preview", label: "Lovable AI (Gemini 3 Flash)" };
-      case "openai":
-        return { url: "https://api.openai.com/v1/chat/completions", apiKey: key, model: "gpt-4o-mini", label: "OpenAI GPT-4o mini" };
-      case "groq":
-        return { url: "https://api.groq.com/openai/v1/chat/completions", apiKey: key, model: "llama-3.3-70b-versatile", label: "Groq Llama 3.3 70B" };
-      case "openrouter":
-        return { url: "https://openrouter.ai/api/v1/chat/completions", apiKey: key, model: "meta-llama/llama-3.3-70b-instruct:free", label: "OpenRouter Llama 3.3 (free)" };
-      case "gemini":
-        // Gemini direto usa endpoint compatível OpenAI
-        return { url: "https://generativelanguage.googleapis.com/v1beta/openai/chat/completions", apiKey: key, model: "gemini-2.0-flash", label: "Google Gemini 2.0 Flash" };
-      case "xai":
-        return { url: "https://api.x.ai/v1/chat/completions", apiKey: key, model: "grok-2-latest", label: "xAI Grok 2" };
-    }
+    if (key) chain.push(buildConfig(p, key));
   }
-  return { error: "Nenhuma chave de IA configurada. Adicione no painel admin.", status: 500 };
+  return chain;
 }
 
 Deno.serve(async (req) => {
@@ -76,50 +80,59 @@ Deno.serve(async (req) => {
       ? systemPrompt
       : DEFAULT_SYSTEM_PROMPT;
 
-    const cfg = resolveProvider(provider as Provider | undefined);
-    if ("error" in cfg) {
-      return new Response(JSON.stringify({ error: cfg.error }), {
-        status: cfg.status,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
-
-    console.log(`[chat-kera] Using provider: ${cfg.label}`);
-
-    const upstream = await fetch(cfg.url, {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${cfg.apiKey}`,
-        "Content-Type": "application/json",
-        ...(cfg.url.includes("openrouter") ? { "HTTP-Referer": "https://kera-ai.lovable.app", "X-Title": "Kera AI" } : {}),
-      },
-      body: JSON.stringify({
-        model: cfg.model,
-        stream: true,
-        messages: [{ role: "system", content: finalSystem }, ...messages],
-      }),
-    });
-
-    if (!upstream.ok) {
-      if (upstream.status === 429) {
-        return new Response(JSON.stringify({ error: "Limite de requisições atingido. Tente novamente em alguns segundos." }), {
-          status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" },
-        });
-      }
-      if (upstream.status === 402) {
-        return new Response(JSON.stringify({ error: "Créditos de IA esgotados." }), {
-          status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" },
-        });
-      }
-      const t = await upstream.text();
-      console.error("Upstream error", upstream.status, t);
-      return new Response(JSON.stringify({ error: `Erro no provedor (${cfg.label}): ${t.slice(0, 200)}` }), {
+    const chain = getProviderChain(provider as Provider | undefined);
+    if (chain.length === 0) {
+      return new Response(JSON.stringify({ error: "Nenhuma chave de IA configurada. Adicione no painel admin." }), {
         status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
-    return new Response(upstream.body, {
-      headers: { ...corsHeaders, "Content-Type": "text/event-stream", "X-Provider": cfg.label },
+    let lastError = "";
+    let lastStatus = 500;
+    for (let i = 0; i < chain.length; i++) {
+      const cfg = chain[i];
+      console.log(`[chat-kera] Tentativa ${i + 1}/${chain.length}: ${cfg.label}`);
+
+      const upstream = await fetch(cfg.url, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${cfg.apiKey}`,
+          "Content-Type": "application/json",
+          ...(cfg.url.includes("openrouter") ? { "HTTP-Referer": "https://kera-ai.lovable.app", "X-Title": "Kera AI" } : {}),
+        },
+        body: JSON.stringify({
+          model: cfg.model,
+          stream: true,
+          messages: [{ role: "system", content: finalSystem }, ...messages],
+        }),
+      });
+
+      if (upstream.ok) {
+        return new Response(upstream.body, {
+          headers: { ...corsHeaders, "Content-Type": "text/event-stream", "X-Provider": cfg.label },
+        });
+      }
+
+      // Falhou — captura erro e tenta próximo se for 429/5xx
+      const errText = await upstream.text();
+      lastStatus = upstream.status;
+      lastError = errText.slice(0, 200);
+      console.warn(`[chat-kera] ${cfg.label} falhou ${upstream.status}: ${lastError}`);
+
+      const shouldFallback = upstream.status === 429 || upstream.status === 402 || upstream.status >= 500;
+      if (!shouldFallback) {
+        // Erro definitivo (auth, bad request) — não adianta tentar outro
+        return new Response(JSON.stringify({ error: `Erro no provedor (${cfg.label}): ${lastError}` }), {
+          status: upstream.status, headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+      // senão, continua o loop pro próximo provedor
+    }
+
+    return new Response(JSON.stringify({
+      error: `Todos os provedores falharam. Último erro (${lastStatus}): ${lastError}`,
+    }), {
+      status: 503, headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (e) {
     console.error("chat-kera error", e);
