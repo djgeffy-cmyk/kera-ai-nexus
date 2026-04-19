@@ -7,8 +7,25 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
-import { Target, Plus, Trash2, Save, X, Power } from "lucide-react";
+import { Target, Plus, Trash2, Save, X, Power, FlaskConical, ChevronDown, ChevronUp } from "lucide-react";
 import { toast } from "sonner";
+
+// Mesma lógica do edge function chat-kera (mantém em sincronia)
+const escapeRegExp = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+const buildTriggerRegex = (t: { keywords: string; regex_pattern: string | null }): RegExp | null => {
+  try {
+    if (t.regex_pattern && t.regex_pattern.trim()) return new RegExp(t.regex_pattern, "i");
+    const parts = t.keywords
+      .split(",")
+      .map((s) => s.trim())
+      .filter(Boolean)
+      .map(escapeRegExp);
+    if (!parts.length) return null;
+    return new RegExp(`\\b(?:${parts.join("|")})\\b`, "i");
+  } catch {
+    return null;
+  }
+};
 
 type Trigger = {
   id: string;
