@@ -77,9 +77,9 @@ async function ttsElevenLabs(opts: {
   const { apiKey, text, voiceId, modelId } = opts;
   const url = `https://api.elevenlabs.io/v1/text-to-speech/${voiceId}?output_format=mp3_44100_128`;
 
-  // Retry até 3x se for 429 concurrent_limit_exceeded (limite de 3 requisições paralelas)
+  // Retry até 6x se for 429 concurrent_limit_exceeded (limite de 3 requisições paralelas)
   let lastErr = "";
-  for (let attempt = 0; attempt < 3; attempt++) {
+  for (let attempt = 0; attempt < 6; attempt++) {
     const upstream = await fetch(url, {
       method: "POST",
       headers: {
@@ -114,10 +114,10 @@ async function ttsElevenLabs(opts: {
     }
     const t = await upstream.text();
     lastErr = `ElevenLabs ${upstream.status}: ${t.slice(0, 300)}`;
-    // Se for limite de concorrência, espera e tenta de novo
+    // Se for limite de concorrência, espera mais e tenta de novo (até 6x)
     if (upstream.status === 429 && /concurrent_limit_exceeded|concurrent requests/i.test(t)) {
-      const wait = 800 * (attempt + 1); // 800ms, 1.6s, 2.4s
-      console.warn(`[ElevenLabs] concurrent limit, retry em ${wait}ms (tentativa ${attempt + 1}/3)`);
+      const wait = 1000 + 1500 * attempt; // 1s, 2.5s, 4s, 5.5s, 7s, 8.5s
+      console.warn(`[ElevenLabs] concurrent limit, retry em ${wait}ms (tentativa ${attempt + 1}/6)`);
       await new Promise((r) => setTimeout(r, wait));
       continue;
     }

@@ -16,8 +16,7 @@ type SR = {
 const TTS_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/tts-kera`;
 
 export function useVoice(opts: { useElevenLabs?: boolean; useRemoteTTS?: boolean; onTranscript: (t: string) => void; lang?: string }) {
-  const { useElevenLabs, useRemoteTTS, onTranscript, lang = "pt-BR" } = opts;
-  const useRemote = useRemoteTTS ?? useElevenLabs ?? false;
+  const { onTranscript, lang = "pt-BR" } = opts;
   const [listening, setListening] = useState(false);
   const [speaking, setSpeaking] = useState(false);
   const [pendingPlay, setPendingPlay] = useState(false);
@@ -44,43 +43,6 @@ export function useVoice(opts: { useElevenLabs?: boolean; useRemoteTTS?: boolean
       audio.load?.();
     } catch {}
   }, []);
-
-  const speakWithBrowser = useCallback(async (text: string) => {
-    if (!("speechSynthesis" in window)) {
-      throw new Error("speechSynthesis não suportado neste navegador");
-    }
-
-    clearPendingUnlock();
-    pendingAudioRef.current = null;
-    setPendingPlay(false);
-    window.speechSynthesis.cancel();
-
-    const utter = new SpeechSynthesisUtterance(text);
-    utter.lang = lang;
-    utter.rate = 1;
-    utter.pitch = 1;
-    utter.volume = 1;
-
-    const voices = window.speechSynthesis.getVoices?.() ?? [];
-    const preferredVoice =
-      voices.find((v) => v.lang?.toLowerCase().startsWith(lang.toLowerCase())) ??
-      voices.find((v) => v.lang?.toLowerCase().startsWith("pt"));
-    if (preferredVoice) utter.voice = preferredVoice;
-
-    setSpeaking(true);
-
-    await new Promise<void>((resolve, reject) => {
-      utter.onend = () => {
-        setSpeaking(false);
-        resolve();
-      };
-      utter.onerror = (event: any) => {
-        setSpeaking(false);
-        reject(new Error(event?.error || "speechSynthesis falhou"));
-      };
-      window.speechSynthesis.speak(utter);
-    });
-  }, [clearPendingUnlock, lang]);
 
   // ---------- STT (Web Speech) ----------
   const startListening = useCallback(() => {
@@ -109,15 +71,13 @@ export function useVoice(opts: { useElevenLabs?: boolean; useRemoteTTS?: boolean
     setListening(false);
   }, []);
 
-  // ---------- TTS ----------
+  // ---------- TTS (ElevenLabs/OpenAI via edge function — sem fallback do navegador) ----------
   const stopSpeaking = useCallback(() => {
     if (inflightRef.current) {
       try { inflightRef.current.abort(); } catch {}
       inflightRef.current = null;
     }
-
     clearPendingUnlock();
-    window.speechSynthesis?.cancel();
     cleanupAudio(audioRef.current);
     audioRef.current = null;
     pendingAudioRef.current = null;
@@ -134,33 +94,26 @@ export function useVoice(opts: { useElevenLabs?: boolean; useRemoteTTS?: boolean
       setPendingPlay(false);
       setSpeaking(true);
     } catch (e) {
-      console.warn("[useVoice] resumePendingPlay falhou, tentando fallback local:", e);
+      console.warn("[useVoice] resumePendingPlay falhou:", e);
     }
   }, [clearPendingUnlock]);
 
   const speak = useCallback(async (text: string) => {
     if (!text.trim()) return;
 
+    // Para qualquer áudio anterior antes de iniciar
     if (pendingAudioRef.current) {
       cleanupAudio(pendingAudioRef.current);
       pendingAudioRef.current = null;
     }
-
     if (inflightRef.current) {
       try { inflightRef.current.abort(); } catch {}
       inflightRef.current = null;
     }
-
     clearPendingUnlock();
-    window.speechSynthesis?.cancel();
     cleanupAudio(audioRef.current);
     audioRef.current = null;
     setPendingPlay(false);
-
-    if (!useRemote) {
-      await speakWithBrowser(text);
-      return;
-    }
 
     const audio = new Audio();
     audio.preload = "auto";
@@ -180,18 +133,15 @@ export function useVoice(opts: { useElevenLabs?: boolean; useRemoteTTS?: boolean
       });
 
       if (resp.status === 204) {
-        console.warn("[useVoice] TTS indisponível (quota). Caindo para voz local.");
+        console.warn("[useVoice] TTS retornou 204 (quota/limite).");
         if (audioRef.current === audio) audioRef.current = null;
         setSpeaking(false);
-        await speakWithBrowser(text);
         return;
       }
-
       if (!resp.ok) {
         const errText = await resp.text().catch(() => "");
         throw new Error("TTS HTTP " + resp.status + " " + errText.slice(0, 200));
       }
-
       if (audioRef.current !== audio) {
         console.log("[useVoice] áudio substituído durante fetch, descartando");
         return;
@@ -212,7 +162,7 @@ export function useVoice(opts: { useElevenLabs?: boolean; useRemoteTTS?: boolean
         clearPendingUnlock();
         URL.revokeObjectURL(url);
       };
-      audio.onerror = async (ev) => {
+      audio.onerror = (ev) => {
         console.warn("[useVoice] audio playback error:", ev);
         if (audioRef.current === audio) audioRef.current = null;
         pendingAudioRef.current = null;
@@ -220,16 +170,11 @@ export function useVoice(opts: { useElevenLabs?: boolean; useRemoteTTS?: boolean
         setSpeaking(false);
         clearPendingUnlock();
         URL.revokeObjectURL(url);
-        try {
-          await speakWithBrowser(text);
-        } catch (fallbackErr) {
-          console.error("[useVoice] fallback local também falhou:", fallbackErr);
-        }
       };
 
       try {
         await audio.play();
-        console.log("[useVoice] ElevenLabs tocando", { len: text.length, bytes: blob.size });
+        console.log("[useVoice] TTS tocando", { len: text.length, bytes: blob.size });
       } catch (playErr) {
         if ((playErr as Error)?.name === "NotAllowedError") {
           console.warn("[useVoice] autoplay bloqueado, aguardando gesto do usuário");
@@ -244,12 +189,8 @@ export function useVoice(opts: { useElevenLabs?: boolean; useRemoteTTS?: boolean
               clearPendingUnlock();
               setPendingPlay(false);
               setSpeaking(true);
-            } catch {
-              try {
-                await speakWithBrowser(text);
-              } catch (fallbackErr) {
-                console.error("[useVoice] fallback local após bloqueio falhou:", fallbackErr);
-              }
+            } catch (e) {
+              console.warn("[useVoice] retry de play falhou:", e);
             }
           };
 
@@ -263,28 +204,21 @@ export function useVoice(opts: { useElevenLabs?: boolean; useRemoteTTS?: boolean
       }
     } catch (e) {
       if ((e as Error)?.name === "AbortError") return;
-      console.error("[useVoice] ElevenLabs falhou:", e);
+      console.error("[useVoice] TTS falhou:", e);
       if (audioRef.current === audio) audioRef.current = null;
       setSpeaking(false);
-      try {
-        await speakWithBrowser(text);
-      } catch (fallbackErr) {
-        console.error("[useVoice] fallback TTS falhou:", fallbackErr);
-        setSpeaking(false);
-      }
     } finally {
       if (inflightRef.current === ac) inflightRef.current = null;
     }
-  }, [cleanupAudio, clearPendingUnlock, speakWithBrowser, useRemote]);
+  }, [cleanupAudio, clearPendingUnlock]);
 
-  // "Warm-up" do TTS: deve ser chamado dentro de um clique do usuário para
-  // destravar o speechSynthesis em navegadores mobile (iOS Safari).
+  // "Warm-up" do contexto de áudio: chamado dentro de um clique do usuário para
+  // destravar reprodução de Audio() em iOS Safari.
   const warmUpTTS = useCallback(() => {
     try {
-      if (!("speechSynthesis" in window)) return;
-      const u = new SpeechSynthesisUtterance(" ");
-      u.volume = 0;
-      window.speechSynthesis.speak(u);
+      const a = new Audio();
+      a.muted = true;
+      a.play().catch(() => {});
     } catch {}
   }, []);
 
