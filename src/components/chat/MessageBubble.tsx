@@ -1,7 +1,8 @@
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import keraAvatar from "@/assets/kera-avatar.png";
-import { User, FileText } from "lucide-react";
+import { User, FileText, Volume2, Square } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 type ContentPart =
   | { type: "text"; text: string }
