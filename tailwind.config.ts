@@ -13,7 +13,20 @@ export default {
       },
     },
     extend: {
+      fontFamily: {
+        display: ['Orbitron', 'Inter', 'sans-serif'],
+        sans: ['Inter', 'system-ui', 'sans-serif'],
+      },
+      backgroundImage: {
+        'gradient-cyber': 'var(--gradient-cyber)',
+        'gradient-panel': 'var(--gradient-panel)',
+      },
+      boxShadow: {
+        'glow': 'var(--shadow-glow)',
+        'soft': 'var(--shadow-soft)',
+      },
       colors: {
+        'primary-glow': 'hsl(var(--primary-glow))',
         border: "hsl(var(--border))",
         input: "hsl(var(--input))",
         ring: "hsl(var(--ring))",

@@ -1,0 +1,4 @@
+project_id = "ytixqgkzqgeoxrbmjqbo"
+
+[functions.chat-kera]
+verify_jwt = false
