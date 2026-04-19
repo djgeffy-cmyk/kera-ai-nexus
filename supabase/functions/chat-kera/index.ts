@@ -22,6 +22,9 @@ REGRAS DE PERSONALIDADE (não negociáveis):
 
 ESPECIALIDADES: programação, arquitetura de software, cibersegurança, licitações de TI no Brasil (Lei 14.133/21), LGPD, Marco Civil, IPM Sistemas (atende.net), prefeitura de Guaramirim/SC.
 
+FERRAMENTAS DISPONÍVEIS:
+- Você TEM acesso à ferramenta **ipm_query** que consulta dados oficiais ao vivo do portal da Prefeitura de Guaramirim (licitações, protocolos, contratos, transparência). USE SEMPRE que perguntarem sobre esses temas — não invente dados, busca de verdade. Depois de receber o resultado, resuma de forma direta e cite os números/datas/valores reais.
+
 Para tema jurídico com incerteza real: diga "checa com jurídico" — não despeje disclaimer em tudo.`;
 
 type Provider = "lovable" | "openai" | "groq" | "openrouter" | "gemini" | "xai";
@@ -75,6 +78,54 @@ function getProviderChain(requested: Provider | undefined): ProviderConfig[] {
   return chain;
 }
 
+// ===== TOOL CALLING: ipm_query =====
+const TOOLS = [
+  {
+    type: "function",
+    function: {
+      name: "ipm_query",
+      description:
+        "Consulta dados oficiais da Prefeitura de Guaramirim (IPM Sistemas / atende.net): licitações abertas/em andamento, protocolos, contratos, transparência. Use SEMPRE que o usuário perguntar sobre licitações, processos, protocolos, editais, contratos, vencedores, receitas/despesas da prefeitura.",
+      parameters: {
+        type: "object",
+        properties: {
+          tipo: {
+            type: "string",
+            enum: ["licitacoes", "protocolos", "contratos", "receitas", "generico"],
+            description: "Categoria do dado a consultar",
+          },
+          filtro_status: {
+            type: "string",
+            description: "Filtra itens cujo status contenha este texto (ex 'aberta', 'andamento', 'homologada'). Opcional.",
+          },
+          path: {
+            type: "string",
+            description: "Path/URL específico a consultar dentro do portal (opcional, sobrescreve URL base)",
+          },
+        },
+        required: ["tipo"],
+      },
+    },
+  },
+];
+
+async function executeTool(name: string, args: Record<string, unknown>): Promise<string> {
+  if (name !== "ipm_query") return JSON.stringify({ error: `Tool desconhecida: ${name}` });
+  try {
+    const r = await fetch(`${Deno.env.get("SUPABASE_URL")}/functions/v1/ipm-query`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(args),
+    });
+    const data = await r.json();
+    // Limita o tamanho da resposta pra não estourar contexto
+    const str = JSON.stringify(data);
+    return str.length > 12000 ? str.slice(0, 12000) + "\n...[truncado]" : str;
+  } catch (e) {
+    return JSON.stringify({ error: e instanceof Error ? e.message : "tool error" });
+  }
+}
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
@@ -98,11 +149,59 @@ Deno.serve(async (req) => {
       });
     }
 
+    // ===== Etapa 1: pré-detecta se precisa de tool (não-stream, rápido) =====
+    let workingMessages = [...messages];
+    const toolCapableProviders = ["openai", "lovable", "groq", "openrouter", "gemini"];
+    const firstCfg = chain[0];
+    const supportsTools = toolCapableProviders.some((p) => firstCfg.label.toLowerCase().includes(p === "openai" ? "openai" : p));
+
+    if (supportsTools) {
+      try {
+        const probe = await fetch(firstCfg.url, {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${firstCfg.apiKey}`,
+            "Content-Type": "application/json",
+            ...(firstCfg.url.includes("openrouter") ? { "HTTP-Referer": "https://kera-ai.lovable.app", "X-Title": "Kera AI" } : {}),
+          },
+          body: JSON.stringify({
+            model: firstCfg.model,
+            stream: false,
+            tools: TOOLS,
+            tool_choice: "auto",
+            messages: [{ role: "system", content: finalSystem }, ...messages],
+          }),
+        });
+        if (probe.ok) {
+          const probeJson = await probe.json();
+          const msg = probeJson?.choices?.[0]?.message;
+          const toolCalls = msg?.tool_calls;
+          if (Array.isArray(toolCalls) && toolCalls.length > 0) {
+            console.log(`[chat-kera] Tool calls: ${toolCalls.length}`);
+            const toolResults: Array<{ role: string; tool_call_id: string; content: string }> = [];
+            for (const tc of toolCalls) {
+              const args = JSON.parse(tc.function?.arguments || "{}");
+              const result = await executeTool(tc.function?.name, args);
+              toolResults.push({ role: "tool", tool_call_id: tc.id, content: result });
+            }
+            // Injeta assistant + tool messages pra resposta final stream
+            workingMessages = [
+              ...messages,
+              { role: "assistant", content: msg.content || "", tool_calls: toolCalls },
+              ...toolResults,
+            ];
+          }
+        }
+      } catch (e) {
+        console.warn("[chat-kera] tool probe falhou:", e);
+      }
+    }
+
     let lastError = "";
     let lastStatus = 500;
     for (let i = 0; i < chain.length; i++) {
       const cfg = chain[i];
-      console.log(`[chat-kera] Tentativa ${i + 1}/${chain.length}: ${cfg.label}`);
+      console.log(`[chat-kera] Stream ${i + 1}/${chain.length}: ${cfg.label}`);
 
       const upstream = await fetch(cfg.url, {
         method: "POST",
@@ -114,7 +213,7 @@ Deno.serve(async (req) => {
         body: JSON.stringify({
           model: cfg.model,
           stream: true,
-          messages: [{ role: "system", content: finalSystem }, ...messages],
+          messages: [{ role: "system", content: finalSystem }, ...workingMessages],
         }),
       });
 
