@@ -521,6 +521,20 @@ Por favor, analise estes resultados, classifique a severidade de cada item e ind
 
         <div className="border-t border-border panel p-3 md:p-4">
           <div className="max-w-3xl mx-auto space-y-2">
+            {isSentinela && (
+              <div className="flex justify-center">
+                <Button
+                  onClick={runSentinelaCheck}
+                  disabled={streaming}
+                  variant="outline"
+                  size="sm"
+                  className="border-emerald-500/40 text-emerald-400 hover:bg-emerald-500/10 hover:text-emerald-300 gap-2"
+                >
+                  <ShieldCheck className="size-4" />
+                  Verificar status dos sistemas (Prefeitura + IPM + Webmail)
+                </Button>
+              </div>
+            )}
             {attachments.length > 0 && (
               <div className="flex flex-wrap gap-2">
                 {attachments.map((a, i) => (
