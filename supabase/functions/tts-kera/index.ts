@@ -188,7 +188,7 @@ Deno.serve(async (req) => {
       try {
         return await ttsElevenLabs({
           apiKey: ELEVEN_KEY,
-          text,
+          text: speakText,
           voiceId: voice || ELEVEN_DEFAULT_VOICE,
           modelId: model || ELEVEN_DEFAULT_MODEL,
         });
@@ -203,7 +203,7 @@ Deno.serve(async (req) => {
       try {
         return await ttsOpenAI({
           apiKey: OPENAI_KEY!,
-          text,
+          text: speakText,
           voice: (provider === "openai" ? voice : undefined) || OPENAI_DEFAULT_VOICE,
           model: (provider === "openai" ? model : undefined) || OPENAI_DEFAULT_MODEL,
           instructions,
