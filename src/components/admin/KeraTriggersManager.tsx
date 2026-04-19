@@ -8,8 +8,25 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Target, Plus, Trash2, Save, X, Power, FlaskConical, ChevronDown, ChevronUp, Flame } from "lucide-react";
+import { Target, Plus, Trash2, Save, X, Power, FlaskConical, ChevronDown, ChevronUp, Flame, GripVertical } from "lucide-react";
 import { toast } from "sonner";
+import {
+  DndContext,
+  closestCenter,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  type DragEndEvent,
+} from "@dnd-kit/core";
+import {
+  arrayMove,
+  SortableContext,
+  sortableKeyboardCoordinates,
+  useSortable,
+  verticalListSortingStrategy,
+} from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
 
 type Intensity = "leve" | "medio" | "pesado";
 const INTENSITY_META: Record<Intensity, { label: string; emoji: string; className: string }> = {
