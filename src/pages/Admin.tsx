@@ -84,7 +84,7 @@ const Admin = () => {
         <h1 className="font-display text-glow text-lg ml-2">PAINEL ADMIN</h1>
       </header>
 
-      <main className="max-w-3xl mx-auto px-4 py-8 space-y-6">
+      <main className="max-w-3xl mx-auto px-4 py-8 space-y-6 overflow-x-hidden">
         <section>
           <h2 className="font-display text-xl text-glow mb-1">Provedores de IA</h2>
           <p className="text-sm text-muted-foreground">
