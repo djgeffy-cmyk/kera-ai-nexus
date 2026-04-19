@@ -16,9 +16,10 @@ import { supabase } from "@/integrations/supabase/client";
 
 const SCRIBE_TOKEN_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/scribe-token`;
 
-// Regex pra wake word "kera" — STT em PT-BR comumente erra pra:
-// kera, kéra, kerá, quera, queira, kara, kará, cara, kerra, querra, que era
-const WAKE_WORD_REGEX = /\b(k[eéê]r+[aá]|qu?er+[aá]|qu?eira|c[aá]r[aá]|kerr?[aá]|querr?[aá]|que\s?era)\b[\s,!?:.\-]*/i;
+// Regex pra wake word "kera" — STT em PT-BR comumente erra pra MUITAS variações.
+// Cobertura: kera, kéra, kerá, kerra, querá, quera, queira, querida, queret, keret,
+// karen, kara, kará, cara, kira, carla, kerê, querer (início)
+const WAKE_WORD_REGEX = /\b(k[eéêia]r+(?:[aáeio]|et|en)\w{0,3}|qu?er+(?:[aáei]|ida|et)\w{0,3}|qu?eira|c[aá]r[aáel]\w{0,3}|kir[aá])\b[\s,!?:.\-]*/i;
 
 export type AlwaysListeningStatus =
   | "idle"
@@ -143,10 +144,14 @@ export function useAlwaysListening(opts: UseAlwaysListeningOptions) {
     }
   }, [flashStatus, playWakeBeep]);
 
+  // Estado pra evitar disparar a wake word duas vezes pro mesmo trecho
+  const wakeFiredForRef = useRef<string>("");
+  const partialDebounceRef = useRef<number | null>(null);
+
   const scribe = useScribe({
     modelId: "scribe_v2_realtime",
     commitStrategy: CommitStrategy.VAD,
-    languageCode: "por", // ISO 639-3 — português, evita STT tentar inglês
+    languageCode: "por",
     onSessionStarted: () => console.log("[AlwaysListen] Session started"),
     onConnect: () => console.log("[AlwaysListen] WebSocket connected"),
     onDisconnect: () => console.log("[AlwaysListen] WebSocket disconnected"),
@@ -154,9 +159,57 @@ export function useAlwaysListening(opts: UseAlwaysListeningOptions) {
     onPartialTranscript: (data: { text: string }) => {
       console.log("[AlwaysListen] Partial:", data.text);
       setPartial(data.text);
+
+      // ⚡ Detecção AGRESSIVA no partial — não espera o commit (pode demorar 30s+)
+      if (noWakeWordRef.current) return;
+      const text = data.text;
+      const match = text.match(WAKE_WORD_REGEX);
+      if (!match) return;
+
+      // Pega o ÚLTIMO match (caso o partial tenha várias ocorrências)
+      let lastIdx = -1;
+      let lastMatch: RegExpExecArray | null = null;
+      const re = new RegExp(WAKE_WORD_REGEX.source, "gi");
+      let m: RegExpExecArray | null;
+      while ((m = re.exec(text)) !== null) {
+        lastIdx = m.index;
+        lastMatch = m;
+      }
+      if (!lastMatch || lastIdx < 0) return;
+
+      const afterWake = text.slice(lastIdx + lastMatch[0].length).trim();
+      // Marca o trecho específico (wake + comando) pra não disparar duas vezes
+      const fingerprint = `${lastMatch[0]}|${afterWake.slice(0, 40)}`;
+      if (wakeFiredForRef.current === fingerprint) return;
+
+      // Aguarda 500ms de "silêncio" no partial antes de disparar (pra dar tempo do usuário terminar a frase)
+      if (partialDebounceRef.current) window.clearTimeout(partialDebounceRef.current);
+      partialDebounceRef.current = window.setTimeout(() => {
+        if (afterWake.length < 2) {
+          // Só "kera" sozinho — toca beep e aguarda próximo
+          if (wakeFiredForRef.current !== fingerprint) {
+            console.log("[AlwaysListen] ⚡ Wake (sem comando) no partial:", lastMatch![0]);
+            playWakeBeep();
+            wakeFiredForRef.current = fingerprint;
+            flashStatus("heard-wake");
+            // Limpa pra reabrir detecção em ~6s
+            window.setTimeout(() => { wakeFiredForRef.current = ""; }, 6000);
+          }
+        } else if (afterWake.length >= 3 && /[\.\?!]\s*$|.{8,}/.test(afterWake)) {
+          // Tem comando substancial (termina com pontuação OU 8+ chars)
+          console.log("[AlwaysListen] ⚡ Wake + comando no partial:", lastMatch![0], "→", afterWake);
+          playWakeBeep();
+          wakeFiredForRef.current = fingerprint;
+          onCommandRef.current(afterWake);
+          flashStatus("heard-wake");
+          // Reseta após 3s
+          window.setTimeout(() => { wakeFiredForRef.current = ""; }, 3000);
+        }
+      }, 600);
     },
     onCommittedTranscript: (data: { text: string }) => {
       setPartial("");
+      // Limpa o fingerprint quando vier um commit (nova "rodada")
       handleCommitted(data.text);
     },
   });
