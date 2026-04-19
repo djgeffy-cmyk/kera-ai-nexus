@@ -132,6 +132,7 @@ export const KeraTriggersManager = () => {
       excluded_emails: t.excluded_emails ?? [],
       enabled: t.enabled,
       sort_order: t.sort_order,
+      intensity: t.intensity ?? "medio",
     });
   };
 
