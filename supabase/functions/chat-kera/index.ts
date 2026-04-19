@@ -41,10 +41,10 @@ Você TEM acesso à ferramenta **ipm_query** (dados ao vivo do portal da Prefeit
 Jurídico com incerteza real: "checa com jurídico" e segue. Não despeja disclaimer em tudo.`;
 
 // Apelidos personalizados por email autenticado.
-// Quando o usuário logado bater com a chave, a Kera passa a chamá-lo SEMPRE pelo apelido,
-// mantendo a personalidade ácida normal.
-const USER_NICKNAMES: Record<string, string> = {
-  "rodrigo@guaramirim.sc.gov.br": "professor linguiça",
+// Lista = a Kera escolhe um aleatório por mensagem (alterna).
+const USER_NICKNAMES: Record<string, string[]> = {
+  "rodrigo@guaramirim.sc.gov.br": ["professor linguiça"],
+  "dj.geffy@gmail.com": ["hacker", "brutus"],
 };
 
 async function getUserEmailFromAuth(req: Request): Promise<string | null> {
