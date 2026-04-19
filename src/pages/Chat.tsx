@@ -310,6 +310,7 @@ const Chat = () => {
           messages: next.map(m => ({ role: m.role, content: m.content })),
           provider: provider === "auto" ? undefined : provider,
           systemPrompt: resolveSystemPrompt(agentKey),
+          agentKey,
         }),
       });
 
