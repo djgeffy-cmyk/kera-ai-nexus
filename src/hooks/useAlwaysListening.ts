@@ -113,6 +113,7 @@ export function useAlwaysListening(opts: UseAlwaysListeningOptions) {
 
     if (match) {
       console.log("[AlwaysListen] ✓ Wake word match:", match[0], "in:", combined);
+      playWakeBeep(); // 🔔 confirmação sonora estilo Alexa
       // Pega o texto APÓS a wake word
       const idx = combined.search(WAKE_WORD_REGEX);
       const afterWake = combined.slice(idx + match[0].length).trim();
