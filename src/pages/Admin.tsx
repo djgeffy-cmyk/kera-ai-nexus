@@ -150,6 +150,79 @@ const Admin = () => {
             Nomes dos secrets: {Object.values(SECRET_NAMES).map(s => <code key={s} className="mx-1 px-1 py-0.5 rounded bg-secondary text-primary text-[11px]">{s}</code>)}
           </p>
         </div>
+
+        <section className="pt-4 border-t border-border space-y-4">
+          <div className="flex items-center gap-2">
+            <Volume2 className="size-5 text-primary" />
+            <h2 className="font-display text-xl text-glow">Voz da Kera (navegador)</h2>
+          </div>
+          <p className="text-sm text-muted-foreground">
+            Escolha qual voz nativa do navegador a Kera vai usar quando ler as respostas em voz alta.
+            Disponíveis: <span className="text-foreground">{ptVoices.length}</span> vozes em português.
+          </p>
+
+          <div className="flex gap-2 flex-wrap">
+            {(["todas", "feminina", "masculina"] as const).map(g => (
+              <Button
+                key={g}
+                size="sm"
+                variant={genderFilter === g ? "default" : "outline"}
+                onClick={() => setGenderFilter(g)}
+                className="capitalize"
+              >
+                {g}
+              </Button>
+            ))}
+          </div>
+
+          {filteredVoices.length === 0 ? (
+            <p className="text-sm text-muted-foreground italic">
+              Nenhuma voz {genderFilter !== "todas" ? genderFilter : "em português"} encontrada neste navegador.
+            </p>
+          ) : (
+            <div className="grid gap-2 sm:grid-cols-2">
+              {filteredVoices.map(v => {
+                const selected = voiceURI === v.voiceURI;
+                const gender = classifyVoice(v);
+                return (
+                  <Card
+                    key={v.voiceURI}
+                    onClick={() => chooseVoice(v.voiceURI)}
+                    className={`p-3 cursor-pointer transition border flex items-center gap-3 ${
+                      selected ? "border-primary shadow-glow bg-primary/5" : "border-border hover:border-primary/40"
+                    }`}
+                  >
+                    <div className={`size-4 rounded-full border flex items-center justify-center shrink-0 ${
+                      selected ? "border-primary bg-primary" : "border-muted-foreground"
+                    }`}>
+                      {selected && <Check className="size-2.5 text-primary-foreground" />}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium truncate">{v.name}</p>
+                      <p className="text-xs text-muted-foreground">
+                        {v.lang} · <span className="capitalize">{gender}</span>
+                      </p>
+                    </div>
+                    <Button
+                      size="icon"
+                      variant="ghost"
+                      className="size-8 shrink-0"
+                      onClick={(e) => { e.stopPropagation(); previewVoice(v); }}
+                      aria-label={`Pré-ouvir ${v.name}`}
+                    >
+                      <Play className="size-4" />
+                    </Button>
+                  </Card>
+                );
+              })}
+            </div>
+          )}
+          {voiceURI && (
+            <Button variant="ghost" size="sm" onClick={() => { setVoiceURI(null); setPreferredVoiceURI(null); toast.success("Voz padrão restaurada"); }}>
+              Restaurar voz padrão
+            </Button>
+          )}
+        </section>
       </main>
     </div>
   );
