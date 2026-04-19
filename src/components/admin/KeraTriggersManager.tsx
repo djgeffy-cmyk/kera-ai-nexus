@@ -59,6 +59,35 @@ export const KeraTriggersManager = () => {
   const [editingId, setEditingId] = useState<string | "new" | null>(null);
   const [draft, setDraft] = useState<Draft>(emptyDraft());
 
+  // ---- Tester ----
+  const [testOpen, setTestOpen] = useState(false);
+  const [testText, setTestText] = useState("");
+  const [testScope, setTestScope] = useState("global");
+  const [testEmail, setTestEmail] = useState("");
+
+  const testMatches = (() => {
+    if (!testText.trim()) return [] as Array<{ trigger: Trigger; regexSrc: string }>;
+    const email = testEmail.trim().toLowerCase();
+    const out: Array<{ trigger: Trigger; regexSrc: string }> = [];
+    for (const t of items) {
+      if (!t.enabled) continue;
+      if (t.scope !== "global" && t.scope !== testScope) continue;
+      if (email && (t.excluded_emails ?? []).includes(email)) continue;
+      const re = buildTriggerRegex(t);
+      if (!re) continue;
+      if (re.test(testText)) {
+        out.push({ trigger: t, regexSrc: re.source });
+      }
+    }
+    return out;
+  })();
+
+  const finalPromptInjection = testMatches.length
+    ? `[INSTRUÇÕES DINÂMICAS — gatilhos disparados para esta mensagem]\n\n${testMatches
+        .map(({ trigger }) => `### ${trigger.name}\n${trigger.theme}`)
+        .join("\n\n---\n\n")}`
+    : "";
+
   const load = async () => {
     setLoading(true);
     const { data, error } = await supabase
