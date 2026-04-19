@@ -284,8 +284,41 @@ const Chat = () => {
 
   const currentAgent = getBuiltinAgent(agentKey) || customAgents.find(a => a.id === agentKey);
   const currentAgentName = currentAgent?.name || "Kera";
+  const isSentinela = agentKey === "kera-sentinela";
 
-  const Sidebar = () => (
+  const runSentinelaCheck = async () => {
+    if (streaming) return;
+    toast.info("🛡️ Sentinela verificando sistemas…");
+    try {
+      const resp = await fetch(MONITOR_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ urls: SENTINELA_TARGETS }),
+      });
+      if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+      const data = await resp.json();
+
+      const lines = data.results.map((r: { url: string; ok: boolean; status: number | null; statusText: string; latencyMs: number | null; server?: string; error?: string }) => {
+        const flag = r.ok ? "🟢" : (r.status && r.status >= 500 ? "🔴" : "🟠");
+        const statusInfo = r.status ? `${r.status} ${r.statusText}` : `ERRO: ${r.error ?? "sem resposta"}`;
+        return `- ${flag} **${r.url}** → ${statusInfo} · ${r.latencyMs ?? "?"}ms${r.server ? ` · server: ${r.server}` : ""}`;
+      }).join("\n");
+
+      const report = `🛡️ **Relatório Sentinela** — ${new Date(data.summary.checkedAt).toLocaleString("pt-BR")}
+
+**Resumo:** ${data.summary.up}/${data.summary.total} UP · ${data.summary.down} DOWN
+
+${lines}
+
+Por favor, analise estes resultados, classifique a severidade de cada item e indique ações recomendadas.`;
+
+      await sendText(report);
+    } catch (e: unknown) {
+      const msg = e instanceof Error ? e.message : "erro";
+      toast.error(`Falha no monitor: ${msg}`);
+    }
+  };
+
     <aside className="h-full w-full md:w-72 panel border-r border-border flex flex-col">
       <div className="p-4 border-b border-border flex items-center gap-2">
         <img src={keraLogo} alt="Kera AI" className="h-8" />
