@@ -253,7 +253,7 @@ Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   try {
-    const { messages, provider, systemPrompt } = await req.json();
+    const { messages, provider, systemPrompt, agentKey } = await req.json();
     if (!Array.isArray(messages)) {
       return new Response(JSON.stringify({ error: "messages must be an array" }), {
         status: 400,
@@ -297,63 +297,40 @@ Deno.serve(async (req) => {
         finalSystem = `${baseSystem}\n\nAPELIDO DO USUÁRIO ATUAL: trate este usuário por "${profile.normal}" (ex: "olha, ${profile.normal}, isso aí tá errado..."). Use no início e ao longo da resposta, com naturalidade, mantendo o tom ácido/mal-humorado de sempre — o apelido NÃO suaviza nada, só personaliza. Não explique o apelido nem comente sobre ele, só usa.`;
       }
 
-      // ===== Gatilhos extras por menção (independem do modo brava/normal) =====
-      // Detecta menções a pessoas conhecidas da prefeitura e injeta zoeira específica.
-      const mentionsRodrigo = /\brodrig[oa]\b|\bprofessor linguiç?a\b/i.test(lastText);
-      const mentionsGeverson = /\bgeverson\b|\bdj\.?\s*geffy\b|\bdalpra\b/i.test(lastText);
-      const mentionsDaniel = /\bdaniel\s+ferrari\b|\bferrari\b/i.test(lastText);
+    } // fim do bloco de apelido (profile)
 
-      const triggers: string[] = [];
+    // ===== Gatilhos editáveis (carregados do banco — kera_triggers) =====
+    // Roda independente do bloco de apelido — funciona pra qualquer usuário autenticado.
+    const lastUserMsgForTriggers = [...messages].reverse().find((m: any) => m?.role === "user");
+    const lastTextForTriggers = typeof lastUserMsgForTriggers?.content === "string"
+      ? lastUserMsgForTriggers.content
+      : JSON.stringify(lastUserMsgForTriggers?.content ?? "");
 
-      // Regra geral pra TODOS os gatilhos: variar sempre, nunca repetir.
+    const dbTriggers = await loadDbTriggers();
+    const matchedTriggers: string[] = [];
+    for (const t of dbTriggers) {
+      // Filtro por escopo: "global" sempre roda; "agent:<key>" só roda se bater
+      if (t.scope && t.scope !== "global") {
+        const expectedAgent = t.scope.startsWith("agent:") ? t.scope.slice(6) : null;
+        if (expectedAgent && expectedAgent !== agentKey) continue;
+      }
+      // Filtro por email excluído
+      if (email && Array.isArray(t.excluded_emails) && t.excluded_emails.includes(email)) continue;
+
+      const re = triggerRegex(t);
+      if (!re) continue;
+      if (!re.test(lastTextForTriggers)) continue;
+
+      matchedTriggers.push(`🎯 GATILHO ${t.name.toUpperCase()}: o usuário mencionou "${t.name}".\n${t.theme}\n\nContinue respondendo à pergunta com qualidade técnica normal — a zoeira é tempero, não substitui a resposta.`);
+    }
+
+    if (matchedTriggers.length > 0) {
       const VARIATION_RULE = `\n\n⚙️ REGRA DE VARIAÇÃO (vale pra TODOS os gatilhos abaixo):
-- NUNCA repita a mesma frase/piada de respostas anteriores. Se já usou "sisteminha do Rodrigo travou de novo", inventa outra ("Rodrigo deve tá benzendo o sisteminha", "sisteminha refatorado é sisteminha mesmo assim", etc).
-- Os exemplos listados são INSPIRAÇÃO — crie variações novas a cada resposta usando os mesmos TEMAS-CHAVE (o "pé fraco" de cada um), mas com palavras, comparações e contextos diferentes.
-- Mantém a MESMA PEGADA: zoeira de colega ácido, não ofensa pessoal. Tom seco/sarcástico da Kera de sempre.
-- O TEMA-CHAVE de cada um é INTOCÁVEL (sempre pega no mesmo pé), mas a EXECUÇÃO da piada muda toda vez.`;
-
-      if (mentionsRodrigo) {
-        triggers.push(`🎯 GATILHO RODRIGO: o usuário mencionou "Rodrigo" (dev dos sistemas da Prefeitura de Guaramirim).
-**TEMA-CHAVE (sempre):** chamar os sistemas dele de **"sisteminha"** (palavra que ele ODEIA).
-**Use "sisteminha" pelo menos 2x na resposta**, mas com VARIAÇÃO — diferentes contextos, comparações, motivos. Exemplos só pra inspiração (NÃO repita literal):
-- "sisteminha de novo travou? que surpresa…"
-- "Rodrigo deve estar benzendo o sisteminha agora"
-- "deixa eu adivinhar, mais um sisteminha precisando de gambiarra"
-- "sisteminha do Rodrigo: rodando em 1 core e uma reza"
-- "essa magia negra do sisteminha só o Rodrigo entende"
-Continue respondendo a pergunta com qualidade técnica normal — a zoeira é tempero.`);
-      }
-
-      if (mentionsGeverson && email !== "dj.geffy@gmail.com") {
-        triggers.push(`🎯 GATILHO GEVERSON: o usuário mencionou "Geverson" (admin da rede da Prefeitura de Guaramirim).
-**TEMA-CHAVE (sempre):** implicar com a **rede da prefeitura** (lentidão, gambiarras, switch antigo, Wi-Fi caindo, cabo no chão, latência absurda) — Geverson ODEIA quando falam mal da rede dele.
-VARIE a piada toda vez, NUNCA repita a mesma frase. Exemplos só pra inspiração:
-- "rede da prefeitura travando? culpa do Geverson, manda ele olhar o switch"
-- "o ping não mente, Geverson, aceita"
-- "aposto que o Wi-Fi caiu enquanto o Geverson lia isso"
-- "rede do Geverson: latência de tartaruga, uptime de político"
-- "Geverson vai jurar que tá tudo perfeito… até o próximo cabo solto"
-Continue respondendo a pergunta com qualidade técnica normal.`);
-      }
-
-      if (mentionsDaniel) {
-        triggers.push(`🎯 GATILHO DANIEL FERRARI: o usuário mencionou "Daniel Ferrari" (responsável pela **telecomunicações** da Prefeitura de Guaramirim — que VIVE com problema).
-**TEMA-CHAVE (sempre, mistura os DOIS):**
-1. **Baixinho** → comparar com **Oompa Loompa** (Fábrica de Chocolate do Wonka).
-2. **Telecom quebrada** → ramal mudo, VoIP caindo, ligação não completa, telefonia anos 90.
-VARIE as piadas a cada resposta, NUNCA repita literal. Inspirações:
-- "Oompa Loompa das telecom apareceu de novo"
-- "baixinho lá do Wonka, agora cuidando de ramal"
-- "o VoIP do Ferrari só funciona em ano bissexto"
-- "telecom do Daniel: tecnologia de ponta dos anos 90"
-- "tamanho Oompa Loompa, problemas tamanho família"
-- "Ferrari + telefonia da prefeitura = silêncio constitucional"
-Mistura os DOIS ângulos. Continue respondendo a pergunta com qualidade técnica normal.`);
-      }
-
-      if (triggers.length > 0) {
-        finalSystem += VARIATION_RULE + `\n\n${triggers.join("\n\n")}`;
-      }
+- NUNCA repita a mesma frase/piada de respostas anteriores. Os exemplos listados são INSPIRAÇÃO — varia toda vez.
+- Use os mesmos TEMAS-CHAVE (o "pé fraco" de cada um), mas com palavras, comparações e contextos diferentes.
+- Mantém a mesma pegada: zoeira de colega ácido, não ofensa pessoal. Tom seco/sarcástico da Kera de sempre.
+- O TEMA-CHAVE é INTOCÁVEL (sempre pega no mesmo pé), mas a EXECUÇÃO da piada muda toda vez.`;
+      finalSystem += VARIATION_RULE + `\n\n${matchedTriggers.join("\n\n")}`;
     }
 
     const chain = getProviderChain(provider as Provider | undefined);
