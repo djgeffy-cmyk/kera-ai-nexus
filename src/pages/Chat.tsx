@@ -641,7 +641,7 @@ Por favor, analise: há perda de pacote? jitter alto sugere instabilidade de rot
         <div className="border-t border-border panel p-3 md:p-4">
           <div className="max-w-3xl mx-auto space-y-2">
             {isSentinela && (
-              <div className="flex justify-center">
+              <div className="flex flex-wrap justify-center gap-2">
                 <Button
                   onClick={runSentinelaCheck}
                   disabled={streaming}
@@ -650,7 +650,17 @@ Por favor, analise: há perda de pacote? jitter alto sugere instabilidade de rot
                   className="border-emerald-500/40 text-emerald-400 hover:bg-emerald-500/10 hover:text-emerald-300 gap-2"
                 >
                   <ShieldCheck className="size-4" />
-                  Verificar status dos sistemas (Prefeitura + IPM + Webmail)
+                  Verificar status (HTTP)
+                </Button>
+                <Button
+                  onClick={runNetworkTrace}
+                  disabled={streaming}
+                  variant="outline"
+                  size="sm"
+                  className="border-cyan-500/40 text-cyan-400 hover:bg-cyan-500/10 hover:text-cyan-300 gap-2"
+                >
+                  <Activity className="size-4" />
+                  Análise de rede (ping/jitter/perda)
                 </Button>
               </div>
             )}
