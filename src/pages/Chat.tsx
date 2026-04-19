@@ -23,6 +23,7 @@ import { useVoice } from "@/hooks/useVoice";
 import { fileToAttachment, buildUserContent, type Attachment } from "@/lib/attachments";
 import { isImageRequest, extractImagePrompt } from "@/lib/imageDetect";
 import { exportConversationToPdf } from "@/lib/exportPdf";
+import { VoiceStatusIndicator } from "@/components/VoiceStatusIndicator";
 
 type Conversation = { id: string; title: string; updated_at: string; agent_key: string };
 type CustomAgent = { id: string; name: string; system_prompt: string; description: string | null };
@@ -930,6 +931,13 @@ Por favor, analise: há perda de pacote? jitter alto sugere instabilidade de rot
           </p>
         </div>
       </div>
+      {voiceMode && (
+        <VoiceStatusIndicator
+          listening={voice.listening}
+          thinking={streaming && !voice.speaking}
+          speaking={voice.speaking}
+        />
+      )}
     </div>
   );
 };
