@@ -7,8 +7,16 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
-import { Target, Plus, Trash2, Save, X, Power, FlaskConical, ChevronDown, ChevronUp } from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Target, Plus, Trash2, Save, X, Power, FlaskConical, ChevronDown, ChevronUp, Flame } from "lucide-react";
 import { toast } from "sonner";
+
+type Intensity = "leve" | "medio" | "pesado";
+const INTENSITY_META: Record<Intensity, { label: string; emoji: string; className: string }> = {
+  leve: { label: "Leve", emoji: "🌶️", className: "bg-emerald-500/15 text-emerald-400 border-emerald-500/30" },
+  medio: { label: "Médio", emoji: "🌶️🌶️", className: "bg-amber-500/15 text-amber-400 border-amber-500/30" },
+  pesado: { label: "Pesado", emoji: "🌶️🌶️🌶️", className: "bg-red-500/15 text-red-400 border-red-500/30" },
+};
 
 // Mesma lógica do edge function chat-kera (mantém em sincronia)
 const escapeRegExp = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
