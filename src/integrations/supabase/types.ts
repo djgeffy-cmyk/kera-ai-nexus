@@ -77,6 +77,48 @@ export type Database = {
         }
         Relationships: []
       }
+      ipm_endpoints: {
+        Row: {
+          auth_type: string
+          base_url: string
+          created_at: string
+          created_by: string | null
+          enabled: boolean
+          id: string
+          kind: string
+          label: string
+          notes: string | null
+          token: string | null
+          updated_at: string
+        }
+        Insert: {
+          auth_type?: string
+          base_url: string
+          created_at?: string
+          created_by?: string | null
+          enabled?: boolean
+          id?: string
+          kind?: string
+          label: string
+          notes?: string | null
+          token?: string | null
+          updated_at?: string
+        }
+        Update: {
+          auth_type?: string
+          base_url?: string
+          created_at?: string
+          created_by?: string | null
+          enabled?: boolean
+          id?: string
+          kind?: string
+          label?: string
+          notes?: string | null
+          token?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       messages: {
         Row: {
           content: string

@@ -11,6 +11,7 @@ import keraLogo from "@/assets/kera-logo.png";
 import { MonitorTargetsManager } from "@/components/admin/MonitorTargetsManager";
 import { NetworkMetricsChart } from "@/components/admin/NetworkMetricsChart";
 import { PasswordResetRequests } from "@/components/admin/PasswordResetRequests";
+import { IpmEndpointsManager } from "@/components/admin/IpmEndpointsManager";
 
 type Status = Record<string, boolean>;
 
@@ -215,6 +216,8 @@ const Admin = () => {
         </section>
 
         <PasswordResetRequests />
+
+        <IpmEndpointsManager />
 
         <MonitorTargetsManager />
 
