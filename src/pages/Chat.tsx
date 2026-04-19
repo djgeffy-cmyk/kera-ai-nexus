@@ -5,11 +5,13 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { toast } from "sonner";
-import { Plus, LogOut, Send, MessageSquare, Trash2, Menu } from "lucide-react";
+import { Plus, LogOut, Send, MessageSquare, Trash2, Menu, Settings } from "lucide-react";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import keraLogo from "@/assets/kera-logo.png";
 import keraAvatar from "@/assets/kera-avatar.png";
 import { MessageBubble, type ChatMessage } from "@/components/chat/MessageBubble";
+import { PROVIDERS, getPreferredProvider, setPreferredProvider, type ProviderId } from "@/lib/providers";
 
 type Conversation = { id: string; title: string; updated_at: string };
 
@@ -23,6 +25,7 @@ const Chat = () => {
   const [input, setInput] = useState("");
   const [streaming, setStreaming] = useState(false);
   const [userId, setUserId] = useState<string | null>(null);
+  const [provider, setProvider] = useState<ProviderId>(getPreferredProvider());
   const scrollerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -115,7 +118,10 @@ const Chat = () => {
           "Content-Type": "application/json",
           ...(sess.session ? { Authorization: `Bearer ${sess.session.access_token}` } : {}),
         },
-        body: JSON.stringify({ messages: next.map(m => ({ role: m.role, content: m.content })) }),
+        body: JSON.stringify({
+          messages: next.map(m => ({ role: m.role, content: m.content })),
+          provider: provider === "auto" ? undefined : provider,
+        }),
       });
 
       if (!resp.ok || !resp.body) {
@@ -240,8 +246,23 @@ const Chat = () => {
             <span className="size-2 rounded-full bg-primary shadow-glow animate-pulse-glow" />
             <h1 className="font-display text-base md:text-lg text-glow">KERA AI</h1>
           </div>
-          <div className="ml-auto text-xs text-muted-foreground hidden sm:block">
-            Direta. Honesta. Útil.
+          <div className="ml-auto flex items-center gap-2">
+            <Select
+              value={provider}
+              onValueChange={(v) => { setProvider(v as ProviderId); setPreferredProvider(v as ProviderId); }}
+            >
+              <SelectTrigger className="h-8 w-[140px] sm:w-[200px] text-xs bg-input/40 border-border">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {PROVIDERS.map(p => (
+                  <SelectItem key={p.id} value={p.id} className="text-xs">{p.label}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <Button variant="ghost" size="icon" onClick={() => navigate("/admin")} aria-label="Painel admin">
+              <Settings className="size-5" />
+            </Button>
           </div>
         </header>
 

@@ -2,3 +2,6 @@ project_id = "ytixqgkzqgeoxrbmjqbo"
 
 [functions.chat-kera]
 verify_jwt = false
+
+[functions.providers-status]
+verify_jwt = false
