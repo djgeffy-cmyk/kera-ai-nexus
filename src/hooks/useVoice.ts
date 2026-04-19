@@ -21,8 +21,10 @@ export function useVoice(opts: { useElevenLabs?: boolean; useRemoteTTS?: boolean
   const useRemote = useRemoteTTS ?? useElevenLabs ?? false;
   const [listening, setListening] = useState(false);
   const [speaking, setSpeaking] = useState(false);
+  const [pendingPlay, setPendingPlay] = useState(false);
   const recRef = useRef<SR | null>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
+  const pendingAudioRef = useRef<HTMLAudioElement | null>(null);
   const inflightRef = useRef<AbortController | null>(null);
 
   // ---------- STT (Web Speech) ----------
@@ -70,7 +72,22 @@ export function useVoice(opts: { useElevenLabs?: boolean; useRemoteTTS?: boolean
       } catch {}
       audioRef.current = null;
     }
+    pendingAudioRef.current = null;
+    setPendingPlay(false);
     setSpeaking(false);
+  }, []);
+
+  // Tenta tocar o áudio que ficou bloqueado pelo autoplay (chamar dentro de um clique do usuário)
+  const resumePendingPlay = useCallback(async () => {
+    const audio = pendingAudioRef.current;
+    if (!audio) return;
+    try {
+      await audio.play();
+      setPendingPlay(false);
+      setSpeaking(true);
+    } catch (e) {
+      console.warn("[useVoice] resumePendingPlay falhou:", e);
+    }
   }, []);
 
   const speak = useCallback(async (text: string) => {
@@ -143,8 +160,33 @@ export function useVoice(opts: { useElevenLabs?: boolean; useRemoteTTS?: boolean
         }
         URL.revokeObjectURL(url);
       };
-      await audio.play();
-      console.log("[useVoice] ElevenLabs tocando", { len: text.length, bytes: blob.size });
+      try {
+        await audio.play();
+        console.log("[useVoice] ElevenLabs tocando", { len: text.length, bytes: blob.size });
+      } catch (playErr) {
+        // iOS/Safari bloqueia autoplay sem gesto — guarda pra tocar no próximo toque
+        if ((playErr as Error)?.name === "NotAllowedError") {
+          console.warn("[useVoice] autoplay bloqueado, aguardando gesto do usuário");
+          pendingAudioRef.current = audio;
+          setPendingPlay(true);
+          setSpeaking(false);
+          // Auto-recover: tenta tocar no próximo toque/click em qualquer lugar da página
+          const tryResume = async () => {
+            if (pendingAudioRef.current !== audio) return;
+            try {
+              await audio.play();
+              setPendingPlay(false);
+              setSpeaking(true);
+              window.removeEventListener("touchend", tryResume);
+              window.removeEventListener("click", tryResume);
+            } catch {}
+          };
+          window.addEventListener("touchend", tryResume, { once: false });
+          window.addEventListener("click", tryResume, { once: false });
+          return;
+        }
+        throw playErr;
+      }
     } catch (e) {
       if ((e as Error)?.name === "AbortError") return;
       console.error("[useVoice] ElevenLabs falhou:", e);
@@ -170,5 +212,5 @@ export function useVoice(opts: { useElevenLabs?: boolean; useRemoteTTS?: boolean
 
   useEffect(() => () => { stopListening(); stopSpeaking(); }, [stopListening, stopSpeaking]);
 
-  return { listening, speaking, startListening, stopListening, speak, stopSpeaking, warmUpTTS };
+  return { listening, speaking, pendingPlay, startListening, stopListening, speak, stopSpeaking, warmUpTTS, resumePendingPlay };
 }
