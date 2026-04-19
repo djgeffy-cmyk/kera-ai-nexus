@@ -815,7 +815,14 @@ Por favor, analise: há perda de pacote? jitter alto sugere instabilidade de rot
                   key={m.id ?? i}
                   msg={m}
                   streaming={streaming && isLast && m.role === "assistant"}
-                  onSpeak={(t) => { voice.warmUpTTS(); voice.speak(t); }}
+                  onSpeak={(t) => {
+                    voice.warmUpTTS();
+                    if (voice.pendingPlay) {
+                      void voice.resumePendingPlay();
+                      return;
+                    }
+                    void voice.speak(t);
+                  }}
                   onStopSpeak={voice.stopSpeaking}
                   isSpeaking={voice.speaking && isLast && m.role === "assistant"}
                 />
