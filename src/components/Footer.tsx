@@ -7,7 +7,7 @@ const Footer = () => {
           <span className="text-primary font-medium">Geverson Carlos Dalpra</span>
           {" "}— criador da personagem{" "}
           <span className="font-display text-glow">Kera</span>
-          <span className="text-primary"> @</span>
+          <sup className="text-primary ml-0.5 text-[8px] font-semibold tracking-wide">®</sup>
         </p>
       </div>
     </div>
