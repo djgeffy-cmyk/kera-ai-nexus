@@ -80,7 +80,7 @@ export const MessageBubble = ({
           <img src={keraAvatar} alt="Kera" className="size-full object-cover object-top" />
         )}
       </div>
-      <div className={`max-w-[85%] md:max-w-[75%] rounded-2xl px-4 py-3 text-[15px] leading-relaxed ${
+      <div className={`max-w-[85%] md:max-w-[75%] min-w-0 rounded-2xl px-4 py-3 text-[15px] leading-relaxed break-words [overflow-wrap:anywhere] ${
         isUser
           ? "bg-secondary text-foreground rounded-tr-sm"
           : "panel border border-primary/15 rounded-tl-sm prose-kera"
