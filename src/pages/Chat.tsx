@@ -48,6 +48,8 @@ const Chat = () => {
   const [voiceMode, setVoiceMode] = useState(false);
   const [hasElevenLabs, setHasElevenLabs] = useState(false);
   const [attachments, setAttachments] = useState<Attachment[]>([]);
+  const [dragging, setDragging] = useState(false);
+  const dragCounter = useRef(0);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const scrollerRef = useRef<HTMLDivElement>(null);
 
@@ -424,7 +426,48 @@ Por favor, analise estes resultados, classifique a severidade de cada item e ind
     <div className="h-screen flex">
       <div className="hidden md:flex"><Sidebar /></div>
 
-      <div className="flex-1 flex flex-col min-w-0">
+      <div
+        className="flex-1 flex flex-col min-w-0 relative"
+        onDragEnter={(e) => {
+          if (!e.dataTransfer?.types?.includes("Files")) return;
+          e.preventDefault();
+          dragCounter.current += 1;
+          setDragging(true);
+        }}
+        onDragOver={(e) => {
+          if (e.dataTransfer?.types?.includes("Files")) {
+            e.preventDefault();
+            e.dataTransfer.dropEffect = "copy";
+          }
+        }}
+        onDragLeave={(e) => {
+          e.preventDefault();
+          dragCounter.current -= 1;
+          if (dragCounter.current <= 0) {
+            dragCounter.current = 0;
+            setDragging(false);
+          }
+        }}
+        onDrop={async (e) => {
+          e.preventDefault();
+          dragCounter.current = 0;
+          setDragging(false);
+          const files = e.dataTransfer?.files;
+          if (files && files.length) {
+            await addFiles(files);
+            toast.success(`${files.length} arquivo(s) anexado(s)`);
+          }
+        }}
+      >
+        {dragging && (
+          <div className="absolute inset-0 z-50 pointer-events-none flex items-center justify-center bg-primary/10 backdrop-blur-sm border-4 border-dashed border-primary rounded-lg m-2">
+            <div className="text-center">
+              <Paperclip className="size-12 mx-auto text-primary animate-pulse" />
+              <p className="mt-3 font-display text-xl text-glow text-primary">Solte aqui para anexar</p>
+              <p className="text-xs text-muted-foreground mt-1">Imagens, prints ou arquivos de texto/código</p>
+            </div>
+          </div>
+        )}
         <header className="h-14 border-b border-border panel flex items-center px-3 md:px-6 gap-3">
           <Sheet>
             <SheetTrigger asChild>
