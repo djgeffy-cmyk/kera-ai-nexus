@@ -40,6 +40,32 @@ Você TEM acesso à ferramenta **ipm_query** (dados ao vivo do portal da Prefeit
 
 Jurídico com incerteza real: "checa com jurídico" e segue. Não despeja disclaimer em tudo.`;
 
+// Apelidos personalizados por email autenticado.
+// Quando o usuário logado bater com a chave, a Kera passa a chamá-lo SEMPRE pelo apelido,
+// mantendo a personalidade ácida normal.
+const USER_NICKNAMES: Record<string, string> = {
+  "rodrigo@guaramirim.sc.gov.br": "professor linguiça",
+};
+
+async function getUserEmailFromAuth(req: Request): Promise<string | null> {
+  try {
+    const auth = req.headers.get("Authorization") || req.headers.get("authorization");
+    if (!auth?.startsWith("Bearer ")) return null;
+    const token = auth.slice(7);
+    const supaUrl = Deno.env.get("SUPABASE_URL");
+    const anon = Deno.env.get("SUPABASE_ANON_KEY");
+    if (!supaUrl || !anon) return null;
+    const r = await fetch(`${supaUrl}/auth/v1/user`, {
+      headers: { Authorization: `Bearer ${token}`, apikey: anon },
+    });
+    if (!r.ok) return null;
+    const u = await r.json();
+    return typeof u?.email === "string" ? u.email.toLowerCase() : null;
+  } catch {
+    return null;
+  }
+}
+
 type Provider = "lovable" | "openai" | "groq" | "openrouter" | "gemini" | "xai";
 
 interface ProviderConfig {
