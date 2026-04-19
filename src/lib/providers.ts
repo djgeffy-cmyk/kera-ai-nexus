@@ -1,5 +1,5 @@
 export const PROVIDERS = [
-  { id: "auto", label: "Automático (recomendado)", description: "Usa a primeira chave disponível", help: "" },
+  { id: "auto", label: "Automático (OpenAI primeiro)", description: "Prioriza OpenAI para economizar créditos Lovable", help: "" },
   { id: "lovable", label: "Lovable AI · Gemini 3 Flash", description: "Grátis até o limite mensal", help: "Já vem ativo, sem chave necessária." },
   { id: "openai", label: "OpenAI · GPT-4o mini", description: "Pago por uso", help: "Crie em platform.openai.com/api-keys" },
   { id: "groq", label: "Groq · Llama 3.3 70B", description: "Grátis e ultra-rápido", help: "Crie em console.groq.com/keys" },
