@@ -90,7 +90,7 @@ const TOOLS = [
     function: {
       name: "ipm_query",
       description:
-        "Consulta dados oficiais da Prefeitura de Guaramirim (IPM Sistemas / atende.net): licitações abertas/em andamento, protocolos, contratos, transparência. Use SEMPRE que o usuário perguntar sobre licitações, processos, protocolos, editais, contratos, vencedores, receitas/despesas da prefeitura.",
+        "Consulta dados oficiais da Prefeitura de Guaramirim (IPM Sistemas / atende.net): licitações, protocolos, contratos, transparência. USO RESTRITO: chame APENAS quando o usuário perguntar EXPLICITAMENTE sobre esses temas (ex: 'quais licitações estão abertas?', 'me mostra os protocolos', 'qual o contrato X'). NUNCA chame proativamente em conversas de outros assuntos (programação, dúvidas gerais, etc).",
       parameters: {
         type: "object",
         properties: {
@@ -113,6 +113,24 @@ const TOOLS = [
     },
   },
 ];
+
+// Heurística leve: só roda probe de tool calling se a última mensagem do usuário
+// menciona termos relacionados a licitação/transparência. Evita custo extra em conversas normais.
+const IPM_KEYWORDS = [
+  "licitaç", "licitac", "edital", "edita", "pregão", "prega", "concorrênc", "concorrenc",
+  "dispensa", "homologa", "protocolo", "contrato", "vencedor", "contratada",
+  "transparência", "transparenc", "atende.net", "ipm", "guaramirim",
+  "receita", "despesa", "empenho", "secretaria",
+];
+
+function shouldProbeIpm(messages: Array<{ role: string; content: unknown }>): boolean {
+  const userMsgs = messages.filter((m) => m.role === "user").slice(-2);
+  const text = userMsgs
+    .map((m) => (typeof m.content === "string" ? m.content : JSON.stringify(m.content)))
+    .join(" ")
+    .toLowerCase();
+  return IPM_KEYWORDS.some((k) => text.includes(k));
+}
 
 async function executeTool(name: string, args: Record<string, unknown>): Promise<string> {
   if (name !== "ipm_query") return JSON.stringify({ error: `Tool desconhecida: ${name}` });
