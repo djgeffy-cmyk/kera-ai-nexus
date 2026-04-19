@@ -465,6 +465,9 @@ export const KeraTriggersManager = () => {
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 flex-wrap">
                     <h3 className="font-medium">{t.name}</h3>
+                    <Badge variant="outline" className={`text-xs ${INTENSITY_META[t.intensity ?? "medio"].className}`}>
+                      {INTENSITY_META[t.intensity ?? "medio"].emoji} {INTENSITY_META[t.intensity ?? "medio"].label}
+                    </Badge>
                     <Badge variant="outline" className="text-xs">{t.scope}</Badge>
                     {!t.enabled && <Badge variant="secondary" className="text-xs">desativado</Badge>}
                     {t.excluded_emails?.length > 0 && (
