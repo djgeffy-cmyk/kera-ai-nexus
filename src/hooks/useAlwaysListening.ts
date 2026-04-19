@@ -141,7 +141,7 @@ export function useAlwaysListening(opts: UseAlwaysListeningOptions) {
         if (recentBufferRef.current === tail) recentBufferRef.current = "";
       }, 4000);
     }
-  }, [flashStatus]);
+  }, [flashStatus, playWakeBeep]);
 
   const scribe = useScribe({
     modelId: "scribe_v2_realtime",
