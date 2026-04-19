@@ -72,7 +72,22 @@ export function useVoice(opts: { useElevenLabs?: boolean; useRemoteTTS?: boolean
       } catch {}
       audioRef.current = null;
     }
+    pendingAudioRef.current = null;
+    setPendingPlay(false);
     setSpeaking(false);
+  }, []);
+
+  // Tenta tocar o áudio que ficou bloqueado pelo autoplay (chamar dentro de um clique do usuário)
+  const resumePendingPlay = useCallback(async () => {
+    const audio = pendingAudioRef.current;
+    if (!audio) return;
+    try {
+      await audio.play();
+      setPendingPlay(false);
+      setSpeaking(true);
+    } catch (e) {
+      console.warn("[useVoice] resumePendingPlay falhou:", e);
+    }
   }, []);
 
   const speak = useCallback(async (text: string) => {
