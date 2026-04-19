@@ -21,8 +21,10 @@ export function useVoice(opts: { useElevenLabs?: boolean; useRemoteTTS?: boolean
   const useRemote = useRemoteTTS ?? useElevenLabs ?? false;
   const [listening, setListening] = useState(false);
   const [speaking, setSpeaking] = useState(false);
+  const [pendingPlay, setPendingPlay] = useState(false);
   const recRef = useRef<SR | null>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
+  const pendingAudioRef = useRef<HTMLAudioElement | null>(null);
   const inflightRef = useRef<AbortController | null>(null);
 
   // ---------- STT (Web Speech) ----------
