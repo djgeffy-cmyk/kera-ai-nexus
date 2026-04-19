@@ -9,6 +9,7 @@ import { loadVoicesAsync, getPreferredVoiceURI, setPreferredVoiceURI, classifyVo
 import { toast } from "sonner";
 import keraLogo from "@/assets/kera-logo.png";
 import { MonitorTargetsManager } from "@/components/admin/MonitorTargetsManager";
+import { NetworkMetricsChart } from "@/components/admin/NetworkMetricsChart";
 
 type Status = Record<string, boolean>;
 
@@ -213,6 +214,8 @@ const Admin = () => {
         </section>
 
         <MonitorTargetsManager />
+
+        <NetworkMetricsChart />
       </main>
     </div>
   );

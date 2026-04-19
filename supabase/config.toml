@@ -14,3 +14,6 @@ verify_jwt = false
 
 [functions.network-trace]
 verify_jwt = false
+
+[functions.network-cron]
+verify_jwt = false
