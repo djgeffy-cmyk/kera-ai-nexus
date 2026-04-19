@@ -8,7 +8,8 @@ import { Card } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { toast } from "sonner";
 import { ShieldCheck, KeyRound, Mail } from "lucide-react";
-import keraHero from "@/assets/kera-hero.jpg";
+import keraAvatar from "@/assets/kera-avatar.png";
+import keraAvatarVideo from "@/assets/kera-avatar.mp4.asset.json";
 
 type Mode = "signin" | "signup" | "totp";
 
