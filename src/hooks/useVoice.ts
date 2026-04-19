@@ -23,6 +23,7 @@ export function useVoice(opts: { useElevenLabs?: boolean; useRemoteTTS?: boolean
   const [speaking, setSpeaking] = useState(false);
   const recRef = useRef<SR | null>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
+  const inflightRef = useRef<AbortController | null>(null);
 
   // ---------- STT (Web Speech) ----------
   const startListening = useCallback(() => {
@@ -53,6 +54,8 @@ export function useVoice(opts: { useElevenLabs?: boolean; useRemoteTTS?: boolean
 
   // ---------- TTS ----------
   const stopSpeaking = useCallback(() => {
+    inflightRef.current?.abort();
+    inflightRef.current = null;
     window.speechSynthesis?.cancel();
     if (audioRef.current) {
       audioRef.current.pause();
@@ -66,12 +69,16 @@ export function useVoice(opts: { useElevenLabs?: boolean; useRemoteTTS?: boolean
     stopSpeaking();
     setSpeaking(true);
 
+    const ac = new AbortController();
+    inflightRef.current = ac;
+
     // SEMPRE usa ElevenLabs (voz paga). Nunca cai pro Web Speech (voz robótica).
     try {
       const resp = await fetch(TTS_URL, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ text }),
+        signal: ac.signal,
       });
       if (resp.status === 204) {
         console.warn("[useVoice] TTS indisponível (quota). Silenciando.");
@@ -91,8 +98,11 @@ export function useVoice(opts: { useElevenLabs?: boolean; useRemoteTTS?: boolean
       await audio.play();
       console.log("[useVoice] ElevenLabs tocando", { len: text.length });
     } catch (e) {
+      if ((e as Error)?.name === "AbortError") return;
       console.error("[useVoice] ElevenLabs falhou (sem fallback robótico):", e);
       setSpeaking(false);
+    } finally {
+      if (inflightRef.current === ac) inflightRef.current = null;
     }
   }, [stopSpeaking]);
 
