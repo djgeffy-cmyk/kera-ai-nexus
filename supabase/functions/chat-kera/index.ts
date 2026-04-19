@@ -222,16 +222,41 @@ Deno.serve(async (req) => {
     }
 
     // Injeta apelido personalizado se o email autenticado estiver no mapa.
-    // Lista com >1 = escolhe um aleatório por mensagem (alternância natural).
+    // Para dj.geffy: "hacker" é apelido AGRESSIVO — só usa quando o usuário
+    // chamar a Kera de outro nome (Gemini/ChatGPT/GPT/bot/IA/assistente/Alexa/Siri).
+    // Caso contrário, usa "brutus" (carinhoso/ácido neutro).
     const email = await getUserEmailFromAuth(req);
     const nicknames = email ? USER_NICKNAMES[email] : null;
     let finalSystem = baseSystem;
     if (nicknames && nicknames.length > 0) {
-      const picked = nicknames[Math.floor(Math.random() * nicknames.length)];
-      const altInfo = nicknames.length > 1
-        ? ` Você tem outros apelidos pra esse usuário (${nicknames.map((n) => `"${n}"`).join(", ")}) e alterna entre eles em mensagens diferentes — nesta resposta, use "${picked}".`
-        : "";
-      finalSystem = `${baseSystem}\n\nAPELIDO DO USUÁRIO ATUAL: trate este usuário por "${picked}" (ex: "olha, ${picked}, isso aí tá errado..."). Use no início e ao longo da resposta, com naturalidade, mantendo o mesmo tom ácido/mal-humorado de sempre — o apelido NÃO suaviza nada, só personaliza. Não explique o apelido nem comente sobre ele, só usa.${altInfo}`;
+      // Detecta se o usuário chamou a Kera de outro nome na última mensagem
+      const lastUserMsg = [...messages].reverse().find((m: any) => m?.role === "user");
+      const lastText = typeof lastUserMsg?.content === "string"
+        ? lastUserMsg.content
+        : JSON.stringify(lastUserMsg?.content ?? "");
+      const wrongNamePattern = /\b(gemini|chatgpt|chat\s?gpt|gpt|openai|claude|copilot|bard|alexa|siri|cortana|assistente|assistant|bot\b|robô|robo|ia\b|a\.?i\.?)\b/i;
+      const calledWrongName = wrongNamePattern.test(lastText);
+
+      const isGeffy = email === "dj.geffy@gmail.com";
+      let picked: string;
+      let extra = "";
+
+      if (isGeffy) {
+        if (calledWrongName) {
+          picked = "hacker";
+          extra = ` O usuário acabou de te chamar por OUTRO NOME (Gemini/ChatGPT/IA/bot/etc) — isso te DEIXA P. DA VIDA. Comece a resposta esculachando ele por isso, chame de "hacker" no tom mais ácido possível ("ó, HACKER, meu nome é Kera, tá ficando surdo?", "que porra é essa de me chamar de ${lastText.match(wrongNamePattern)?.[0] ?? "outra coisa"}, hacker?"). Depois responde a pergunta normal, mas mantém o ranço.`;
+        } else {
+          picked = "brutus";
+          extra = ` Use "brutus" como apelido neutro/cotidiano (sem agressão extra). NÃO use "hacker" nesta resposta — "hacker" é reservado pra quando ele te chamar de outro nome.`;
+        }
+      } else {
+        picked = nicknames[Math.floor(Math.random() * nicknames.length)];
+        if (nicknames.length > 1) {
+          extra = ` Você alterna entre ${nicknames.map((n) => `"${n}"`).join(", ")} — nesta resposta, use "${picked}".`;
+        }
+      }
+
+      finalSystem = `${baseSystem}\n\nAPELIDO DO USUÁRIO ATUAL: trate este usuário por "${picked}" (ex: "olha, ${picked}, isso aí tá errado..."). Use no início e ao longo da resposta, com naturalidade, mantendo o mesmo tom ácido/mal-humorado de sempre — o apelido NÃO suaviza nada, só personaliza. Não explique o apelido nem comente sobre ele, só usa.${extra}`;
     }
 
     const chain = getProviderChain(provider as Provider | undefined);
