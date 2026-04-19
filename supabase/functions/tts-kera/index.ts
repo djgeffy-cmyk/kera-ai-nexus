@@ -1,27 +1,122 @@
-// TTS via OpenAI (voz natural). Retorna MP3 binário.
+// TTS natural para Kera. Prioriza ElevenLabs (qualidade superior em PT-BR),
+// com fallback automático para OpenAI se ElevenLabs falhar ou não estiver configurado.
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers":
     "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
-// Vozes femininas naturais da OpenAI: "nova" (jovem, calorosa), "shimmer" (suave), "alloy" (neutra)
-const DEFAULT_VOICE = "nova";
-const DEFAULT_MODEL = "gpt-4o-mini-tts"; // mais barato e natural; alternativa: "tts-1-hd"
+// ElevenLabs - Sarah: voz feminina jovem, natural, excelente em PT-BR
+const ELEVEN_DEFAULT_VOICE = "EXAVITQu4vr4xnSDxMaL"; // Sarah
+const ELEVEN_DEFAULT_MODEL = "eleven_multilingual_v2";
+
+// OpenAI - fallback
+const OPENAI_DEFAULT_VOICE = "nova";
+const OPENAI_DEFAULT_MODEL = "gpt-4o-mini-tts";
+
+async function ttsElevenLabs(opts: {
+  apiKey: string;
+  text: string;
+  voiceId: string;
+  modelId: string;
+}): Promise<Response> {
+  const { apiKey, text, voiceId, modelId } = opts;
+  const url = `https://api.elevenlabs.io/v1/text-to-speech/${voiceId}?output_format=mp3_44100_128`;
+  const upstream = await fetch(url, {
+    method: "POST",
+    headers: {
+      "xi-api-key": apiKey,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      text: text.slice(0, 4000),
+      model_id: modelId,
+      voice_settings: {
+        stability: 0.45,
+        similarity_boost: 0.8,
+        style: 0.35,
+        use_speaker_boost: true,
+        speed: 1.0,
+      },
+    }),
+  });
+  if (!upstream.ok) {
+    const t = await upstream.text();
+    throw new Error(`ElevenLabs ${upstream.status}: ${t.slice(0, 300)}`);
+  }
+  return new Response(upstream.body, {
+    headers: {
+      ...corsHeaders,
+      "Content-Type": "audio/mpeg",
+      "Cache-Control": "no-store",
+      "X-TTS-Provider": "elevenlabs",
+    },
+  });
+}
+
+async function ttsOpenAI(opts: {
+  apiKey: string;
+  text: string;
+  voice: string;
+  model: string;
+  instructions?: string;
+}): Promise<Response> {
+  const { apiKey, text, voice, model, instructions } = opts;
+  const body: Record<string, unknown> = {
+    model,
+    voice,
+    input: text.slice(0, 4000),
+    response_format: "mp3",
+    speed: 1.0,
+  };
+  if (model.includes("4o-mini-tts")) {
+    body.instructions =
+      instructions ||
+      "Fale em português brasileiro, voz feminina jovem, calorosa, natural e expressiva. Tom amigável, ritmo conversacional, sem soar robótica.";
+  }
+  const upstream = await fetch("https://api.openai.com/v1/audio/speech", {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${apiKey}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(body),
+  });
+  if (!upstream.ok) {
+    const t = await upstream.text();
+    throw new Error(`OpenAI ${upstream.status}: ${t.slice(0, 300)}`);
+  }
+  return new Response(upstream.body, {
+    headers: {
+      ...corsHeaders,
+      "Content-Type": "audio/mpeg",
+      "Cache-Control": "no-store",
+      "X-TTS-Provider": "openai",
+    },
+  });
+}
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
-  const OPENAI_API_KEY = Deno.env.get("OPENAI_API_KEY");
-  if (!OPENAI_API_KEY) {
-    return new Response(JSON.stringify({ error: "OPENAI_API_KEY não configurada" }), {
-      status: 501,
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-    });
+  const ELEVEN_KEY = Deno.env.get("ELEVENLABS_API_KEY");
+  const OPENAI_KEY = Deno.env.get("OPENAI_API_KEY");
+
+  if (!ELEVEN_KEY && !OPENAI_KEY) {
+    return new Response(
+      JSON.stringify({ error: "Nenhum provedor de TTS configurado (ELEVENLABS_API_KEY ou OPENAI_API_KEY)." }),
+      { status: 501, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+    );
   }
 
   try {
-    const { text, voice, model, instructions } = await req.json();
+    const payload = await req.json().catch(() => ({}));
+    const text: string = payload?.text;
+    const provider: string | undefined = payload?.provider; // "elevenlabs" | "openai" | undefined (auto)
+    const voice: string | undefined = payload?.voice;
+    const model: string | undefined = payload?.model;
+    const instructions: string | undefined = payload?.instructions;
+
     if (typeof text !== "string" || !text.trim()) {
       return new Response(JSON.stringify({ error: "text é obrigatório" }), {
         status: 400,
@@ -29,43 +124,38 @@ Deno.serve(async (req) => {
       });
     }
 
-    const chosenVoice = voice || DEFAULT_VOICE;
-    const chosenModel = model || DEFAULT_MODEL;
+    const wantEleven = provider === "elevenlabs" || (!provider && !!ELEVEN_KEY);
+    const wantOpenAI = provider === "openai" || (!provider && !ELEVEN_KEY && !!OPENAI_KEY);
 
-    const body: Record<string, unknown> = {
-      model: chosenModel,
-      voice: chosenVoice,
-      input: text.slice(0, 4000),
-      response_format: "mp3",
-      speed: 1.0,
-    };
-    // gpt-4o-mini-tts aceita "instructions" para controle de tom/estilo
-    if (chosenModel.includes("4o-mini-tts")) {
-      body.instructions =
-        instructions ||
-        "Fale em português brasileiro, com voz feminina jovem, calorosa, natural e expressiva. Tom amigável, ritmo conversacional, sem soar robótica.";
+    // 1ª tentativa: ElevenLabs (se quiser e tiver chave)
+    if (wantEleven && ELEVEN_KEY) {
+      try {
+        return await ttsElevenLabs({
+          apiKey: ELEVEN_KEY,
+          text,
+          voiceId: voice || ELEVEN_DEFAULT_VOICE,
+          modelId: model || ELEVEN_DEFAULT_MODEL,
+        });
+      } catch (err) {
+        console.error("ElevenLabs falhou, tentando fallback:", err);
+        if (!OPENAI_KEY) throw err; // sem fallback
+      }
     }
 
-    const upstream = await fetch("https://api.openai.com/v1/audio/speech", {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${OPENAI_API_KEY}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(body),
-    });
-
-    if (!upstream.ok) {
-      const t = await upstream.text();
-      console.error("OpenAI TTS error", upstream.status, t);
-      return new Response(JSON.stringify({ error: `OpenAI ${upstream.status}: ${t.slice(0, 300)}` }), {
-        status: 500,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
+    // Fallback ou rota direta: OpenAI
+    if (wantOpenAI || (OPENAI_KEY && !wantEleven) || OPENAI_KEY) {
+      return await ttsOpenAI({
+        apiKey: OPENAI_KEY!,
+        text,
+        voice: (provider === "openai" ? voice : undefined) || OPENAI_DEFAULT_VOICE,
+        model: (provider === "openai" ? model : undefined) || OPENAI_DEFAULT_MODEL,
+        instructions,
       });
     }
 
-    return new Response(upstream.body, {
-      headers: { ...corsHeaders, "Content-Type": "audio/mpeg", "Cache-Control": "no-store" },
+    return new Response(JSON.stringify({ error: "Nenhum provedor disponível" }), {
+      status: 500,
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (e) {
     console.error("tts-kera error", e);
