@@ -1,10 +1,11 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, Check, X, KeyRound, ExternalLink } from "lucide-react";
+import { ArrowLeft, Check, X, KeyRound, ExternalLink, Volume2, Play } from "lucide-react";
 import { PROVIDERS, SECRET_NAMES, getPreferredProvider, setPreferredProvider, type ProviderId } from "@/lib/providers";
+import { loadVoicesAsync, getPreferredVoiceURI, setPreferredVoiceURI, classifyVoice } from "@/lib/nativeVoice";
 import { toast } from "sonner";
 import keraLogo from "@/assets/kera-logo.png";
 
@@ -17,6 +18,9 @@ const Admin = () => {
   const [status, setStatus] = useState<Status>({});
   const [loading, setLoading] = useState(true);
   const [pref, setPref] = useState<ProviderId>(getPreferredProvider());
+  const [voices, setVoices] = useState<SpeechSynthesisVoice[]>([]);
+  const [voiceURI, setVoiceURI] = useState<string | null>(getPreferredVoiceURI());
+  const [genderFilter, setGenderFilter] = useState<"todas" | "feminina" | "masculina">("todas");
 
   useEffect(() => {
     document.title = "Kera AI — Painel Admin";
@@ -25,7 +29,34 @@ const Admin = () => {
       .then(setStatus)
       .catch(() => toast.error("Não foi possível carregar status dos provedores."))
       .finally(() => setLoading(false));
+    loadVoicesAsync().then(setVoices);
   }, []);
+
+  const ptVoices = useMemo(
+    () => voices.filter(v => v.lang.toLowerCase().startsWith("pt")),
+    [voices]
+  );
+  const filteredVoices = useMemo(() => {
+    if (genderFilter === "todas") return ptVoices;
+    return ptVoices.filter(v => classifyVoice(v) === genderFilter);
+  }, [ptVoices, genderFilter]);
+
+  const chooseVoice = (uri: string) => {
+    setVoiceURI(uri);
+    setPreferredVoiceURI(uri);
+    const v = voices.find(x => x.voiceURI === uri);
+    toast.success(`Voz: ${v?.name ?? "padrão"}`);
+  };
+
+  const previewVoice = (v: SpeechSynthesisVoice) => {
+    window.speechSynthesis.cancel();
+    const u = new SpeechSynthesisUtterance("Olá, eu sou a Kera. Esta é a minha voz.");
+    u.voice = v;
+    u.lang = v.lang;
+    u.rate = 1.05;
+    u.pitch = 1.05;
+    window.speechSynthesis.speak(u);
+  };
 
   const choose = (id: ProviderId) => {
     setPref(id);
@@ -119,6 +150,79 @@ const Admin = () => {
             Nomes dos secrets: {Object.values(SECRET_NAMES).map(s => <code key={s} className="mx-1 px-1 py-0.5 rounded bg-secondary text-primary text-[11px]">{s}</code>)}
           </p>
         </div>
+
+        <section className="pt-4 border-t border-border space-y-4">
+          <div className="flex items-center gap-2">
+            <Volume2 className="size-5 text-primary" />
+            <h2 className="font-display text-xl text-glow">Voz da Kera (navegador)</h2>
+          </div>
+          <p className="text-sm text-muted-foreground">
+            Escolha qual voz nativa do navegador a Kera vai usar quando ler as respostas em voz alta.
+            Disponíveis: <span className="text-foreground">{ptVoices.length}</span> vozes em português.
+          </p>
+
+          <div className="flex gap-2 flex-wrap">
+            {(["todas", "feminina", "masculina"] as const).map(g => (
+              <Button
+                key={g}
+                size="sm"
+                variant={genderFilter === g ? "default" : "outline"}
+                onClick={() => setGenderFilter(g)}
+                className="capitalize"
+              >
+                {g}
+              </Button>
+            ))}
+          </div>
+
+          {filteredVoices.length === 0 ? (
+            <p className="text-sm text-muted-foreground italic">
+              Nenhuma voz {genderFilter !== "todas" ? genderFilter : "em português"} encontrada neste navegador.
+            </p>
+          ) : (
+            <div className="grid gap-2 sm:grid-cols-2">
+              {filteredVoices.map(v => {
+                const selected = voiceURI === v.voiceURI;
+                const gender = classifyVoice(v);
+                return (
+                  <Card
+                    key={v.voiceURI}
+                    onClick={() => chooseVoice(v.voiceURI)}
+                    className={`p-3 cursor-pointer transition border flex items-center gap-3 ${
+                      selected ? "border-primary shadow-glow bg-primary/5" : "border-border hover:border-primary/40"
+                    }`}
+                  >
+                    <div className={`size-4 rounded-full border flex items-center justify-center shrink-0 ${
+                      selected ? "border-primary bg-primary" : "border-muted-foreground"
+                    }`}>
+                      {selected && <Check className="size-2.5 text-primary-foreground" />}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium truncate">{v.name}</p>
+                      <p className="text-xs text-muted-foreground">
+                        {v.lang} · <span className="capitalize">{gender}</span>
+                      </p>
+                    </div>
+                    <Button
+                      size="icon"
+                      variant="ghost"
+                      className="size-8 shrink-0"
+                      onClick={(e) => { e.stopPropagation(); previewVoice(v); }}
+                      aria-label={`Pré-ouvir ${v.name}`}
+                    >
+                      <Play className="size-4" />
+                    </Button>
+                  </Card>
+                );
+              })}
+            </div>
+          )}
+          {voiceURI && (
+            <Button variant="ghost" size="sm" onClick={() => { setVoiceURI(null); setPreferredVoiceURI(null); toast.success("Voz padrão restaurada"); }}>
+              Restaurar voz padrão
+            </Button>
+          )}
+        </section>
       </main>
     </div>
   );

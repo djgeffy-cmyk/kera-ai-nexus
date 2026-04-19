@@ -90,10 +90,10 @@ export function useVoice(opts: { useElevenLabs: boolean; onTranscript: (t: strin
     u.lang = lang;
     u.rate = 1.05;
     u.pitch = 1.05;
-    const voices = window.speechSynthesis.getVoices();
-    const ptVoice = voices.find(v => v.lang.startsWith("pt") && /female|fem|maria|luciana|monica|joana/i.test(v.name)) ||
-                    voices.find(v => v.lang.startsWith("pt"));
-    if (ptVoice) u.voice = ptVoice;
+    const { loadVoicesAsync, pickVoice } = await import("@/lib/nativeVoice");
+    const voices = await loadVoicesAsync();
+    const chosen = pickVoice(voices, lang);
+    if (chosen) u.voice = chosen;
     u.onend = () => setSpeaking(false);
     u.onerror = () => setSpeaking(false);
     window.speechSynthesis.speak(u);
