@@ -199,12 +199,113 @@ export const KeraTriggersManager = () => {
           <Target className="size-5 text-primary" />
           <h2 className="font-display text-xl text-glow">Gatilhos da Kera</h2>
         </div>
-        {!editingDraft && (
-          <Button size="sm" onClick={startNew}>
-            <Plus className="size-4 mr-1" /> Novo gatilho
+        <div className="flex gap-2">
+          <Button
+            size="sm"
+            variant={testOpen ? "secondary" : "outline"}
+            onClick={() => setTestOpen((v) => !v)}
+          >
+            <FlaskConical className="size-4 mr-1" />
+            Testar
+            {testOpen ? <ChevronUp className="size-3 ml-1" /> : <ChevronDown className="size-3 ml-1" />}
           </Button>
-        )}
+          {!editingDraft && (
+            <Button size="sm" onClick={startNew}>
+              <Plus className="size-4 mr-1" /> Novo gatilho
+            </Button>
+          )}
+        </div>
       </div>
+      <p className="text-sm text-muted-foreground">
+        Quando alguma palavra-chave aparece numa mensagem do usuário, a Kera injeta o tema (zoeira) na resposta.
+        Use <code className="text-xs">scope=global</code> pra valer em qualquer chat, ou <code className="text-xs">agent:kera-nutri</code> pra restringir a um agente.
+      </p>
+
+      {testOpen && (
+        <Card className="p-4 space-y-3 border-accent/40 bg-accent/5">
+          <div className="flex items-center gap-2">
+            <FlaskConical className="size-4 text-accent" />
+            <h3 className="font-medium text-sm">Simulador de gatilhos</h3>
+          </div>
+          <div>
+            <Label className="text-xs">Frase do usuário</Label>
+            <Textarea
+              value={testText}
+              onChange={(e) => setTestText(e.target.value)}
+              placeholder="Ex: o que você acha do rodrigo? e da tania regina?"
+              className="min-h-[60px]"
+            />
+          </div>
+          <div className="grid gap-3 sm:grid-cols-2">
+            <div>
+              <Label className="text-xs">Escopo simulado</Label>
+              <Input
+                value={testScope}
+                onChange={(e) => setTestScope(e.target.value)}
+                placeholder="global  ou  agent:kera-nutri"
+              />
+              <p className="text-xs text-muted-foreground mt-1">
+                Gatilhos <code>global</code> sempre entram. Os de outro escopo só batem se igualar aqui.
+              </p>
+            </div>
+            <div>
+              <Label className="text-xs">Email do usuário (opcional)</Label>
+              <Input
+                value={testEmail}
+                onChange={(e) => setTestEmail(e.target.value)}
+                placeholder="fulano@guaramirim.sc.gov.br"
+              />
+              <p className="text-xs text-muted-foreground mt-1">
+                Se o email estiver na lista de excluídos do gatilho, ele não dispara.
+              </p>
+            </div>
+          </div>
+
+          <div className="space-y-2 pt-2">
+            <div className="flex items-center justify-between">
+              <Label className="text-xs">
+                Gatilhos disparados:{" "}
+                <Badge variant={testMatches.length ? "default" : "outline"}>
+                  {testMatches.length}
+                </Badge>
+              </Label>
+            </div>
+            {testText.trim() && testMatches.length === 0 && (
+              <p className="text-xs text-muted-foreground italic">
+                Nenhum gatilho deu match com essa frase.
+              </p>
+            )}
+            {testMatches.map(({ trigger, regexSrc }) => (
+              <Card key={trigger.id} className="p-3 border-primary/30 bg-primary/5">
+                <div className="flex items-center gap-2 flex-wrap mb-1">
+                  <Badge>{trigger.name}</Badge>
+                  <Badge variant="outline" className="text-xs">{trigger.scope}</Badge>
+                </div>
+                <p className="text-xs font-mono text-muted-foreground break-all">
+                  /{regexSrc}/i
+                </p>
+                <p className="text-xs mt-2 line-clamp-3 whitespace-pre-wrap">
+                  {trigger.theme}
+                </p>
+              </Card>
+            ))}
+          </div>
+
+          {finalPromptInjection && (
+            <div>
+              <Label className="text-xs">Trecho injetado no system prompt</Label>
+              <Textarea
+                readOnly
+                value={finalPromptInjection}
+                className="min-h-[160px] font-mono text-xs leading-relaxed bg-background"
+              />
+              <p className="text-xs text-muted-foreground mt-1">
+                Esse bloco é anexado ao system prompt da Kera quando essa frase chega.
+              </p>
+            </div>
+          )}
+        </Card>
+      )}
       <p className="text-sm text-muted-foreground">
         Quando alguma palavra-chave aparece numa mensagem do usuário, a Kera injeta o tema (zoeira) na resposta.
         Use <code className="text-xs">scope=global</code> pra valer em qualquer chat, ou <code className="text-xs">agent:kera-nutri</code> pra restringir a um agente.
