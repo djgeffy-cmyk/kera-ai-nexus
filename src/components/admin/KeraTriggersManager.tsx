@@ -295,6 +295,9 @@ export const KeraTriggersManager = () => {
               <Card key={trigger.id} className="p-3 border-primary/30 bg-primary/5">
                 <div className="flex items-center gap-2 flex-wrap mb-1">
                   <Badge>{trigger.name}</Badge>
+                  <Badge variant="outline" className={`text-xs ${INTENSITY_META[trigger.intensity ?? "medio"].className}`}>
+                    {INTENSITY_META[trigger.intensity ?? "medio"].emoji} {INTENSITY_META[trigger.intensity ?? "medio"].label}
+                  </Badge>
                   <Badge variant="outline" className="text-xs">{trigger.scope}</Badge>
                 </div>
                 <p className="text-xs font-mono text-muted-foreground break-all">
