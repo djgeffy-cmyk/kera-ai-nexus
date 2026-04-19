@@ -64,6 +64,16 @@ const Chat = () => {
     onTranscript: (t) => { lastInputViaVoiceRef.current = true; setInput(t); setTimeout(() => sendText(t), 100); },
   });
 
+  // Modo "sempre escutando" estilo Grok/Hey Google — mic aberto, dispara só quando ouve "Kera"
+  const alwaysListen = useAlwaysListening({
+    onCommand: (text) => {
+      lastInputViaVoiceRef.current = true;
+      setInput(text);
+      setTimeout(() => sendText(text), 50);
+    },
+    onError: (msg) => toast.error(msg),
+  });
+
   // Hands-free: quando a Kera termina de falar, reabre o microfone automaticamente
   useEffect(() => {
     if (!handsFreeRef.current) return;
