@@ -1,8 +1,24 @@
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import keraAvatar from "@/assets/kera-avatar.png";
-import { User, FileText, Volume2, Square } from "lucide-react";
+import { User, FileText, Volume2, Square, Sparkles, ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
+
+// Detecta se a resposta do especialista sugere trocar pra Kera principal.
+// Heurística: cobre frases como "use a Kera", "troca pra Kera", "Kera principal",
+// "agente Kera", "**Kera**" — sem disparar quando o próprio agente é a Kera.
+export const suggestsKeraSwitch = (text: string): boolean => {
+  if (!text) return false;
+  const t = text.toLowerCase();
+  const patterns = [
+    /\bkera\s+(principal|generalista|m[ãa]e)\b/,
+    /\b(use|usa|chama|chame|abre|abra|troc[ae]|mude|mud[ae]|v[ãa]|v[áa])\s+(pra|para|para\s+a|pra\s+a|à|a)?\s*kera\b/,
+    /\bagente\s+kera\b/,
+    /\*\*kera\*\*/,
+    /\bfora\s+do\s+(meu\s+)?(escopo|tema|foco|dom[íi]nio)\b/,
+  ];
+  return patterns.some(re => re.test(t));
+};
 
 type ContentPart =
   | { type: "text"; text: string }
