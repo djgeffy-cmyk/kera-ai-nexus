@@ -14,6 +14,7 @@ import { PasswordResetRequests } from "@/components/admin/PasswordResetRequests"
 import { IpmEndpointsManager } from "@/components/admin/IpmEndpointsManager";
 import { KeraPromptEditor } from "@/components/admin/KeraPromptEditor";
 import { KeraVoiceSelector } from "@/components/admin/KeraVoiceSelector";
+import { KeraTriggersManager } from "@/components/admin/KeraTriggersManager";
 
 type Status = Record<string, boolean>;
 
@@ -220,6 +221,8 @@ const Admin = () => {
         <KeraPromptEditor />
 
         <KeraVoiceSelector />
+
+        <KeraTriggersManager />
 
         <PasswordResetRequests />
 

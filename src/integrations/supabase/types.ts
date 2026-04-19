@@ -191,6 +191,51 @@ export type Database = {
         }
         Relationships: []
       }
+      kera_triggers: {
+        Row: {
+          created_at: string
+          enabled: boolean
+          excluded_emails: string[]
+          id: string
+          keywords: string
+          name: string
+          regex_pattern: string | null
+          scope: string
+          sort_order: number
+          theme: string
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          created_at?: string
+          enabled?: boolean
+          excluded_emails?: string[]
+          id?: string
+          keywords: string
+          name: string
+          regex_pattern?: string | null
+          scope?: string
+          sort_order?: number
+          theme: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          created_at?: string
+          enabled?: boolean
+          excluded_emails?: string[]
+          id?: string
+          keywords?: string
+          name?: string
+          regex_pattern?: string | null
+          scope?: string
+          sort_order?: number
+          theme?: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: []
+      }
       licitacoes_alerts: {
         Row: {
           created_at: string
