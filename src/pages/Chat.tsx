@@ -45,7 +45,9 @@ const Chat = () => {
   const [userId, setUserId] = useState<string | null>(null);
   const [isAdmin, setIsAdmin] = useState(false);
   const [provider, setProvider] = useState<ProviderId>(getPreferredProvider());
-  const [voiceMode, setVoiceMode] = useState(false);
+  const [voiceMode, setVoiceMode] = useState<boolean>(() => {
+    try { return localStorage.getItem("kera:voiceMode") === "1"; } catch { return false; }
+  });
   const [hasElevenLabs, setHasElevenLabs] = useState(false);
   const [attachments, setAttachments] = useState<Attachment[]>([]);
   const [dragging, setDragging] = useState(false);
@@ -738,7 +740,18 @@ Por favor, analise: há perda de pacote? jitter alto sugere instabilidade de rot
             </Select>
             <Button
               variant="ghost" size="icon"
-              onClick={() => { setVoiceMode(v => !v); if (voiceMode) voice.stopSpeaking(); }}
+              onClick={() => {
+                const next = !voiceMode;
+                setVoiceMode(next);
+                try { localStorage.setItem("kera:voiceMode", next ? "1" : "0"); } catch {}
+                if (next) {
+                  // destrava TTS em mobile (precisa rodar dentro do gesto do usuário)
+                  voice.warmUpTTS();
+                  toast.success("Modo voz ativado — Kera vai falar as respostas");
+                } else {
+                  voice.stopSpeaking();
+                }
+              }}
               aria-label="Modo voz"
               className={voiceMode ? "text-primary" : ""}
             >
