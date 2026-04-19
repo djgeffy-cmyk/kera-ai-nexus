@@ -23,3 +23,6 @@ verify_jwt = false
 
 [functions.transparencia-scrape]
 verify_jwt = false
+
+[functions.ipm-query]
+verify_jwt = false
