@@ -80,50 +80,59 @@ Deno.serve(async (req) => {
       ? systemPrompt
       : DEFAULT_SYSTEM_PROMPT;
 
-    const cfg = resolveProvider(provider as Provider | undefined);
-    if ("error" in cfg) {
-      return new Response(JSON.stringify({ error: cfg.error }), {
-        status: cfg.status,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
-
-    console.log(`[chat-kera] Using provider: ${cfg.label}`);
-
-    const upstream = await fetch(cfg.url, {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${cfg.apiKey}`,
-        "Content-Type": "application/json",
-        ...(cfg.url.includes("openrouter") ? { "HTTP-Referer": "https://kera-ai.lovable.app", "X-Title": "Kera AI" } : {}),
-      },
-      body: JSON.stringify({
-        model: cfg.model,
-        stream: true,
-        messages: [{ role: "system", content: finalSystem }, ...messages],
-      }),
-    });
-
-    if (!upstream.ok) {
-      if (upstream.status === 429) {
-        return new Response(JSON.stringify({ error: "Limite de requisições atingido. Tente novamente em alguns segundos." }), {
-          status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" },
-        });
-      }
-      if (upstream.status === 402) {
-        return new Response(JSON.stringify({ error: "Créditos de IA esgotados." }), {
-          status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" },
-        });
-      }
-      const t = await upstream.text();
-      console.error("Upstream error", upstream.status, t);
-      return new Response(JSON.stringify({ error: `Erro no provedor (${cfg.label}): ${t.slice(0, 200)}` }), {
+    const chain = getProviderChain(provider as Provider | undefined);
+    if (chain.length === 0) {
+      return new Response(JSON.stringify({ error: "Nenhuma chave de IA configurada. Adicione no painel admin." }), {
         status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
-    return new Response(upstream.body, {
-      headers: { ...corsHeaders, "Content-Type": "text/event-stream", "X-Provider": cfg.label },
+    let lastError = "";
+    let lastStatus = 500;
+    for (let i = 0; i < chain.length; i++) {
+      const cfg = chain[i];
+      console.log(`[chat-kera] Tentativa ${i + 1}/${chain.length}: ${cfg.label}`);
+
+      const upstream = await fetch(cfg.url, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${cfg.apiKey}`,
+          "Content-Type": "application/json",
+          ...(cfg.url.includes("openrouter") ? { "HTTP-Referer": "https://kera-ai.lovable.app", "X-Title": "Kera AI" } : {}),
+        },
+        body: JSON.stringify({
+          model: cfg.model,
+          stream: true,
+          messages: [{ role: "system", content: finalSystem }, ...messages],
+        }),
+      });
+
+      if (upstream.ok) {
+        return new Response(upstream.body, {
+          headers: { ...corsHeaders, "Content-Type": "text/event-stream", "X-Provider": cfg.label },
+        });
+      }
+
+      // Falhou — captura erro e tenta próximo se for 429/5xx
+      const errText = await upstream.text();
+      lastStatus = upstream.status;
+      lastError = errText.slice(0, 200);
+      console.warn(`[chat-kera] ${cfg.label} falhou ${upstream.status}: ${lastError}`);
+
+      const shouldFallback = upstream.status === 429 || upstream.status === 402 || upstream.status >= 500;
+      if (!shouldFallback) {
+        // Erro definitivo (auth, bad request) — não adianta tentar outro
+        return new Response(JSON.stringify({ error: `Erro no provedor (${cfg.label}): ${lastError}` }), {
+          status: upstream.status, headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+      // senão, continua o loop pro próximo provedor
+    }
+
+    return new Response(JSON.stringify({
+      error: `Todos os provedores falharam. Último erro (${lastStatus}): ${lastError}`,
+    }), {
+      status: 503, headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (e) {
     console.error("chat-kera error", e);
