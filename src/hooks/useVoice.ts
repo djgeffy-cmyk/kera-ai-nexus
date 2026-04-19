@@ -84,10 +84,13 @@ export function useVoice(opts: { useElevenLabs?: boolean; useRemoteTTS?: boolean
         audio.onended = () => { setSpeaking(false); URL.revokeObjectURL(url); };
         audio.onerror = () => { setSpeaking(false); URL.revokeObjectURL(url); };
         await audio.play();
-        console.log("[useVoice] OpenAI TTS tocando", { len: text.length });
+        console.log("[useVoice] TTS remoto tocando", { len: text.length });
         return;
       } catch (e) {
-        console.warn("[useVoice] TTS remoto falhou, fallback Web Speech:", e);
+        // Não cai pro Web Speech (voz robótica). Usuário prefere ficar em silêncio.
+        console.error("[useVoice] TTS remoto falhou (sem fallback robótico):", e);
+        setSpeaking(false);
+        return;
       }
     }
 
