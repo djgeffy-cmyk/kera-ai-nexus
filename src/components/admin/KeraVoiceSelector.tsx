@@ -271,12 +271,12 @@ export const KeraVoiceSelector = () => {
             </p>
           </div>
 
-          <div className="flex items-center justify-between pt-2 border-t border-border">
-            <span className="text-xs text-muted-foreground">
-              Ativa: <code className="font-mono">{savedId}</code>
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 pt-2 border-t border-border">
+            <span className="text-xs text-muted-foreground min-w-0 break-all">
+              Ativa: <code className="font-mono break-all">{savedId}</code>
               {dirty && <span className="ml-2 text-primary">• não salvo</span>}
             </span>
-            <Button size="sm" onClick={save} disabled={saving || !dirty}>
+            <Button size="sm" onClick={save} disabled={saving || !dirty} className="shrink-0 self-end sm:self-auto">
               <Save className="size-4 mr-1" /> {saving ? "Salvando..." : "Salvar"}
             </Button>
           </div>
