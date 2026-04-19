@@ -40,6 +40,7 @@ const Chat = () => {
   const [input, setInput] = useState("");
   const [streaming, setStreaming] = useState(false);
   const [userId, setUserId] = useState<string | null>(null);
+  const [isAdmin, setIsAdmin] = useState(false);
   const [provider, setProvider] = useState<ProviderId>(getPreferredProvider());
   const [voiceMode, setVoiceMode] = useState(false);
   const [hasElevenLabs, setHasElevenLabs] = useState(false);
