@@ -45,12 +45,12 @@ const Footer = () => {
         rel="noopener noreferrer"
         aria-label="Acessar Kera AI Space in Cloud"
         title="Kera AI · Space in Cloud — Soluções em Nuvem"
-        className="fixed bottom-2 right-3 md:bottom-3 md:right-5 z-40 opacity-95 hover:opacity-100 hover:scale-105 transition-all"
+        className="fixed bottom-16 right-2 md:bottom-3 md:right-5 z-20 md:z-40 opacity-80 md:opacity-95 hover:opacity-100 hover:scale-105 transition-all pointer-events-auto"
       >
         <img
           src={keraSpaceLogo}
           alt="Kera AI Space in Cloud"
-          className="h-28 md:h-36 w-auto bg-transparent drop-shadow-[0_6px_18px_rgba(0,0,0,0.7)]"
+          className="h-16 md:h-36 w-auto bg-transparent drop-shadow-[0_6px_18px_rgba(0,0,0,0.7)]"
           loading="lazy"
           decoding="async"
           style={{ background: "transparent" }}
