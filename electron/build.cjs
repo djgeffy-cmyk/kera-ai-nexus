@@ -1,4 +1,3 @@
-const packager = require('@electron/packager').default || require('@electron/packager');
 const path = require('path');
 const fs = require('fs');
 const zip = require('bestzip');
@@ -16,6 +15,10 @@ async function bundle() {
     console.log('--- Geverson, iniciando o empacotamento... segura a onda ---');
     console.log(`Alvo: ${PLATFORM}-${ARCH}`);
     
+    // @electron/packager v19+ é ESM puro — precisamos de import() dinâmico aqui no CJS.
+    const packagerMod = await import('@electron/packager');
+    const packager = packagerMod.default || packagerMod.packager || packagerMod;
+
     // 1. Build Vite
     console.log('[1/3] Gerando build do Vite...');
     try {
