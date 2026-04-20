@@ -1,8 +1,10 @@
+import { useState } from "react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import keraAvatar from "@/assets/kera-avatar.png";
-import { User, FileText, Volume2, Square, Sparkles, ArrowRight } from "lucide-react";
+import { User, FileText, Volume2, Square, Sparkles, ArrowRight, Copy, Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { toast } from "sonner";
 
 // Detecta se a resposta do especialista sugere trocar pra Kera principal.
 // Heurística: cobre frases como "use a Kera", "troca pra Kera", "Kera principal",
