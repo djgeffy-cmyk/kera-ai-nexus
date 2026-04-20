@@ -26,14 +26,16 @@ import keraNutriBgVideo from "@/assets/kera-nutri-bg.mp4.asset.json";
 import keraGamerBgVideo from "@/assets/kera-gamer-bg.mp4.asset.json";
 import keraSpaceLogo from "@/assets/kera-spaceincloud-logo.png";
 
+import { assetUrl } from "@/lib/assetUrl";
+
 const AGENT_BG_VIDEOS: Record<string, string> = {
-  "kera": keraBgVideo.url,
-  "kera-dev": keraDevBgVideo.url,
-  "kera-sec": keraSecBgVideo.url,
-  "kera-juridica": keraJuridicaBgVideo.url,
-  "kera-sentinela": keraSentinelaBgVideo.url,
-  "kera-nutri": keraNutriBgVideo.url,
-  "kera-gamer": keraGamerBgVideo.url,
+  "kera": assetUrl(keraBgVideo),
+  "kera-dev": assetUrl(keraDevBgVideo),
+  "kera-sec": assetUrl(keraSecBgVideo),
+  "kera-juridica": assetUrl(keraJuridicaBgVideo),
+  "kera-sentinela": assetUrl(keraSentinelaBgVideo),
+  "kera-nutri": assetUrl(keraNutriBgVideo),
+  "kera-gamer": assetUrl(keraGamerBgVideo),
 };
 import { MessageBubble, type ChatMessage } from "@/components/chat/MessageBubble";
 import { PROVIDERS, getPreferredProvider, setPreferredProvider, type ProviderId } from "@/lib/providers";
@@ -1021,7 +1023,7 @@ Por favor, analise: há perda de pacote? jitter alto sugere instabilidade de rot
             {messages.length === 0 && !streaming && (
               <div className="text-center pt-10 md:pt-20">
                 <video
-                  src={keraAvatarVideo.url}
+                  src={assetUrl(keraAvatarVideo)}
                   poster={keraAvatar}
                   autoPlay
                   loop
