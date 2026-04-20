@@ -49,6 +49,7 @@ import { exportConversationToPdf } from "@/lib/exportPdf";
 import { VoiceStatusIndicator } from "@/components/VoiceStatusIndicator";
 import { useTheme } from "@/hooks/useTheme";
 import { GalleryDialog } from "@/components/GalleryDialog";
+import KeraAvatar3D from "@/components/KeraAvatar3D";
 
 type Conversation = { id: string; title: string; updated_at: string; agent_key: string };
 type CustomAgent = { id: string; name: string; system_prompt: string; description: string | null };
@@ -80,6 +81,16 @@ const Chat = () => {
   useEffect(() => {
     try { localStorage.removeItem("kera:voiceMode"); } catch {}
   }, []);
+  // Avatar 3D (boneca da Kera) — persiste preferência
+  const [avatar3D, setAvatar3D] = useState<boolean>(() => {
+    try { return localStorage.getItem("kera:avatar3D") === "1"; } catch { return false; }
+  });
+  useEffect(() => {
+    try { localStorage.setItem("kera:avatar3D", avatar3D ? "1" : "0"); } catch {}
+  }, [avatar3D]);
+  // Texto da última resposta — usado pelo avatar 3D pra detectar emoção e animar boca
+  const lastAssistantTextRef = useRef<string>("");
+  const [lastAssistantText, setLastAssistantText] = useState<string>("");
   const [hasRemoteTTS, setHasRemoteTTS] = useState(false);
   const [attachments, setAttachments] = useState<Attachment[]>([]);
   const [dragging, setDragging] = useState(false);
