@@ -9,6 +9,7 @@ import {
   Plus, LogOut, Send, MessageSquare, Trash2, Menu, Settings,
   Image as ImageIcon, LayoutGrid, FolderPlus, Mic, MicOff, Volume2, VolumeX, Bot, ChevronRight,
   Paperclip, X, FileText, ShieldCheck, Activity, Download, Ear, Sun, Moon, Sparkles, Gem,
+  PanelLeftClose, PanelLeftOpen,
 } from "lucide-react";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -76,6 +77,12 @@ const Chat = () => {
   const [hasRemoteTTS, setHasRemoteTTS] = useState(false);
   const [attachments, setAttachments] = useState<Attachment[]>([]);
   const [dragging, setDragging] = useState(false);
+  const [sidebarOpen, setSidebarOpen] = useState<boolean>(() => {
+    try { return localStorage.getItem("kera:sidebarOpen") !== "0"; } catch { return true; }
+  });
+  useEffect(() => {
+    try { localStorage.setItem("kera:sidebarOpen", sidebarOpen ? "1" : "0"); } catch {}
+  }, [sidebarOpen]);
   const dragCounter = useRef(0);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const scrollerRef = useRef<HTMLDivElement>(null);
@@ -686,7 +693,13 @@ Por favor, analise: há perda de pacote? jitter alto sugere instabilidade de rot
 
   return (
     <div className="h-screen flex">
-      <div className="hidden md:flex"><Sidebar /></div>
+      <div
+        className={`hidden md:flex transition-all duration-300 ease-in-out overflow-hidden ${
+          sidebarOpen ? "w-72 opacity-100" : "w-0 opacity-0 pointer-events-none"
+        }`}
+      >
+        <Sidebar />
+      </div>
 
       <div
         className="flex-1 flex flex-col min-w-0 relative"
@@ -752,6 +765,17 @@ Por favor, analise: há perda de pacote? jitter alto sugere instabilidade de rot
           </div>
         )}
         <header className="relative z-10 h-14 border-b border-border panel flex items-center px-2 md:px-6 gap-1.5 md:gap-3 overflow-hidden">
+          {/* Botão para ocultar/mostrar a sidebar (desktop) */}
+          <Button
+            variant="ghost"
+            size="icon"
+            className="hidden md:inline-flex shrink-0 h-9 w-9"
+            onClick={() => setSidebarOpen((v) => !v)}
+            aria-label={sidebarOpen ? "Ocultar menu lateral" : "Mostrar menu lateral"}
+            title={sidebarOpen ? "Ocultar menu lateral" : "Mostrar menu lateral"}
+          >
+            {sidebarOpen ? <PanelLeftClose className="size-5" /> : <PanelLeftOpen className="size-5" />}
+          </Button>
           <Sheet>
             <SheetTrigger asChild>
               <Button variant="ghost" size="icon" className="md:hidden shrink-0 h-9 w-9"><Menu className="size-5" /></Button>
