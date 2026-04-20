@@ -297,6 +297,40 @@ const KeraDesktopPage = () => {
           </div>
         </Card>
 
+        {/* ATUALIZAÇÕES */}
+        <Card className="p-4 space-y-3">
+          <div className="flex items-center justify-between gap-2 flex-wrap">
+            <div className="flex items-center gap-2">
+              <Download className="size-4 text-primary" />
+              <h2 className="text-sm uppercase tracking-wider text-muted-foreground">Atualizações</h2>
+            </div>
+            <div className="flex gap-2">
+              <Button onClick={checkUpdate} size="sm" variant="outline" className="gap-2" disabled={checkingUpdate}>
+                <RefreshCw className={`size-4 ${checkingUpdate ? "animate-spin" : ""}`} /> Verificar atualizações
+              </Button>
+              {updateStatus?.state === "downloaded" && (
+                <Button onClick={installUpdate} size="sm" className="gap-2">
+                  <Download className="size-4" /> Reiniciar e instalar
+                </Button>
+              )}
+            </div>
+          </div>
+          <p className="text-xs text-muted-foreground">
+            Versão atual: <span className="font-mono text-foreground">v{info?.version || "—"}</span>. Atualizações são baixadas automaticamente em background.
+          </p>
+          {updateStatus && (
+            <div className="text-xs font-mono px-3 py-2 rounded-md bg-secondary/40">
+              {updateStatus.state === "checking" && "Verificando..."}
+              {updateStatus.state === "available" && `📦 Disponível: v${updateStatus.version} — baixando…`}
+              {updateStatus.state === "downloading" && `⬇ Baixando: ${updateStatus.percent ?? 0}%`}
+              {updateStatus.state === "downloaded" && `✅ v${updateStatus.version} pronta. Reinicie pra instalar.`}
+              {updateStatus.state === "up-to-date" && "✓ Você está na versão mais recente."}
+              {updateStatus.state === "skipped" && `⚠ Auto-update desativado (${updateStatus.message || "dev"}).`}
+              {updateStatus.state === "error" && `✗ Erro: ${updateStatus.message}`}
+            </div>
+          )}
+        </Card>
+
         {/* PASTAS AUTORIZADAS — allow-list de segurança */}
         <Card className="p-4 space-y-3">
           <div className="flex items-center justify-between gap-2 flex-wrap">
