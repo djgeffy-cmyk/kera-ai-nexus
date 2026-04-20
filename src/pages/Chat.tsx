@@ -1148,6 +1148,7 @@ Por favor, analise: há perda de pacote? jitter alto sugere instabilidade de rot
           speaking={voice.speaking}
         />
       )}
+      <GalleryDialog open={galleryOpen} onOpenChange={setGalleryOpen} userId={userId} />
     </div>
   );
 };
