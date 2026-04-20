@@ -16,6 +16,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel,
 import keraLogo from "@/assets/kera-logo.png";
 import keraAvatar from "@/assets/kera-avatar.png";
 import keraAvatarVideo from "@/assets/kera-avatar.mp4.asset.json";
+import keraDevBgVideo from "@/assets/kera-dev-bg.mp4.asset.json";
 import { MessageBubble, type ChatMessage } from "@/components/chat/MessageBubble";
 import { PROVIDERS, getPreferredProvider, setPreferredProvider, type ProviderId } from "@/lib/providers";
 import { BUILTIN_AGENTS, getBuiltinAgent, DEFAULT_AGENT_KEY } from "@/lib/agents";
