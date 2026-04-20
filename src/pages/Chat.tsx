@@ -49,6 +49,7 @@ import { exportConversationToPdf } from "@/lib/exportPdf";
 import { VoiceStatusIndicator } from "@/components/VoiceStatusIndicator";
 import { useTheme } from "@/hooks/useTheme";
 import { GalleryDialog } from "@/components/GalleryDialog";
+import KeraAvatar3D from "@/components/KeraAvatar3D";
 
 type Conversation = { id: string; title: string; updated_at: string; agent_key: string };
 type CustomAgent = { id: string; name: string; system_prompt: string; description: string | null };
@@ -80,6 +81,16 @@ const Chat = () => {
   useEffect(() => {
     try { localStorage.removeItem("kera:voiceMode"); } catch {}
   }, []);
+  // Avatar 3D (boneca da Kera) — persiste preferência
+  const [avatar3D, setAvatar3D] = useState<boolean>(() => {
+    try { return localStorage.getItem("kera:avatar3D") === "1"; } catch { return false; }
+  });
+  useEffect(() => {
+    try { localStorage.setItem("kera:avatar3D", avatar3D ? "1" : "0"); } catch {}
+  }, [avatar3D]);
+  // Texto da última resposta — usado pelo avatar 3D pra detectar emoção e animar boca
+  const lastAssistantTextRef = useRef<string>("");
+  const [lastAssistantText, setLastAssistantText] = useState<string>("");
   const [hasRemoteTTS, setHasRemoteTTS] = useState(false);
   const [attachments, setAttachments] = useState<Attachment[]>([]);
   const [dragging, setDragging] = useState(false);
@@ -539,6 +550,9 @@ const Chat = () => {
           conversation_id: convId, user_id: userId, role: "assistant", content: assistantText,
         });
         await supabase.from("conversations").update({ updated_at: new Date().toISOString() }).eq("id", convId);
+        // Atualiza o texto pro avatar 3D detectar emoção / sincronizar boca
+        lastAssistantTextRef.current = assistantText;
+        setLastAssistantText(assistantText);
         if (voiceMode) voice.speak(assistantText.replace(/```[\s\S]*?```/g, "(bloco de código)").replace(/[#*_`>]/g, ""));
       }
     } catch (e: any) {
@@ -904,6 +918,24 @@ Por favor, analise: há perda de pacote? jitter alto sugere instabilidade de rot
           </div>
         )}
 
+        {/* Kera 3D — boneca volumétrica que reage à voz e às emoções da resposta */}
+        {avatar3D && (
+          <div className="hidden md:block absolute right-4 bottom-24 z-10 w-[320px] h-[480px] pointer-events-none animate-[fade-in_500ms_ease-out]">
+            <div className="relative w-full h-full rounded-3xl overflow-hidden border border-primary/30 bg-gradient-to-b from-primary/10 via-transparent to-primary/5 shadow-[0_0_60px_-10px_hsl(var(--primary)/0.4)] backdrop-blur-sm">
+              <KeraAvatar3D
+                speaking={voice.speaking}
+                audioElement={voice.audioRef.current}
+                lastReplyText={lastAssistantText}
+              />
+              {/* Indicador "ao vivo" */}
+              <div className="absolute top-2 left-2 flex items-center gap-1.5 text-[10px] font-medium text-primary bg-background/70 backdrop-blur-sm px-2 py-0.5 rounded-full border border-primary/30">
+                <span className={`size-1.5 rounded-full ${voice.speaking ? "bg-primary animate-pulse" : "bg-muted-foreground"}`} />
+                Kera 3D
+              </div>
+            </div>
+          </div>
+        )}
+
         {dragging && (
           <div className="absolute inset-0 z-50 pointer-events-none flex items-center justify-center bg-primary/10 backdrop-blur-sm border-4 border-dashed border-primary rounded-lg m-2">
             <div className="text-center">
@@ -1019,6 +1051,18 @@ Por favor, analise: há perda de pacote? jitter alto sugere instabilidade de rot
                 {PROVIDERS.map(p => (<SelectItem key={p.id} value={p.id} className="text-xs">{p.label}</SelectItem>))}
               </SelectContent>
             </Select>
+            <Button
+              variant="ghost" size="icon"
+              onClick={() => {
+                setAvatar3D(v => !v);
+                if (!avatar3D) toast.success("Kera 3D ativada — boneca aparece no canto e fala com você");
+              }}
+              aria-label="Avatar 3D"
+              title={avatar3D ? "Ocultar Kera 3D" : "Mostrar Kera 3D"}
+              className={`shrink-0 h-9 w-9 ${avatar3D ? "text-primary" : ""}`}
+            >
+              <Bot className="size-5" />
+            </Button>
             <Button
               variant="ghost" size="icon"
               onClick={() => {
