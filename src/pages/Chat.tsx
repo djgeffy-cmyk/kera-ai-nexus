@@ -631,7 +631,7 @@ Por favor, analise: há perda de pacote? jitter alto sugere instabilidade de rot
           <span>Agentes</span>
         </button>
         <button
-          onClick={() => toast.info("Galeria em breve")}
+          onClick={() => setGalleryOpen(true)}
           className="w-full flex items-center gap-3 px-2.5 py-2 rounded-md hover:bg-secondary/60 transition text-sm"
         >
           <ImageIcon className="size-4 text-muted-foreground" />
