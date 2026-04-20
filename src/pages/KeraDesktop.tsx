@@ -239,22 +239,40 @@ const KeraDesktopPage = () => {
   if (!desktop) {
     return (
       <div className="min-h-screen flex items-center justify-center p-6 bg-background text-foreground">
-        <Card className="max-w-2xl p-8 space-y-4 text-center">
-          <Monitor className="size-12 mx-auto text-primary" />
-          <h1 className="text-2xl font-display text-glow">Kera Desktop</h1>
-          <p className="text-muted-foreground">
-            Esta página só funciona quando você abre a Kera pelo <strong>app desktop</strong>{" "}
-            (Windows/Mac/Linux). No navegador, o acesso ao sistema do PC é bloqueado.
-          </p>
-          <p className="text-sm text-muted-foreground/80">
-            Baixe o instalador na sua área de admin e rode o <code className="text-primary">KeraDesktop.exe</code>.
-          </p>
-          <Link to="/">
-            <Button variant="outline" className="gap-2">
-              <ArrowLeft className="size-4" /> Voltar ao chat
-            </Button>
-          </Link>
-        </Card>
+        <div className="w-full max-w-2xl space-y-4">
+          <Card className="p-8 space-y-4 text-center">
+            <Monitor className="size-12 mx-auto text-primary" />
+            <h1 className="text-2xl font-display text-glow">Kera Desktop</h1>
+            <p className="text-muted-foreground">
+              Esta página só funciona quando você abre a Kera pelo <strong>app desktop</strong>{" "}
+              (Windows/Mac/Linux). No navegador, o acesso ao sistema do PC é bloqueado.
+            </p>
+            <p className="text-sm text-muted-foreground/80">
+              Baixe o instalador na sua área de admin e rode o <code className="text-primary">KeraDesktop.exe</code>.
+            </p>
+            <Link to="/">
+              <Button variant="outline" className="gap-2">
+                <ArrowLeft className="size-4" /> Voltar ao chat
+              </Button>
+            </Link>
+          </Card>
+
+          {/* ATUALIZAÇÕES — preview desabilitado no navegador */}
+          <Card className="p-4 space-y-3 opacity-70">
+            <div className="flex items-center justify-between gap-2 flex-wrap">
+              <div className="flex items-center gap-2">
+                <Download className="size-4 text-primary" />
+                <h2 className="text-sm uppercase tracking-wider text-muted-foreground">Atualizações</h2>
+              </div>
+              <Button size="sm" variant="outline" className="gap-2" disabled>
+                <RefreshCw className="size-4" /> Verificar atualizações
+              </Button>
+            </div>
+            <div className="text-xs px-3 py-2 rounded-md bg-secondary/40 text-muted-foreground italic">
+              Disponível apenas no Kera Desktop. Abra o app instalado para verificar e instalar atualizações automaticamente.
+            </div>
+          </Card>
+        </div>
       </div>
     );
   }
