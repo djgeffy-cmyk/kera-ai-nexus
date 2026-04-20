@@ -42,4 +42,13 @@ contextBridge.exposeInMainWorld("kera", {
     lock: () => ipcRenderer.invoke("kera:power", "lock"),
     cancel: () => ipcRenderer.invoke("kera:power", "cancel"),
   },
+  update: {
+    check: () => ipcRenderer.invoke("kera:update:check"),
+    install: () => ipcRenderer.invoke("kera:update:install"),
+    onStatus: (cb) => {
+      const handler = (_e, payload) => cb(payload);
+      ipcRenderer.on("kera:update:status", handler);
+      return () => ipcRenderer.removeListener("kera:update:status", handler);
+    },
+  },
 });
