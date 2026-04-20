@@ -303,6 +303,111 @@ const KeraDesktopPage = () => {
           )}
         </Card>
 
+        {/* STATUS DO SISTEMA */}
+        <Card className="p-4 space-y-3">
+          <div className="flex items-center justify-between gap-2 flex-wrap">
+            <div className="flex items-center gap-2">
+              <Cpu className="size-4 text-primary" />
+              <h2 className="text-sm uppercase tracking-wider text-muted-foreground">Status do sistema</h2>
+            </div>
+            <Button onClick={loadStatus} size="sm" variant="outline" className="gap-2">
+              <RefreshCw className="size-4" /> Atualizar
+            </Button>
+          </div>
+          {sysStatus ? (
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-3 text-xs">
+              <div><div className="text-muted-foreground">CPU</div><div className="font-mono truncate" title={sysStatus.cpuModel}>{sysStatus.cpuModel}</div></div>
+              <div><div className="text-muted-foreground">Núcleos</div><div className="font-mono">{sysStatus.cpuCount}</div></div>
+              <div><div className="text-muted-foreground">Load (1/5/15m)</div><div className="font-mono">{sysStatus.loadAvg.map(n => n.toFixed(2)).join(" / ")}</div></div>
+              <div><div className="text-muted-foreground">RAM usada</div><div className="font-mono">{sysStatus.memUsedPct}%</div></div>
+              <div><div className="text-muted-foreground">RAM total</div><div className="font-mono">{(sysStatus.memTotalBytes / 1024 ** 3).toFixed(1)} GB</div></div>
+              <div><div className="text-muted-foreground">Uptime</div><div className="font-mono">{Math.floor(sysStatus.uptimeSec / 3600)}h {Math.floor((sysStatus.uptimeSec % 3600) / 60)}m</div></div>
+              {sysStatus.homeDiskRaw && (
+                <div className="col-span-2 md:col-span-3"><div className="text-muted-foreground">Disco (home)</div><div className="font-mono text-[10px] truncate" title={sysStatus.homeDiskRaw}>{sysStatus.homeDiskRaw}</div></div>
+              )}
+            </div>
+          ) : (
+            <p className="text-xs text-muted-foreground italic">Clique em Atualizar para ver o status do seu PC.</p>
+          )}
+        </Card>
+
+        {/* CLIPBOARD */}
+        <Card className="p-4 space-y-3">
+          <div className="flex items-center gap-2">
+            <ClipboardCopy className="size-4 text-primary" />
+            <h2 className="text-sm uppercase tracking-wider text-muted-foreground">Área de transferência</h2>
+          </div>
+          <Textarea value={clip} onChange={(e) => setClip(e.target.value)} rows={3} className="font-mono text-xs" placeholder="Conteúdo do clipboard…" />
+          <div className="flex gap-2">
+            <Button onClick={readClip} size="sm" variant="outline" className="gap-2"><ClipboardPaste className="size-4" /> Ler do clipboard</Button>
+            <Button onClick={writeClip} size="sm" className="gap-2" disabled={!clip.trim()}><ClipboardCopy className="size-4" /> Copiar p/ clipboard</Button>
+          </div>
+        </Card>
+
+        {/* SCREENSHOT */}
+        <Card className="p-4 space-y-3">
+          <div className="flex items-center justify-between gap-2 flex-wrap">
+            <div className="flex items-center gap-2">
+              <Camera className="size-4 text-primary" />
+              <h2 className="text-sm uppercase tracking-wider text-muted-foreground">Captura de tela</h2>
+            </div>
+            <Button onClick={takeShot} size="sm" className="gap-2"><Camera className="size-4" /> Capturar</Button>
+          </div>
+          {shot && (
+            <img src={shot} alt="Captura de tela" className="w-full rounded-md border border-border" />
+          )}
+        </Card>
+
+        {/* ABRIR PROGRAMAS / ARQUIVOS / URLs */}
+        <Card className="p-4 space-y-3">
+          <div className="flex items-center gap-2">
+            <Rocket className="size-4 text-primary" />
+            <h2 className="text-sm uppercase tracking-wider text-muted-foreground">Abrir programas e arquivos</h2>
+          </div>
+          <div className="space-y-2">
+            <div className="text-xs text-muted-foreground">Abrir arquivo/pasta/URL com app padrão</div>
+            <div className="flex gap-2">
+              <Input value={openTarget} onChange={(e) => setOpenTarget(e.target.value)} placeholder="/home/usuario/arquivo.pdf  ou  https://google.com" className="text-xs font-mono" />
+              <Button onClick={openPath} size="sm" className="gap-2" disabled={!openTarget.trim()}><Globe className="size-4" /> Abrir</Button>
+            </div>
+          </div>
+          <div className="space-y-2">
+            <div className="text-xs text-muted-foreground">Abrir programa pelo nome (ex: firefox, code, gedit)</div>
+            <div className="flex gap-2">
+              <Input value={appName} onChange={(e) => setAppName(e.target.value)} placeholder="firefox" className="text-xs font-mono" />
+              <Button onClick={openApp} size="sm" variant="outline" className="gap-2" disabled={!appName.trim()}><Rocket className="size-4" /> Executar</Button>
+            </div>
+          </div>
+        </Card>
+
+        {/* TERMINAL */}
+        <Card className="p-4 space-y-3 border-destructive/30">
+          <div className="flex items-center gap-2">
+            <Terminal className="size-4 text-destructive" />
+            <h2 className="text-sm uppercase tracking-wider text-muted-foreground">Terminal (avançado)</h2>
+          </div>
+          <p className="text-xs text-muted-foreground">
+            ⚠️ Poderoso e arriscado. Cada comando pede confirmação. Timeout 30s. Saída limitada a 20k caracteres.
+          </p>
+          <Textarea value={cmd} onChange={(e) => setCmd(e.target.value)} rows={2} className="font-mono text-xs" placeholder='ls -la  |  df -h  |  git status' />
+          <Button onClick={runCmd} size="sm" variant="destructive" className="gap-2" disabled={!cmd.trim()}>
+            <Terminal className="size-4" /> Executar comando
+          </Button>
+          {execResult && (
+            <div className="space-y-1 text-xs">
+              <div className={execResult.ok ? "text-primary" : "text-destructive"}>
+                {execResult.ok ? "✓ sucesso" : `✗ ${execResult.error || "falha"}`}
+              </div>
+              {execResult.stdout && (
+                <pre className="bg-background/60 border border-border rounded-md p-2 overflow-auto max-h-48 font-mono text-[11px] whitespace-pre-wrap">{execResult.stdout}</pre>
+              )}
+              {execResult.stderr && (
+                <pre className="bg-destructive/10 border border-destructive/30 rounded-md p-2 overflow-auto max-h-32 font-mono text-[11px] whitespace-pre-wrap text-destructive">{execResult.stderr}</pre>
+              )}
+            </div>
+          )}
+        </Card>
+
         {/* EXPLORADOR DE ARQUIVOS */}
         <Card className="p-4 space-y-3">
           <div className="flex items-center justify-between gap-2 flex-wrap">
