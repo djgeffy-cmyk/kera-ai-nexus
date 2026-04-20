@@ -79,6 +79,38 @@ const KeraDesktopPage = () => {
     await k.update.install();
   };
 
+  const refreshVideos = async () => {
+    const k = getKera(); if (!k) return;
+    const s = await k.videos.status();
+    setVideosStatus({ cached: s.cached, missing: s.missing, total: s.total, dir: s.dir });
+  };
+
+  const downloadVideos = async () => {
+    const k = getKera(); if (!k) return;
+    setVideosDownloading(true);
+    setVideosProgress(null);
+    try {
+      const r = await k.videos.download();
+      if (r.ok) toast.success("Vídeos baixados! Modo offline ativo.");
+      else toast.error(`Falha em ${r.errors.length} vídeo(s): ${r.errors[0]?.error || ""}`);
+      // Recarrega para o assetUrl pegar o cache novo (mais simples e seguro).
+      await refreshVideos();
+      setTimeout(() => window.location.reload(), 600);
+    } finally {
+      setVideosDownloading(false);
+      setVideosProgress(null);
+    }
+  };
+
+  const clearVideos = async () => {
+    const k = getKera(); if (!k) return;
+    if (!confirm("Apagar vídeos baixados? Eles voltarão a carregar pela internet.")) return;
+    await k.videos.clear();
+    await refreshVideos();
+    toast.success("Cache de vídeos apagado.");
+    setTimeout(() => window.location.reload(), 400);
+  };
+
   const refreshAllowlist = async () => {
     const k = getKera();
     if (!k) return;
