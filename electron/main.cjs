@@ -145,12 +145,61 @@ function createWindow() {
   });
 }
 
+// Registra o esquema ANTES de app.whenReady para ser tratado como standard.
+protocol.registerSchemesAsPrivileged([
+  { scheme: "kera-video", privileges: { standard: true, secure: true, supportFetchAPI: true, stream: true, bypassCSP: true } },
+]);
+
 app.whenReady().then(() => {
+  // kera-video://local/<filename> -> arquivo no userData/videos/
+  protocol.registerFileProtocol("kera-video", (request, callback) => {
+    try {
+      const u = new URL(request.url);
+      const name = decodeURIComponent(u.pathname.replace(/^\/+/, ""));
+      callback({ path: videoLocalPath(name) });
+    } catch (e) {
+      callback({ error: -2 });
+    }
+  });
+
   createWindow();
   setupAutoUpdater();
   app.on("activate", () => {
     if (BrowserWindow.getAllWindows().length === 0) createWindow();
   });
+});
+
+// ============= IPC CACHE DE VÍDEOS =============
+ipcMain.handle("kera:videos:status", () => {
+  const map = cachedVideoMap();
+  return {
+    cached: Object.keys(map),
+    missing: VIDEO_FILES.filter((n) => !map[n]),
+    total: VIDEO_FILES.length,
+    map,
+    dir: videosCacheDir(),
+  };
+});
+
+ipcMain.handle("kera:videos:download", async () => {
+  const missing = VIDEO_FILES.filter((n) => {
+    const p = videoLocalPath(n);
+    return !fsSync.existsSync(p) || fsSync.statSync(p).size === 0;
+  });
+  const errors = [];
+  for (const name of missing) {
+    try { await downloadOne(name); }
+    catch (e) { errors.push({ name, error: String(e?.message || e) }); }
+  }
+  return { ok: errors.length === 0, errors, map: cachedVideoMap() };
+});
+
+ipcMain.handle("kera:videos:clear", async () => {
+  for (const name of VIDEO_FILES) {
+    const p = videoLocalPath(name);
+    if (fsSync.existsSync(p)) { try { fsSync.unlinkSync(p); } catch {} }
+  }
+  return { ok: true };
 });
 
 // IPC: checagem manual de update + status
