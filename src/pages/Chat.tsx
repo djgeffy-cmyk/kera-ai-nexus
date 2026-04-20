@@ -787,6 +787,23 @@ Por favor, analise: há perda de pacote? jitter alto sugere instabilidade de rot
               <button className="flex items-center gap-1.5 md:gap-2 hover:bg-secondary/60 px-1.5 md:px-2 py-1 rounded-lg transition min-w-0 max-w-[42vw] md:max-w-none">
                 <span className="size-2 rounded-full bg-primary shadow-glow animate-pulse-glow shrink-0" />
                 <h1 className="font-display text-sm md:text-lg text-glow truncate">{currentAgentName.toUpperCase()}</h1>
+                <a
+                  href="https://app.spaceincloud.com.br/"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  aria-label="Acessar Kera AI Space in Cloud"
+                  title="Kera AI · Space in Cloud — Soluções em Nuvem"
+                  onClick={(e) => e.stopPropagation()}
+                  className="hidden md:inline-flex items-center shrink-0 ml-2 hover:opacity-80 transition"
+                >
+                  <img
+                    src={keraSpaceLogo}
+                    alt="Kera AI Space in Cloud"
+                    className="h-12 w-auto drop-shadow-[0_2px_10px_hsl(var(--primary)/0.45)] bg-transparent"
+                    loading="eager"
+                    decoding="async"
+                  />
+                </a>
                 <ChevronRight className="size-4 rotate-90 text-muted-foreground shrink-0" />
               </button>
             </DropdownMenuTrigger>
