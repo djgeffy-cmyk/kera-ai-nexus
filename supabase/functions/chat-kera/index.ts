@@ -287,6 +287,11 @@ Deno.serve(async (req) => {
       baseSystem = dbPrompt ?? DEFAULT_SYSTEM_PROMPT;
     }
 
+    // Se o cliente é Desktop, anexa instruções sobre as tools disponíveis no PC
+    if (hasDesktopTools) {
+      baseSystem += `\n\n🖥️ VOCÊ ESTÁ RODANDO NO KERA DESKTOP — tem acesso a tools que mexem no PC do usuário:\n- list_folder, read_file, write_file, delete_path (dentro da allow-list de pastas autorizadas)\n- system_status (CPU/RAM/disco — só leitura)\n- read_clipboard, write_clipboard, take_screenshot\n- open_path (arquivo/URL), open_app (programa por nome)\n- run_command (shell — arriscado, cada comando pede confirmação nativa)\nREGRAS: só use tool quando o usuário pedir claramente algo que exige mexer no PC. Não fique explorando arquivos sem pedirem. Se o usuário pedir algo que precisa de arquivo e você não achar na allow-list, fala que ele precisa autorizar a pasta em Kera Desktop > Pastas autorizadas.`;
+    }
+
     // Apelido + modo "brava":
     // - Normal: usa o apelido cotidiano (ex: "Geverson", "professor linguiça").
     // - Brava (usuário chamou Kera de outro nome — Gemini/ChatGPT/IA/bot/etc):
