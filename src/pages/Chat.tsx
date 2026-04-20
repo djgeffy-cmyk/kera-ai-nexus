@@ -16,6 +16,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel,
 import keraLogo from "@/assets/kera-logo.png";
 import keraAvatar from "@/assets/kera-avatar.png";
 import keraAvatarVideo from "@/assets/kera-avatar.mp4.asset.json";
+import keraDevBgVideo from "@/assets/kera-dev-bg.mp4.asset.json";
 import { MessageBubble, type ChatMessage } from "@/components/chat/MessageBubble";
 import { PROVIDERS, getPreferredProvider, setPreferredProvider, type ProviderId } from "@/lib/providers";
 import { BUILTIN_AGENTS, getBuiltinAgent, DEFAULT_AGENT_KEY } from "@/lib/agents";
@@ -701,6 +702,21 @@ Por favor, analise: há perda de pacote? jitter alto sugere instabilidade de rot
           }
         }}
       >
+        {agentKey === "kera-dev" && (
+          <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none">
+            <video
+              autoPlay
+              loop
+              muted
+              playsInline
+              className="w-full h-full object-cover opacity-30 mix-blend-screen"
+            >
+              <source src={keraDevBgVideo.url} type="video/mp4" />
+            </video>
+            <div className="absolute inset-0 bg-gradient-to-b from-background/40 via-background/60 to-background/90" />
+          </div>
+        )}
+
         {dragging && (
           <div className="absolute inset-0 z-50 pointer-events-none flex items-center justify-center bg-primary/10 backdrop-blur-sm border-4 border-dashed border-primary rounded-lg m-2">
             <div className="text-center">
@@ -710,7 +726,7 @@ Por favor, analise: há perda de pacote? jitter alto sugere instabilidade de rot
             </div>
           </div>
         )}
-        <header className="h-14 border-b border-border panel flex items-center px-2 md:px-6 gap-1.5 md:gap-3 overflow-hidden">
+        <header className="relative z-10 h-14 border-b border-border panel flex items-center px-2 md:px-6 gap-1.5 md:gap-3 overflow-hidden">
           <Sheet>
             <SheetTrigger asChild>
               <Button variant="ghost" size="icon" className="md:hidden shrink-0 h-9 w-9"><Menu className="size-5" /></Button>
@@ -805,7 +821,7 @@ Por favor, analise: há perda de pacote? jitter alto sugere instabilidade de rot
           </div>
         </header>
 
-        <div ref={scrollerRef} className="flex-1 overflow-y-auto overflow-x-hidden scrollbar-thin">
+        <div ref={scrollerRef} className="relative z-10 flex-1 overflow-y-auto overflow-x-hidden scrollbar-thin">
           <div className="max-w-3xl mx-auto px-3 md:px-4 py-6 space-y-5">
             {messages.length === 0 && !streaming && (
               <div className="text-center pt-10 md:pt-20">
@@ -867,7 +883,7 @@ Por favor, analise: há perda de pacote? jitter alto sugere instabilidade de rot
           </div>
         </div>
 
-        <div className="border-t border-border panel p-3 md:p-4 pb-10 md:pb-12">
+        <div className="relative z-10 border-t border-border panel p-3 md:p-4 pb-10 md:pb-12">
           <div className="max-w-3xl mx-auto space-y-2">
             {isSentinela && (
               <div className="flex flex-wrap justify-center gap-2">
