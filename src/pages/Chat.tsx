@@ -1021,6 +1021,14 @@ Por favor, analise: há perda de pacote? jitter alto sugere instabilidade de rot
                 className="hidden"
                 onChange={(e) => { if (e.target.files) addFiles(e.target.files); e.target.value = ""; }}
               />
+              <input
+                ref={cameraInputRef}
+                type="file"
+                accept="image/*"
+                capture="environment"
+                className="hidden"
+                onChange={(e) => { if (e.target.files) addFiles(e.target.files); e.target.value = ""; }}
+              />
 
               <Textarea
                 value={input}
@@ -1052,6 +1060,17 @@ Por favor, analise: há perda de pacote? jitter alto sugere instabilidade de rot
                     disabled={streaming}
                   >
                     <Paperclip className="size-4" />
+                  </Button>
+                  <Button
+                    onClick={() => cameraInputRef.current?.click()}
+                    variant="ghost"
+                    size="icon"
+                    className="md:hidden h-9 w-9 rounded-full text-muted-foreground hover:text-foreground hover:bg-muted/50"
+                    aria-label="Tirar foto com a câmera"
+                    title="Tirar foto"
+                    disabled={streaming}
+                  >
+                    <Camera className="size-4" />
                   </Button>
                   <Button
                     onClick={() => {
