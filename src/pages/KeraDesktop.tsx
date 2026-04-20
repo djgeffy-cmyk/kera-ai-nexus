@@ -431,6 +431,56 @@ const KeraDesktopPage = () => {
           )}
         </Card>
 
+        {/* VÍDEOS OFFLINE */}
+        <Card className="p-4 space-y-3">
+          <div className="flex items-center justify-between gap-2 flex-wrap">
+            <div className="flex items-center gap-2">
+              <Download className="size-4 text-primary" />
+              <h2 className="text-sm uppercase tracking-wider text-muted-foreground">Vídeos offline</h2>
+            </div>
+            <div className="flex gap-2">
+              <Button
+                onClick={downloadVideos}
+                size="sm"
+                className="gap-2"
+                disabled={videosDownloading || (videosStatus?.missing.length === 0)}
+              >
+                <Download className={`size-4 ${videosDownloading ? "animate-pulse" : ""}`} />
+                {videosStatus?.missing.length === 0 ? "Tudo baixado" : `Baixar (${videosStatus?.missing.length ?? "?"})`}
+              </Button>
+              {videosStatus && videosStatus.cached.length > 0 && (
+                <Button onClick={clearVideos} size="sm" variant="outline" className="gap-2" disabled={videosDownloading}>
+                  <Trash2 className="size-4" /> Limpar cache
+                </Button>
+              )}
+            </div>
+          </div>
+          <p className="text-xs text-muted-foreground">
+            Baixa os vídeos de fundo dos agentes uma única vez (~250 MB) para funcionar 100% sem internet.
+          </p>
+          {videosStatus && (
+            <div className="text-xs font-mono px-3 py-2 rounded-md bg-secondary/40 space-y-1">
+              <div>
+                ✅ Cacheados: <span className="text-foreground">{videosStatus.cached.length}/{videosStatus.total}</span>
+                {videosStatus.missing.length > 0 && (
+                  <> &nbsp;•&nbsp; Faltando: <span className="text-foreground">{videosStatus.missing.length}</span></>
+                )}
+              </div>
+              {videosDownloading && videosProgress && (
+                <div>
+                  ⬇ {videosProgress.name}:{" "}
+                  {videosProgress.total
+                    ? `${Math.round((videosProgress.received / videosProgress.total) * 100)}%`
+                    : `${(videosProgress.received / 1024 / 1024).toFixed(1)} MB`}
+                </div>
+              )}
+              <div className="text-muted-foreground truncate" title={videosStatus.dir}>
+                📁 {videosStatus.dir}
+              </div>
+            </div>
+          )}
+        </Card>
+
         {/* PASTAS AUTORIZADAS — allow-list de segurança */}
         <Card className="p-4 space-y-3">
           <div className="flex items-center justify-between gap-2 flex-wrap">
