@@ -319,5 +319,5 @@ export function useVoice(opts: { useElevenLabs?: boolean; useRemoteTTS?: boolean
     stopSpeaking();
   }, [stopListening, stopSpeaking]);
 
-  return { listening, speaking, pendingPlay, startListening, stopListening, speak, stopSpeaking, warmUpTTS, resumePendingPlay };
+  return { listening, speaking, pendingPlay, startListening, stopListening, speak, stopSpeaking, warmUpTTS, resumePendingPlay, audioRef };
 }
