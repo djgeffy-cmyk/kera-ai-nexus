@@ -262,13 +262,22 @@ Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   try {
-    const { messages, provider, systemPrompt, agentKey } = await req.json();
+    const { messages, provider, systemPrompt, agentKey, desktopTools } = await req.json();
     if (!Array.isArray(messages)) {
       return new Response(JSON.stringify({ error: "messages must be an array" }), {
         status: 400,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
+
+    // Se o cliente é Kera Desktop, ele envia `desktopTools` com as definições das tools locais.
+    // Essas tools executam no Electron (não no servidor). Quando o LLM pede uma delas,
+    // a edge function retorna JSON (não stream) com { tool_calls, assistant_message } pro
+    // cliente executar e reenviar.
+    const hasDesktopTools = Array.isArray(desktopTools) && desktopTools.length > 0;
+    const desktopToolNames: Set<string> = new Set(
+      hasDesktopTools ? desktopTools.map((t: any) => t?.function?.name).filter(Boolean) : [],
+    );
 
     let baseSystem: string;
     if (typeof systemPrompt === "string" && systemPrompt.trim().length > 0) {
