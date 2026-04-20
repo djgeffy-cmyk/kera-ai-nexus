@@ -30,6 +30,11 @@ contextBridge.exposeInMainWorld("kera", {
     app: (appName, args) => ipcRenderer.invoke("kera:open:app", appName, args),
   },
   exec: (command) => ipcRenderer.invoke("kera:exec", command),
+  install: {
+    apt: (pkg) => ipcRenderer.invoke("kera:install:apt", pkg),
+    flatpak: (appId) => ipcRenderer.invoke("kera:install:flatpak", appId),
+    searchFlatpak: (query) => ipcRenderer.invoke("kera:search:flatpak", query),
+  },
   power: {
     shutdown: () => ipcRenderer.invoke("kera:power", "shutdown"),
     restart: () => ipcRenderer.invoke("kera:power", "restart"),

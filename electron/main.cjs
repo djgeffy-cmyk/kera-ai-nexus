@@ -347,6 +347,93 @@ ipcMain.handle("kera:exec", async (_e, command) => {
   });
 });
 
+// ============= INSTALAR PROGRAMAS =============
+// Regex de sanidade: só letras, números, ponto, hífen e sublinhado nos nomes.
+const SAFE_PKG = /^[a-zA-Z0-9._+-]{1,80}$/;
+
+// Detecta terminais disponíveis no Linux, em ordem de preferência.
+function detectLinuxTerminal() {
+  const candidates = [
+    { bin: "gnome-terminal", args: (cmd) => ["--", "bash", "-lc", `${cmd}; echo; echo '[Pressione ENTER para fechar]'; read`] },
+    { bin: "konsole",        args: (cmd) => ["-e", "bash", "-lc", `${cmd}; echo; echo '[Pressione ENTER para fechar]'; read`] },
+    { bin: "xfce4-terminal", args: (cmd) => ["--hold", "-e", `bash -lc "${cmd.replace(/"/g, '\\"')}"`] },
+    { bin: "xterm",          args: (cmd) => ["-hold", "-e", `bash -lc '${cmd.replace(/'/g, "'\\''")}'`] },
+    { bin: "kitty",          args: (cmd) => ["bash", "-lc", `${cmd}; echo; read -p '[ENTER]'`] },
+  ];
+  for (const c of candidates) {
+    try {
+      const { execSync } = require("child_process");
+      execSync(`command -v ${c.bin}`, { stdio: "ignore" });
+      return c;
+    } catch {}
+  }
+  return null;
+}
+
+// Instala via apt abrindo terminal visível (usuário digita a senha sudo lá).
+ipcMain.handle("kera:install:apt", async (_e, packageName) => {
+  if (process.platform !== "linux") return { ok: false, error: "apt só existe no Linux" };
+  const pkg = String(packageName || "").trim();
+  if (!SAFE_PKG.test(pkg)) return { ok: false, error: "Nome de pacote inválido" };
+
+  const { response } = await dialog.showMessageBox(mainWindow, {
+    type: "warning",
+    buttons: ["Cancelar", "Abrir terminal e instalar"],
+    defaultId: 0, cancelId: 0,
+    title: "Instalar via apt?",
+    message: `A Kera vai abrir um terminal rodando:\n\nsudo apt install -y ${pkg}\n\nVocê vai precisar digitar sua senha sudo NO TERMINAL que abrir.`,
+  });
+  if (response !== 1) return { ok: false, cancelled: true };
+
+  const term = detectLinuxTerminal();
+  if (!term) return { ok: false, error: "Nenhum terminal encontrado (gnome-terminal, konsole, xterm, etc)" };
+  const cmd = `sudo apt update && sudo apt install -y ${pkg}`;
+  try {
+    spawn(term.bin, term.args(cmd), { detached: true, stdio: "ignore" }).unref();
+    return { ok: true, note: `Terminal aberto (${term.bin}). Digite sua senha lá.` };
+  } catch (e) {
+    return { ok: false, error: e.message };
+  }
+});
+
+// Instala via flatpak user-level (sem sudo).
+ipcMain.handle("kera:install:flatpak", async (_e, appId) => {
+  const id = String(appId || "").trim();
+  if (!SAFE_PKG.test(id) && !/^[a-zA-Z0-9._-]+(\.[a-zA-Z0-9._-]+)+$/.test(id)) {
+    return { ok: false, error: "App ID inválido (ex: com.spotify.Client)" };
+  }
+
+  const { response } = await dialog.showMessageBox(mainWindow, {
+    type: "question",
+    buttons: ["Cancelar", "Instalar"],
+    defaultId: 1, cancelId: 0,
+    title: "Instalar via Flatpak?",
+    message: `A Kera vai instalar (user-level, sem senha):\n\nflatpak install --user -y flathub ${id}\n\nPode levar alguns minutos.`,
+  });
+  if (response !== 1) return { ok: false, cancelled: true };
+
+  return new Promise((resolve) => {
+    exec(`flatpak install --user -y flathub ${id}`, { timeout: 300_000, maxBuffer: MAX_OUTPUT_CHARS * 4 }, (err, stdout, stderr) => {
+      const out = String(stdout || "").slice(0, MAX_OUTPUT_CHARS);
+      const errOut = String(stderr || "").slice(0, MAX_OUTPUT_CHARS);
+      if (err) resolve({ ok: false, error: err.message, stdout: out, stderr: errOut });
+      else resolve({ ok: true, stdout: out, stderr: errOut });
+    });
+  });
+});
+
+// Busca Flatpak (sem senha, leitura).
+ipcMain.handle("kera:search:flatpak", async (_e, query) => {
+  const q = String(query || "").trim();
+  if (!q || q.length > 80) return { ok: false, error: "Query inválida" };
+  return new Promise((resolve) => {
+    exec(`flatpak search --columns=application,name,description ${JSON.stringify(q)}`, { timeout: 20_000 }, (err, stdout, stderr) => {
+      if (err) resolve({ ok: false, error: err.message, stderr: String(stderr || "") });
+      else resolve({ ok: true, stdout: String(stdout || "").slice(0, MAX_OUTPUT_CHARS) });
+    });
+  });
+});
+
 // ============= ENERGIA =============
 function powerCommand(action) {
   const p = process.platform;
