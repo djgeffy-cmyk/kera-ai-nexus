@@ -1,17 +1,15 @@
 // Janela principal da Kera Desktop. Sempre CommonJS (.cjs) porque o package.json
 // declara "type":"module" e .js viraria ESM, quebrando __dirname.
-const { app, BrowserWindow, ipcMain, dialog, shell } = require("electron");
+const { app, BrowserWindow, ipcMain, dialog, shell, clipboard, desktopCapturer, screen } = require("electron");
 const path = require("path");
 const fs = require("fs/promises");
 const fsSync = require("fs");
-const { exec } = require("child_process");
+const { exec, spawn } = require("child_process");
 const os = require("os");
 
 let mainWindow = null;
 
-// ============= ALLOW-LIST DE PASTAS AUTORIZADAS =============
-// Persiste em userData/kera-allowlist.json. Qualquer fs:read/write/delete/list
-// que caia fora dessas pastas é bloqueado, mesmo se a LLM tentar.
+// ============= ALLOW-LIST DE PASTAS =============
 const ALLOWLIST_FILE = () => path.join(app.getPath("userData"), "kera-allowlist.json");
 
 function loadAllowlist() {
@@ -29,7 +27,6 @@ function saveAllowlist(list) {
   fsSync.writeFileSync(ALLOWLIST_FILE(), JSON.stringify(list, null, 2), "utf-8");
 }
 
-// Um path está autorizado se for igual ou descendente de alguma entrada da allow-list.
 function isPathAllowed(targetPath) {
   const list = loadAllowlist();
   if (list.length === 0) return false;
@@ -69,11 +66,8 @@ function createWindow() {
   });
 
   const devUrl = process.env.ELECTRON_DEV_URL;
-  if (devUrl) {
-    mainWindow.loadURL(devUrl);
-  } else {
-    mainWindow.loadFile(path.join(__dirname, "..", "dist", "index.html"));
-  }
+  if (devUrl) mainWindow.loadURL(devUrl);
+  else mainWindow.loadFile(path.join(__dirname, "..", "dist", "index.html"));
 
   mainWindow.webContents.setWindowOpenHandler(({ url }) => {
     shell.openExternal(url);
@@ -111,19 +105,15 @@ ipcMain.handle("kera:allowlist:add", async () => {
     properties: ["openDirectory"],
   });
   if (r.canceled || !r.filePaths[0]) return { ok: false, cancelled: true };
-
   const picked = path.resolve(r.filePaths[0]);
-
   const { response } = await dialog.showMessageBox(mainWindow, {
     type: "question",
     buttons: ["Cancelar", "Autorizar"],
-    defaultId: 0,
-    cancelId: 0,
+    defaultId: 0, cancelId: 0,
     title: "Confirmar autorização",
     message: `Autorizar a Kera a ler, escrever e apagar em:\n\n${picked}\n\nTodas as ações de escrita/exclusão ainda pedirão confirmação individual.`,
   });
   if (response !== 1) return { ok: false, cancelled: true };
-
   const list = loadAllowlist();
   if (!list.includes(picked)) list.push(picked);
   saveAllowlist(list);
@@ -139,16 +129,14 @@ ipcMain.handle("kera:allowlist:remove", (_e, folder) => {
 
 ipcMain.handle("kera:allowlist:check", (_e, p) => isPathAllowed(p));
 
-// ============= SISTEMA DE ARQUIVOS (restrito à allow-list) =============
+// ============= FILE SYSTEM =============
 ipcMain.handle("kera:fs:list", async (_e, dirPath) => {
   const target = path.resolve(dirPath || loadAllowlist()[0] || os.homedir());
   assertAllowed(target);
   const entries = await fs.readdir(target, { withFileTypes: true });
   return entries.map((d) => ({
-    name: d.name,
-    path: path.join(target, d.name),
-    isDir: d.isDirectory(),
-    isFile: d.isFile(),
+    name: d.name, path: path.join(target, d.name),
+    isDir: d.isDirectory(), isFile: d.isFile(),
   }));
 });
 
@@ -161,18 +149,15 @@ ipcMain.handle("kera:fs:read", async (_e, filePath) => {
 ipcMain.handle("kera:fs:write", async (_e, filePath, content) => {
   const target = path.resolve(filePath);
   assertAllowed(target);
-
   const exists = fsSync.existsSync(target);
   const { response } = await dialog.showMessageBox(mainWindow, {
     type: "question",
     buttons: ["Cancelar", exists ? "Sobrescrever" : "Criar"],
-    defaultId: 0,
-    cancelId: 0,
+    defaultId: 0, cancelId: 0,
     title: exists ? "Confirmar sobrescrita" : "Confirmar criação",
     message: `${exists ? "Sobrescrever" : "Criar"}:\n${target}`,
   });
   if (response !== 1) return { ok: false, cancelled: true };
-
   await fs.writeFile(target, content, "utf-8");
   return { ok: true };
 });
@@ -180,25 +165,20 @@ ipcMain.handle("kera:fs:write", async (_e, filePath, content) => {
 ipcMain.handle("kera:fs:delete", async (_e, filePath) => {
   const target = path.resolve(filePath);
   assertAllowed(target);
-
   const { response } = await dialog.showMessageBox(mainWindow, {
     type: "warning",
     buttons: ["Cancelar", "Deletar"],
-    defaultId: 0,
-    cancelId: 0,
+    defaultId: 0, cancelId: 0,
     title: "Confirmar exclusão",
     message: `Deletar:\n${target}\n\nEsta ação não pode ser desfeita.`,
   });
   if (response !== 1) return { ok: false, cancelled: true };
-
   const stat = await fs.stat(target);
   if (stat.isDirectory()) await fs.rm(target, { recursive: true });
   else await fs.unlink(target);
   return { ok: true };
 });
 
-// pickFolder abre o diálogo nativo. Não exige allow-list (é o próprio usuário escolhendo).
-// Mas só retorna se a pasta já estiver autorizada — se não estiver, orienta a autorizar antes.
 ipcMain.handle("kera:fs:pickFolder", async () => {
   const r = await dialog.showOpenDialog(mainWindow, { properties: ["openDirectory"] });
   if (r.canceled) return null;
@@ -212,6 +192,159 @@ ipcMain.handle("kera:fs:pickFolder", async () => {
     return null;
   }
   return picked;
+});
+
+// ============= CLIPBOARD =============
+ipcMain.handle("kera:clipboard:read", () => clipboard.readText());
+ipcMain.handle("kera:clipboard:write", (_e, text) => {
+  clipboard.writeText(String(text ?? ""));
+  return { ok: true };
+});
+
+// ============= SCREENSHOT =============
+// Retorna dataURL PNG da tela. Sempre pede confirmação.
+ipcMain.handle("kera:screenshot", async () => {
+  const { response } = await dialog.showMessageBox(mainWindow, {
+    type: "question",
+    buttons: ["Cancelar", "Capturar"],
+    defaultId: 0, cancelId: 0,
+    title: "Capturar tela?",
+    message: "A Kera vai capturar uma imagem da sua tela atual. Deseja prosseguir?",
+  });
+  if (response !== 1) return { ok: false, cancelled: true };
+
+  const primary = screen.getPrimaryDisplay();
+  const { width, height } = primary.size;
+  const sources = await desktopCapturer.getSources({
+    types: ["screen"],
+    thumbnailSize: { width, height },
+  });
+  if (!sources.length) return { ok: false, error: "Nenhuma tela disponível" };
+  return { ok: true, dataUrl: sources[0].thumbnail.toDataURL() };
+});
+
+// ============= SYSTEM STATUS =============
+ipcMain.handle("kera:system:status", async () => {
+  const totalMem = os.totalmem();
+  const freeMem = os.freemem();
+  const cpus = os.cpus();
+  const load = os.loadavg();
+
+  // Disco livre no home (Linux/macOS: df; Windows: wmic)
+  const freeHome = await new Promise((resolve) => {
+    const cmd = process.platform === "win32"
+      ? `wmic logicaldisk get size,freespace,caption /format:csv`
+      : `df -k "${os.homedir()}" | tail -1`;
+    exec(cmd, (err, stdout) => {
+      if (err) return resolve(null);
+      resolve(stdout.trim());
+    });
+  });
+
+  return {
+    platform: process.platform,
+    hostname: os.hostname(),
+    uptimeSec: os.uptime(),
+    cpuModel: cpus[0]?.model ?? "?",
+    cpuCount: cpus.length,
+    loadAvg: load,
+    memTotalBytes: totalMem,
+    memFreeBytes: freeMem,
+    memUsedPct: Number(((1 - freeMem / totalMem) * 100).toFixed(1)),
+    homeDiskRaw: freeHome,
+    nodeVersion: process.versions.node,
+    electronVersion: process.versions.electron,
+  };
+});
+
+// ============= OPEN PROGRAMS / FILES / URLS =============
+// Abre arquivo/pasta com o app padrão do SO. Requer allow-list se for path local.
+ipcMain.handle("kera:open:path", async (_e, target) => {
+  if (!target) return { ok: false, error: "Caminho vazio" };
+  // Se não for URL http(s)/mailto, trata como path e valida allow-list.
+  const isUrl = /^(https?:|mailto:|file:)/i.test(target);
+  if (!isUrl) {
+    const abs = path.resolve(target);
+    assertAllowed(abs);
+    const { response } = await dialog.showMessageBox(mainWindow, {
+      type: "question",
+      buttons: ["Cancelar", "Abrir"],
+      defaultId: 1, cancelId: 0,
+      title: "Abrir com app padrão?",
+      message: `Abrir:\n${abs}`,
+    });
+    if (response !== 1) return { ok: false, cancelled: true };
+    const err = await shell.openPath(abs);
+    return err ? { ok: false, error: err } : { ok: true };
+  }
+  // URL: só confirma.
+  const { response } = await dialog.showMessageBox(mainWindow, {
+    type: "question",
+    buttons: ["Cancelar", "Abrir no navegador"],
+    defaultId: 1, cancelId: 0,
+    title: "Abrir URL?",
+    message: target,
+  });
+  if (response !== 1) return { ok: false, cancelled: true };
+  await shell.openExternal(target);
+  return { ok: true };
+});
+
+// Abre programa nomeado (ex: "firefox", "code", "gedit"). No Windows, usa `start`.
+ipcMain.handle("kera:open:app", async (_e, appName, args) => {
+  if (!appName || typeof appName !== "string") return { ok: false, error: "Nome inválido" };
+  const safeArgs = Array.isArray(args) ? args.map(String) : [];
+
+  const { response } = await dialog.showMessageBox(mainWindow, {
+    type: "question",
+    buttons: ["Cancelar", "Abrir"],
+    defaultId: 1, cancelId: 0,
+    title: "Abrir programa?",
+    message: `Abrir: ${appName}${safeArgs.length ? " " + safeArgs.join(" ") : ""}`,
+  });
+  if (response !== 1) return { ok: false, cancelled: true };
+
+  try {
+    if (process.platform === "win32") {
+      spawn("cmd.exe", ["/c", "start", "", appName, ...safeArgs], { detached: true, stdio: "ignore" }).unref();
+    } else if (process.platform === "darwin") {
+      spawn("open", ["-a", appName, ...safeArgs], { detached: true, stdio: "ignore" }).unref();
+    } else {
+      spawn(appName, safeArgs, { detached: true, stdio: "ignore" }).unref();
+    }
+    return { ok: true };
+  } catch (e) {
+    return { ok: false, error: e.message };
+  }
+});
+
+// ============= TERMINAL (execução com confirmação) =============
+// Perigoso — cada comando pede confirmação, tem timeout e truncagem de saída.
+const EXEC_TIMEOUT_MS = 30_000;
+const MAX_OUTPUT_CHARS = 20_000;
+
+ipcMain.handle("kera:exec", async (_e, command) => {
+  if (!command || typeof command !== "string") return { ok: false, error: "Comando vazio" };
+  const trimmed = command.trim();
+
+  const { response } = await dialog.showMessageBox(mainWindow, {
+    type: "warning",
+    buttons: ["Cancelar", "Executar"],
+    defaultId: 0, cancelId: 0,
+    title: "Executar comando no terminal?",
+    message: `A Kera vai executar:\n\n${trimmed}\n\nPode alterar ou apagar arquivos do seu PC. Prossiga só se souber o que faz.`,
+  });
+  if (response !== 1) return { ok: false, cancelled: true };
+
+  return new Promise((resolve) => {
+    exec(trimmed, { timeout: EXEC_TIMEOUT_MS, maxBuffer: MAX_OUTPUT_CHARS * 4 }, (err, stdout, stderr) => {
+      const out = String(stdout || "").slice(0, MAX_OUTPUT_CHARS);
+      const errOut = String(stderr || "").slice(0, MAX_OUTPUT_CHARS);
+      if (err && err.killed) resolve({ ok: false, error: "Timeout (30s)", stdout: out, stderr: errOut });
+      else if (err) resolve({ ok: false, error: err.message, code: err.code, stdout: out, stderr: errOut });
+      else resolve({ ok: true, stdout: out, stderr: errOut });
+    });
+  });
 });
 
 // ============= ENERGIA =============
@@ -243,7 +376,6 @@ function powerCommand(action) {
 ipcMain.handle("kera:power", async (_e, action) => {
   const cmd = powerCommand(action);
   if (!cmd) return { ok: false, error: `Ação ${action} não suportada em ${process.platform}` };
-
   if (action !== "cancel") {
     const labels = {
       shutdown: "DESLIGAR o computador",
@@ -254,15 +386,13 @@ ipcMain.handle("kera:power", async (_e, action) => {
     const { response } = await dialog.showMessageBox(mainWindow, {
       type: "warning",
       buttons: ["Cancelar", `Sim, ${labels[action] || action}`],
-      defaultId: 0,
-      cancelId: 0,
+      defaultId: 0, cancelId: 0,
       title: "Confirmar ação de energia",
       message: `A Kera está pedindo para ${labels[action] || action}.\n\nDeseja prosseguir?`,
       detail: "Salve seus arquivos antes de continuar.",
     });
     if (response !== 1) return { ok: false, cancelled: true };
   }
-
   return new Promise((resolve) => {
     exec(cmd, (err) => {
       if (err) resolve({ ok: false, error: err.message });

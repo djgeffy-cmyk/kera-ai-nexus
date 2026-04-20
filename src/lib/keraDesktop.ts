@@ -16,6 +16,30 @@ export type KeraPlatformInfo = {
   version: string;
 };
 
+export type KeraSystemStatus = {
+  platform: string;
+  hostname: string;
+  uptimeSec: number;
+  cpuModel: string;
+  cpuCount: number;
+  loadAvg: number[];
+  memTotalBytes: number;
+  memFreeBytes: number;
+  memUsedPct: number;
+  homeDiskRaw: string | null;
+  nodeVersion: string;
+  electronVersion: string;
+};
+
+export type KeraExecResult = {
+  ok: boolean;
+  cancelled?: boolean;
+  error?: string;
+  code?: number | string;
+  stdout?: string;
+  stderr?: string;
+};
+
 export type KeraDesktopApi = {
   isDesktop: true;
   platform: () => Promise<KeraPlatformInfo>;
@@ -32,6 +56,19 @@ export type KeraDesktopApi = {
     delete: (filePath: string) => Promise<{ ok: boolean; cancelled?: boolean }>;
     pickFolder: () => Promise<string | null>;
   };
+  clipboard: {
+    read: () => Promise<string>;
+    write: (text: string) => Promise<{ ok: boolean }>;
+  };
+  screenshot: () => Promise<{ ok: boolean; cancelled?: boolean; dataUrl?: string; error?: string }>;
+  system: {
+    status: () => Promise<KeraSystemStatus>;
+  };
+  open: {
+    path: (target: string) => Promise<{ ok: boolean; cancelled?: boolean; error?: string }>;
+    app: (appName: string, args?: string[]) => Promise<{ ok: boolean; cancelled?: boolean; error?: string }>;
+  };
+  exec: (command: string) => Promise<KeraExecResult>;
   power: {
     shutdown: () => Promise<{ ok: boolean; cancelled?: boolean; error?: string }>;
     restart: () => Promise<{ ok: boolean; cancelled?: boolean; error?: string }>;
