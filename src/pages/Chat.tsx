@@ -728,11 +728,11 @@ Por favor, analise: há perda de pacote? jitter alto sugere instabilidade de rot
               loop
               muted
               playsInline
-              className="w-full h-full object-cover opacity-30 mix-blend-screen"
+              className="w-full h-full object-cover opacity-45 mix-blend-screen"
             >
               <source src={AGENT_BG_VIDEOS[agentKey]} type="video/mp4" />
             </video>
-            <div className="absolute inset-0 bg-gradient-to-b from-background/40 via-background/60 to-background/90" />
+            <div className="absolute inset-0 bg-gradient-to-b from-background/20 via-background/35 to-background/75" />
           </div>
         )}
 
