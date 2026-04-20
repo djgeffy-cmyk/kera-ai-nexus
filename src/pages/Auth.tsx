@@ -136,7 +136,7 @@ const Auth = () => {
 
   return (
     <main className="relative min-h-screen flex items-center justify-center p-4 overflow-hidden">
-      {/* Vídeo Kera de fundo */}
+      {/* Vídeo Kera de fundo — em alta qualidade, com overlay leve pra ela aparecer */}
       <video
         aria-hidden
         autoPlay
@@ -147,20 +147,32 @@ const Auth = () => {
         src={keraAvatarVideo.url}
         poster={keraAvatar}
       />
-      <div aria-hidden className="absolute inset-0 bg-background/70 backdrop-blur-sm" />
+      {/* Overlay sutil — só o suficiente pra dar contraste no card, sem apagar a Kera */}
+      <div aria-hidden className="absolute inset-0 bg-background/30" />
+      {/* Vinheta nas bordas, centro limpo pra Kera respirar */}
       <div
         aria-hidden
-        className="absolute inset-0"
+        className="absolute inset-0 pointer-events-none"
         style={{
           background:
-            "radial-gradient(ellipse at center, transparent 0%, hsl(var(--background) / 0.85) 70%)",
+            "radial-gradient(ellipse at center, transparent 30%, hsl(var(--background) / 0.55) 75%, hsl(var(--background) / 0.85) 100%)",
         }}
       />
 
-      <Card className="panel relative w-full max-w-md p-7 sm:p-8 border-primary/30 shadow-glow z-10">
+      <Card className="panel relative w-full max-w-md p-7 sm:p-8 border-primary/30 shadow-glow z-10 backdrop-blur-md bg-card/70">
         <div className="flex flex-col items-center mb-5">
-          <div className="size-24 rounded-full overflow-hidden border-2 border-primary/60 shadow-glow mb-3 bg-background">
-            <img src={keraAvatar} alt="Kera AI" className="w-full h-full object-cover" />
+          <div className="relative size-28 rounded-full overflow-hidden border-2 border-primary/70 shadow-glow mb-3 bg-background ring-4 ring-primary/20">
+            <video
+              aria-hidden
+              autoPlay
+              loop
+              muted
+              playsInline
+              src={keraAvatarVideo.url}
+              poster={keraAvatar}
+              className="w-full h-full object-cover"
+            />
+            <div aria-hidden className="absolute inset-0 rounded-full ring-1 ring-primary/40 pointer-events-none" />
           </div>
           <h1 className="font-display text-2xl text-glow text-center">
             {mode === "signin" && "Acesse a Kera"}
