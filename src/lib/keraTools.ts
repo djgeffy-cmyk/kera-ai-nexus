@@ -196,6 +196,7 @@ export const DESKTOP_TOOLS = [
       },
     },
   },
+] as const;
 
 // Nomes das tools desktop (pra distinguir de tools server-side como ipm_query).
 export const DESKTOP_TOOL_NAMES = new Set(DESKTOP_TOOLS.map((t) => t.function.name));
