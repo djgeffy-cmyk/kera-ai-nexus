@@ -36,12 +36,19 @@ const KeraDesktopPage = () => {
   const [execResult, setExecResult] = useState<KeraExecResult | null>(null);
   const [updateStatus, setUpdateStatus] = useState<{ state: string; version?: string; percent?: number; message?: string } | null>(null);
   const [checkingUpdate, setCheckingUpdate] = useState(false);
+  const [videosStatus, setVideosStatus] = useState<{ cached: string[]; missing: string[]; total: number; dir: string } | null>(null);
+  const [videosDownloading, setVideosDownloading] = useState(false);
+  const [videosProgress, setVideosProgress] = useState<{ name: string; received: number; total: number } | null>(null);
 
   useEffect(() => {
     const k = getKera();
     if (!k) return;
     const off = k.update.onStatus((payload) => setUpdateStatus(payload));
-    return () => { off?.(); };
+    const offV = k.videos.onProgress((p) => setVideosProgress(p));
+    k.videos.status().then((s) =>
+      setVideosStatus({ cached: s.cached, missing: s.missing, total: s.total, dir: s.dir }),
+    ).catch(() => undefined);
+    return () => { off?.(); offV?.(); };
   }, []);
 
   const checkUpdate = async () => {
