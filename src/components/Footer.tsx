@@ -43,9 +43,9 @@ const Footer = () => {
           className="shrink-0 inline-flex items-center justify-center rounded-md bg-background p-1 ring-1 ring-emerald-500/40 hover:ring-emerald-400 transition-all"
         >
           <img
-            src={`https://api.qrserver.com/v1/create-qr-code/?size=80x80&margin=0&data=${encodeURIComponent("https://wa.me/5547999208916")}`}
+            src={`https://api.qrserver.com/v1/create-qr-code/?size=120x120&margin=0&data=${encodeURIComponent("https://wa.me/5547999208916")}`}
             alt="QR Code WhatsApp"
-            className="h-8 w-8"
+            className="h-12 w-12"
             loading="lazy"
             decoding="async"
           />
