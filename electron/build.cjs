@@ -6,18 +6,22 @@ const { execSync } = require('child_process');
 const ROOT = path.resolve(__dirname, '..');
 
 // Plataforma alvo: definida pela env BUILD_PLATFORM (win32 | linux | darwin).
-// Default = win32 pra manter retrocompatibilidade.
-const PLATFORM = process.env.BUILD_PLATFORM || 'win32';
+const PLATFORM = process.env.BUILD_PLATFORM || (process.platform === 'win32' ? 'win32' : 'linux');
 const ARCH = process.env.BUILD_ARCH || 'x64';
 const ARTIFACT_NAME = `KeraDesktop-${PLATFORM}-${ARCH}`;
 
 async function bundle() {
     console.log('--- Geverson, iniciando o empacotamento... segura a onda ---');
     console.log(`Alvo: ${PLATFORM}-${ARCH}`);
-    
+
     // @electron/packager v19+ é ESM puro — precisamos de import() dinâmico aqui no CJS.
     const packagerMod = await import('@electron/packager');
-    const packager = packagerMod.default || packagerMod.packager || packagerMod;
+    const packager = packagerMod.packager || packagerMod.default || packagerMod;
+
+    if (typeof packager !== 'function') {
+        console.error('Falha ao carregar @electron/packager. Exports disponíveis:', Object.keys(packagerMod));
+        process.exit(1);
+    }
 
     // 1. Build Vite
     console.log('[1/3] Gerando build do Vite...');
@@ -30,18 +34,18 @@ async function bundle() {
 
     // 2. Empacotar com Electron Packager
     console.log('[2/3] Empacotando com Electron Packager...');
-    const outDir = path.join(ROOT, 'dist-electron');
-    
+    const outDir = path.join(ROOT, 'dist-package');
+
     if (fs.existsSync(outDir)) {
         fs.rmSync(outDir, { recursive: true, force: true });
     }
 
     const appPaths = await packager({
-        dir: '.',
+        dir: ROOT,
         name: 'KeraDesktop',
         platform: PLATFORM,
         arch: ARCH,
-        out: 'dist-electron',
+        out: outDir,
         overwrite: true,
         asar: true,
         prune: true,
@@ -50,19 +54,21 @@ async function bundle() {
             /^\/src/,
             /^\/public/,
             /^\/supabase/,
-            /^\/.git/,
-            /^\/node_modules/, // O packager lida com isso se prune for true, mas as vezes é bom reforçar
-            /^\/dist-electron/
+            /^\/\.git/,
+            /^\/dist-package/,
+            /^\/dist-electron/,
+            /^\/release-builds/
         ]
     });
 
     const buildPath = appPaths[0];
+    const folderName = path.basename(buildPath);
     console.log(`Build finalizado em: ${buildPath}`);
 
     // 3. Compactar para ZIP
     const releaseDir = path.join(ROOT, 'release-builds');
     const outputZip = path.join(releaseDir, `${ARTIFACT_NAME}.zip`);
-    
+
     if (!fs.existsSync(releaseDir)) {
         fs.mkdirSync(releaseDir, { recursive: true });
     }
@@ -72,13 +78,12 @@ async function bundle() {
     }
 
     console.log('[3/3] Compactando para ZIP...');
-    
+
     try {
-        const relativeBuildPath = path.relative(ROOT, buildPath);
         await zip({
-            source: '*',
-            destination: outputZip,
-            cwd: buildPath
+            source: folderName,
+            cwd: outDir,
+            destination: outputZip
         });
         console.log(`\n✅ Build ZIP pronto, Geverson! Arquivo disponível em: ${outputZip}`);
     } catch (err) {
