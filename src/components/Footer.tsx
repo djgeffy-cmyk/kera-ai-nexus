@@ -6,19 +6,19 @@ const Footer = () => {
       className="fixed bottom-0 right-0 z-30 pointer-events-none transition-[left] duration-300 ease-in-out"
       style={{ left: "var(--chat-sidebar-w, 0px)" }}
     >
-      <div className="mx-auto w-fit max-w-[95vw] mb-2 px-4 py-2 rounded-full bg-background/80 backdrop-blur-md border border-border/60 pointer-events-auto flex items-center gap-3 shadow-lg shadow-background/40">
+      <div className="mx-auto w-fit max-w-[95vw] mb-2 pl-2 pr-4 py-1.5 rounded-full bg-background/80 backdrop-blur-md border border-border/60 pointer-events-auto flex items-center gap-3 shadow-lg shadow-background/40">
         <a
           href="https://app.spaceincloud.com.br/"
           target="_blank"
           rel="noopener noreferrer"
           aria-label="Acessar Kera AI Space in Cloud"
           title="Kera AI · Space in Cloud — Soluções em Nuvem"
-          className="shrink-0 opacity-90 hover:opacity-100 transition-opacity"
+          className="shrink-0 opacity-90 hover:opacity-100 transition-opacity -my-4 md:-my-6"
         >
           <img
             src={keraSpaceLogo}
             alt="Kera AI Space in Cloud"
-            className="h-20 md:h-24 w-auto bg-transparent"
+            className="h-20 md:h-24 w-auto bg-transparent drop-shadow-[0_4px_12px_rgba(0,0,0,0.6)]"
             loading="lazy"
             decoding="async"
             style={{ background: "transparent" }}
