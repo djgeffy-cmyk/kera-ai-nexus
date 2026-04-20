@@ -208,6 +208,8 @@ const Auth = () => {
       />
       {/* Overlay sutil — só o suficiente pra dar contraste no card, sem apagar a Kera */}
       <div aria-hidden className="absolute inset-0 bg-background/30" />
+      {/* Partículas/poeira luminosa flutuando sobre a Kera — dá profundidade */}
+      <ParticlesOverlay />
       {/* Vinheta nas bordas, centro limpo pra Kera respirar */}
       <div
         aria-hidden
