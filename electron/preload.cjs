@@ -51,4 +51,14 @@ contextBridge.exposeInMainWorld("kera", {
       return () => ipcRenderer.removeListener("kera:update:status", handler);
     },
   },
+  videos: {
+    status: () => ipcRenderer.invoke("kera:videos:status"),
+    download: () => ipcRenderer.invoke("kera:videos:download"),
+    clear: () => ipcRenderer.invoke("kera:videos:clear"),
+    onProgress: (cb) => {
+      const handler = (_e, payload) => cb(payload);
+      ipcRenderer.on("kera:videos:progress", handler);
+      return () => ipcRenderer.removeListener("kera:videos:progress", handler);
+    },
+  },
 });
