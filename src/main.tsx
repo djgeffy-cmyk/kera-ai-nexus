@@ -13,7 +13,7 @@ try {
 
 // No Kera Desktop, carrega o mapa de vídeos cacheados ANTES de renderizar
 // para que <video src> já saia apontando pro arquivo local quando disponível.
-(async () => {
+async function bootstrap() {
   try {
     const w = window as unknown as { kera?: { videos?: { status: () => Promise<{ map: Record<string, string> }> } } };
     if (w.kera?.videos) {
@@ -21,7 +21,9 @@ try {
       setDesktopVideoCache(s.map || {});
     }
   } catch {}
-})();
 
-createRoot(document.getElementById("root")!).render(<App />);
+  createRoot(document.getElementById("root")!).render(<App />);
+}
+
+bootstrap();
 
