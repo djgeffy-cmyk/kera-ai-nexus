@@ -85,6 +85,21 @@ const Chat = () => {
   useEffect(() => {
     try { localStorage.setItem("kera:sidebarOpen", sidebarOpen ? "1" : "0"); } catch {}
   }, [sidebarOpen]);
+  // Expõe a largura da sidebar como CSS var para que elementos fixos (ex.: Footer)
+  // possam ficar centralizados em relação à área do chat, e não da viewport inteira.
+  useEffect(() => {
+    const apply = () => {
+      const isDesktop = window.matchMedia("(min-width: 768px)").matches;
+      const w = isDesktop && sidebarOpen ? "18rem" : "0px";
+      document.documentElement.style.setProperty("--chat-sidebar-w", w);
+    };
+    apply();
+    window.addEventListener("resize", apply);
+    return () => {
+      window.removeEventListener("resize", apply);
+      document.documentElement.style.removeProperty("--chat-sidebar-w");
+    };
+  }, [sidebarOpen]);
   const dragCounter = useRef(0);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const scrollerRef = useRef<HTMLDivElement>(null);
