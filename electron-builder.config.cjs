@@ -14,6 +14,7 @@ module.exports = {
   files: [
     "dist/**/*",
     "electron/**/*.cjs",
+    "electron/**/*.html",
     "package.json",
   ],
   asar: true,
