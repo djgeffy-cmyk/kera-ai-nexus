@@ -25,8 +25,9 @@ export const AskKeraFab = () => {
   const [open, setOpen] = useState(false);
   const [text, setText] = useState("");
 
-  // Esconde em /auth e dentro do próprio /chat (já tem input nativo)
-  if (location.pathname.startsWith("/auth") || location.pathname.startsWith("/chat")) {
+  // Esconde em /auth e na home (que já é o próprio chat)
+  const path = location.pathname;
+  if (path.startsWith("/auth") || path === "/" || path.startsWith("/chat")) {
     return null;
   }
 
