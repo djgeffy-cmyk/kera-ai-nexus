@@ -69,6 +69,11 @@ export type KeraDesktopApi = {
     app: (appName: string, args?: string[]) => Promise<{ ok: boolean; cancelled?: boolean; error?: string }>;
   };
   exec: (command: string) => Promise<KeraExecResult>;
+  install: {
+    apt: (pkg: string) => Promise<{ ok: boolean; cancelled?: boolean; error?: string; note?: string }>;
+    flatpak: (appId: string) => Promise<{ ok: boolean; cancelled?: boolean; error?: string; stdout?: string; stderr?: string }>;
+    searchFlatpak: (query: string) => Promise<{ ok: boolean; error?: string; stdout?: string; stderr?: string }>;
+  };
   power: {
     shutdown: () => Promise<{ ok: boolean; cancelled?: boolean; error?: string }>;
     restart: () => Promise<{ ok: boolean; cancelled?: boolean; error?: string }>;

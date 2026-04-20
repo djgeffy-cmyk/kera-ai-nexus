@@ -151,7 +151,51 @@ export const DESKTOP_TOOLS = [
       },
     },
   },
-] as const;
+  {
+    type: "function",
+    function: {
+      name: "install_flatpak",
+      description:
+        "Instala um aplicativo via Flatpak no modo user-level (SEM senha sudo). Ideal pra apps populares: Spotify (com.spotify.Client), Discord (com.discordapp.Discord), VSCode (com.visualstudio.code), OBS (com.obsproject.Studio), Firefox (org.mozilla.firefox), Chrome (com.google.Chrome). Passe o App ID completo do Flathub. PREFIRA ESTA TOOL ao instalar programas — não precisa de senha.",
+      parameters: {
+        type: "object",
+        properties: {
+          app_id: { type: "string", description: "App ID Flathub (ex: com.spotify.Client)" },
+        },
+        required: ["app_id"],
+      },
+    },
+  },
+  {
+    type: "function",
+    function: {
+      name: "search_flatpak",
+      description:
+        "Busca apps no Flathub pra achar o App ID certo antes de install_flatpak. Use quando o usuário pedir um programa e você não souber o App ID exato.",
+      parameters: {
+        type: "object",
+        properties: {
+          query: { type: "string", description: "Nome ou palavra-chave (ex: 'spotify', 'editor de video')" },
+        },
+        required: ["query"],
+      },
+    },
+  },
+  {
+    type: "function",
+    function: {
+      name: "install_apt",
+      description:
+        "Instala um pacote via apt abrindo um TERMINAL VISÍVEL onde o usuário digita a senha sudo manualmente. Use SÓ quando o pacote não existir no Flathub (ex: ferramentas CLI como htop, curl, git, build-essential). Linux/Ubuntu apenas.",
+      parameters: {
+        type: "object",
+        properties: {
+          package: { type: "string", description: "Nome do pacote apt (ex: 'htop', 'git')" },
+        },
+        required: ["package"],
+      },
+    },
+  },
 
 // Nomes das tools desktop (pra distinguir de tools server-side como ipm_query).
 export const DESKTOP_TOOL_NAMES = new Set(DESKTOP_TOOLS.map((t) => t.function.name));
@@ -212,6 +256,18 @@ export async function executeDesktopTool(
       }
       case "run_command": {
         const r = await k.exec(String(args.command));
+        return JSON.stringify(r);
+      }
+      case "install_flatpak": {
+        const r = await k.install.flatpak(String(args.app_id));
+        return JSON.stringify(r);
+      }
+      case "search_flatpak": {
+        const r = await k.install.searchFlatpak(String(args.query));
+        return JSON.stringify(r);
+      }
+      case "install_apt": {
+        const r = await k.install.apt(String(args.package));
         return JSON.stringify(r);
       }
       default:
