@@ -36,12 +36,19 @@ const KeraDesktopPage = () => {
   const [execResult, setExecResult] = useState<KeraExecResult | null>(null);
   const [updateStatus, setUpdateStatus] = useState<{ state: string; version?: string; percent?: number; message?: string } | null>(null);
   const [checkingUpdate, setCheckingUpdate] = useState(false);
+  const [videosStatus, setVideosStatus] = useState<{ cached: string[]; missing: string[]; total: number; dir: string } | null>(null);
+  const [videosDownloading, setVideosDownloading] = useState(false);
+  const [videosProgress, setVideosProgress] = useState<{ name: string; received: number; total: number } | null>(null);
 
   useEffect(() => {
     const k = getKera();
     if (!k) return;
     const off = k.update.onStatus((payload) => setUpdateStatus(payload));
-    return () => { off?.(); };
+    const offV = k.videos.onProgress((p) => setVideosProgress(p));
+    k.videos.status().then((s) =>
+      setVideosStatus({ cached: s.cached, missing: s.missing, total: s.total, dir: s.dir }),
+    ).catch(() => undefined);
+    return () => { off?.(); offV?.(); };
   }, []);
 
   const checkUpdate = async () => {
@@ -70,6 +77,38 @@ const KeraDesktopPage = () => {
   const installUpdate = async () => {
     const k = getKera(); if (!k) return;
     await k.update.install();
+  };
+
+  const refreshVideos = async () => {
+    const k = getKera(); if (!k) return;
+    const s = await k.videos.status();
+    setVideosStatus({ cached: s.cached, missing: s.missing, total: s.total, dir: s.dir });
+  };
+
+  const downloadVideos = async () => {
+    const k = getKera(); if (!k) return;
+    setVideosDownloading(true);
+    setVideosProgress(null);
+    try {
+      const r = await k.videos.download();
+      if (r.ok) toast.success("Vídeos baixados! Modo offline ativo.");
+      else toast.error(`Falha em ${r.errors.length} vídeo(s): ${r.errors[0]?.error || ""}`);
+      // Recarrega para o assetUrl pegar o cache novo (mais simples e seguro).
+      await refreshVideos();
+      setTimeout(() => window.location.reload(), 600);
+    } finally {
+      setVideosDownloading(false);
+      setVideosProgress(null);
+    }
+  };
+
+  const clearVideos = async () => {
+    const k = getKera(); if (!k) return;
+    if (!confirm("Apagar vídeos baixados? Eles voltarão a carregar pela internet.")) return;
+    await k.videos.clear();
+    await refreshVideos();
+    toast.success("Cache de vídeos apagado.");
+    setTimeout(() => window.location.reload(), 400);
   };
 
   const refreshAllowlist = async () => {
@@ -388,6 +427,56 @@ const KeraDesktopPage = () => {
               {updateStatus.state === "up-to-date" && "✓ Você está na versão mais recente."}
               {updateStatus.state === "skipped" && `⚠ Auto-update desativado (${updateStatus.message || "dev"}).`}
               {updateStatus.state === "error" && `✗ Erro: ${updateStatus.message}`}
+            </div>
+          )}
+        </Card>
+
+        {/* VÍDEOS OFFLINE */}
+        <Card className="p-4 space-y-3">
+          <div className="flex items-center justify-between gap-2 flex-wrap">
+            <div className="flex items-center gap-2">
+              <Download className="size-4 text-primary" />
+              <h2 className="text-sm uppercase tracking-wider text-muted-foreground">Vídeos offline</h2>
+            </div>
+            <div className="flex gap-2">
+              <Button
+                onClick={downloadVideos}
+                size="sm"
+                className="gap-2"
+                disabled={videosDownloading || (videosStatus?.missing.length === 0)}
+              >
+                <Download className={`size-4 ${videosDownloading ? "animate-pulse" : ""}`} />
+                {videosStatus?.missing.length === 0 ? "Tudo baixado" : `Baixar (${videosStatus?.missing.length ?? "?"})`}
+              </Button>
+              {videosStatus && videosStatus.cached.length > 0 && (
+                <Button onClick={clearVideos} size="sm" variant="outline" className="gap-2" disabled={videosDownloading}>
+                  <Trash2 className="size-4" /> Limpar cache
+                </Button>
+              )}
+            </div>
+          </div>
+          <p className="text-xs text-muted-foreground">
+            Baixa os vídeos de fundo dos agentes uma única vez (~250 MB) para funcionar 100% sem internet.
+          </p>
+          {videosStatus && (
+            <div className="text-xs font-mono px-3 py-2 rounded-md bg-secondary/40 space-y-1">
+              <div>
+                ✅ Cacheados: <span className="text-foreground">{videosStatus.cached.length}/{videosStatus.total}</span>
+                {videosStatus.missing.length > 0 && (
+                  <> &nbsp;•&nbsp; Faltando: <span className="text-foreground">{videosStatus.missing.length}</span></>
+                )}
+              </div>
+              {videosDownloading && videosProgress && (
+                <div>
+                  ⬇ {videosProgress.name}:{" "}
+                  {videosProgress.total
+                    ? `${Math.round((videosProgress.received / videosProgress.total) * 100)}%`
+                    : `${(videosProgress.received / 1024 / 1024).toFixed(1)} MB`}
+                </div>
+              )}
+              <div className="text-muted-foreground truncate" title={videosStatus.dir}>
+                📁 {videosStatus.dir}
+              </div>
             </div>
           )}
         </Card>
