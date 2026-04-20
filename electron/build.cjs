@@ -1,4 +1,4 @@
-const packager = require('@electron/packager');
+const packager = require('@electron/packager').default || require('@electron/packager');
 const path = require('path');
 const fs = require('fs');
 const zip = require('bestzip');
