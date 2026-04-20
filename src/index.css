@@ -172,6 +172,121 @@
     box-shadow: 0 0 0 2px hsl(46 65% 52% / 0.55), 0 0 16px hsl(46 65% 52% / 0.35);
     border-color: hsl(46 65% 52%);
   }
+
+  .kera-premium {
+    /* Kera Premium — preto azulado profundo + ciano neon + olhos de ouro */
+    --background: 220 20% 5%;
+    --foreground: 180 20% 98%;
+
+    --card: 220 20% 8%;
+    --card-foreground: 180 20% 98%;
+
+    --popover: 220 25% 7%;
+    --popover-foreground: 180 20% 98%;
+
+    --primary: 190 90% 50%;
+    --primary-foreground: 190 100% 10%;
+    --primary-glow: 190 100% 65%;
+
+    --secondary: 220 25% 12%;
+    --secondary-foreground: 180 20% 98%;
+
+    --muted: 220 20% 11%;
+    --muted-foreground: 200 15% 65%;
+
+    --accent: 40 80% 55%;
+    --accent-foreground: 40 100% 10%;
+
+    --destructive: 0 75% 55%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 190 50% 20%;
+    --input: 220 25% 11%;
+    --ring: 190 90% 50%;
+
+    /* Glassmorphism tokens */
+    --glass-bg: 220 25% 8% / 0.6;
+    --glass-border: 190 100% 50% / 0.25;
+
+    --gradient-cyber: linear-gradient(135deg, hsl(190 90% 50%) 0%, hsl(220 90% 45%) 100%);
+    --gradient-bg: radial-gradient(ellipse at top, hsl(220 60% 12% / 0.8), transparent 60%),
+                   radial-gradient(ellipse at bottom right, hsl(190 90% 25% / 0.25), transparent 55%),
+                   linear-gradient(180deg, hsl(220 25% 4%), hsl(220 30% 6%));
+    --gradient-panel: linear-gradient(180deg, hsl(220 25% 8% / 0.65), hsl(220 30% 5% / 0.7));
+
+    --shadow-glow: 0 0 30px hsl(190 90% 50% / 0.4), 0 0 80px hsl(190 90% 50% / 0.18);
+    --shadow-soft: 0 8px 32px 0 hsl(220 50% 2% / 0.8);
+
+    --sidebar-background: 220 25% 5%;
+    --sidebar-foreground: 180 20% 92%;
+    --sidebar-primary: 190 90% 50%;
+    --sidebar-primary-foreground: 190 100% 10%;
+    --sidebar-accent: 220 25% 10%;
+    --sidebar-accent-foreground: 180 20% 98%;
+    --sidebar-border: 190 50% 18%;
+    --sidebar-ring: 190 90% 50%;
+  }
+
+  /* Kera Premium: glass + ciano neon + brilho azulado no texto */
+  .kera-premium .panel,
+  .kera-premium [role="dialog"],
+  .kera-premium [data-state] [role="menu"] {
+    background: hsl(var(--glass-bg)) !important;
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+    border: 1px solid hsl(var(--glass-border));
+    box-shadow: 0 8px 32px 0 hsl(220 50% 2% / 0.8);
+  }
+  .kera-premium input,
+  .kera-premium textarea,
+  .kera-premium [role="combobox"] {
+    border-color: hsl(190 100% 50% / 0.25);
+    background: hsl(220 25% 8% / 0.55);
+    backdrop-filter: blur(8px);
+  }
+  .kera-premium input:focus-visible,
+  .kera-premium textarea:focus-visible {
+    border-color: hsl(190 90% 50%);
+    box-shadow: 0 0 0 2px hsl(190 90% 50% / 0.45), 0 0 18px hsl(190 90% 50% / 0.4);
+  }
+  /* Texto principal com leve neon azul */
+  .kera-premium {
+    text-shadow: 0 0 10px hsl(195 100% 50% / 0.18);
+  }
+  /* Estados ativos / ícones de destaque em ouro (olhos da Kera) */
+  .kera-premium [data-active="true"],
+  .kera-premium [aria-current="page"],
+  .kera-premium [data-state="active"] {
+    color: hsl(40 80% 55%);
+    text-shadow: 0 0 15px hsl(40 80% 55% / 0.55);
+  }
+}
+
+@layer utilities {
+  .kera-glass {
+    background: hsl(var(--glass-bg, 220 25% 8% / 0.6));
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid hsl(var(--glass-border, 190 100% 50% / 0.25));
+    box-shadow: 0 8px 32px 0 hsl(220 50% 2% / 0.8);
+  }
+  .kera-text-glow {
+    text-shadow: 0 0 10px hsl(195 100% 50% / 0.5), 0 0 20px hsl(195 100% 50% / 0.3);
+  }
+  .kera-eye-glow {
+    color: hsl(40 80% 55%);
+    text-shadow: 0 0 15px hsl(40 80% 55% / 0.6);
+  }
+  .kera-btn-primary {
+    background: linear-gradient(135deg, hsl(190 90% 50%), hsl(220 90% 45%));
+    color: hsl(190 100% 10%);
+    border: 1px solid hsl(190 100% 50% / 0.4);
+    box-shadow: 0 4px 20px hsl(190 90% 50% / 0.35);
+  }
+  .kera-btn-primary:hover {
+    box-shadow: 0 6px 28px hsl(190 90% 50% / 0.5);
+    filter: brightness(1.1);
+  }
 }
 
 @layer base {
