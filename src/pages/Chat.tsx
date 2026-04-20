@@ -9,7 +9,7 @@ import {
   Plus, LogOut, Send, MessageSquare, Trash2, Menu, Settings,
   Image as ImageIcon, LayoutGrid, FolderPlus, Mic, MicOff, Volume2, VolumeX, Bot, ChevronRight,
   Paperclip, X, FileText, ShieldCheck, Activity, Download, Ear, Sun, Moon, Sparkles, Gem,
-  PanelLeftClose, PanelLeftOpen, Camera, Pencil, Eraser, BookOpen,
+  PanelLeftClose, PanelLeftOpen, Camera, Pencil, Eraser,
 } from "lucide-react";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -46,8 +46,6 @@ import { exportConversationToPdf } from "@/lib/exportPdf";
 import { VoiceStatusIndicator } from "@/components/VoiceStatusIndicator";
 import { useTheme } from "@/hooks/useTheme";
 import { GalleryDialog } from "@/components/GalleryDialog";
-import { BookTranslateDialog } from "@/components/chat/BookTranslateDialog";
-import type { Chapter } from "@/lib/bookParser";
 
 type Conversation = { id: string; title: string; updated_at: string; agent_key: string };
 type CustomAgent = { id: string; name: string; system_prompt: string; description: string | null };
@@ -70,7 +68,6 @@ const Chat = () => {
   const [streaming, setStreaming] = useState(false);
   const [userId, setUserId] = useState<string | null>(null);
   const [galleryOpen, setGalleryOpen] = useState(false);
-  const [bookDialogOpen, setBookDialogOpen] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
   const [provider, setProvider] = useState<ProviderId>(getPreferredProvider());
   // Modo voz NÃO persiste — sempre começa desligado a cada sessão para evitar
@@ -472,109 +469,6 @@ const Chat = () => {
     }
   };
 
-  // ===== Tradução de livro inteiro (Kera Tradutora) =====
-  // Traduz um capítulo: posta a mensagem do "usuário" com o trecho original e
-  // a resposta da Kera com a tradução. Salva tudo no DB pra ficar igual a chat normal.
-  const translateBookChapter = async (chapter: Chapter, totalChapters: number, bookName: string) => {
-    if (!userId) throw new Error("Não autenticado.");
-    let convId = currentId;
-    if (!convId) {
-      const title = `📖 ${bookName.replace(/\.[^.]+$/, "")}`.slice(0, 80);
-      const { data, error } = await supabase
-        .from("conversations").insert({ user_id: userId, title, agent_key: "kera-tradutora" })
-        .select().single();
-      if (error) throw new Error(error.message);
-      convId = data.id;
-      setCurrentId(convId);
-      setAgentKey("kera-tradutora");
-      setConversations(prev => [data as Conversation, ...prev]);
-    }
-
-    const userPrompt =
-      `Traduza para o português brasileiro literário o **capítulo ${chapter.index} de ${totalChapters}** ` +
-      `do livro "${bookName}" — título: "${chapter.title}".\n\n` +
-      `Mantenha a voz do autor, formatação de parágrafos e diálogos com travessão (—).\n` +
-      `Responda APENAS com a tradução em PT-BR, sem prefácios. Pode incluir notas do tradutor entre [N.T.: ...] quando necessário.\n\n` +
-      `--- TEXTO ORIGINAL (${chapter.wordCount} palavras) ---\n\n${chapter.text}`;
-
-    const userMsg: ChatMessage = { role: "user", content: `📖 **Capítulo ${chapter.index}/${totalChapters} — ${chapter.title}**\n\n_Enviado para tradução (${chapter.wordCount.toLocaleString("pt-BR")} palavras)._` };
-    setMessages(prev => [...prev, userMsg]);
-    await supabase.from("messages").insert({
-      conversation_id: convId, user_id: userId, role: "user", content: userMsg.content as string,
-    });
-
-    let assistantText = "";
-    setMessages(prev => [...prev, { role: "assistant", content: "" }]);
-
-    const { data: sess } = await supabase.auth.getSession();
-    const resp = await fetch(CHAT_URL, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        ...(sess.session ? { Authorization: `Bearer ${sess.session.access_token}` } : {}),
-      },
-      body: JSON.stringify({
-        // Mandamos só o prompt do capítulo (sem histórico) pra economizar contexto e
-        // garantir consistência entre capítulos.
-        messages: [{ role: "user", content: userPrompt }],
-        provider: provider === "auto" ? undefined : provider,
-        systemPrompt: resolveSystemPrompt("kera-tradutora"),
-        agentKey: "kera-tradutora",
-      }),
-    });
-
-    if (!resp.ok || !resp.body) {
-      const j = await resp.json().catch(() => ({}));
-      setMessages(prev => prev.slice(0, -1));
-      if (resp.status === 429) throw new Error("Rate limit. Aguarde antes de continuar.");
-      if (resp.status === 402) throw new Error("Créditos de IA esgotados.");
-      throw new Error(j.error || "Falha ao traduzir.");
-    }
-
-    const reader = resp.body.getReader();
-    const decoder = new TextDecoder();
-    let buffer = "";
-    let done = false;
-    while (!done) {
-      const { done: d, value } = await reader.read();
-      if (d) break;
-      buffer += decoder.decode(value, { stream: true });
-      let idx: number;
-      while ((idx = buffer.indexOf("\n")) !== -1) {
-        let line = buffer.slice(0, idx);
-        buffer = buffer.slice(idx + 1);
-        if (line.endsWith("\r")) line = line.slice(0, -1);
-        if (!line || line.startsWith(":")) continue;
-        if (!line.startsWith("data: ")) continue;
-        const payload = line.slice(6).trim();
-        if (payload === "[DONE]") { done = true; break; }
-        try {
-          const parsed = JSON.parse(payload);
-          const delta = parsed.choices?.[0]?.delta?.content;
-          if (delta) {
-            assistantText += delta;
-            setMessages(prev => {
-              const copy = [...prev];
-              copy[copy.length - 1] = { role: "assistant", content: assistantText };
-              return copy;
-            });
-          }
-        } catch {
-          buffer = line + "\n" + buffer;
-          break;
-        }
-      }
-    }
-
-    if (!assistantText.trim()) {
-      setMessages(prev => prev.slice(0, -1));
-      throw new Error("Tradução vazia.");
-    }
-    await supabase.from("messages").insert({
-      conversation_id: convId, user_id: userId, role: "assistant", content: assistantText,
-    });
-    await supabase.from("conversations").update({ updated_at: new Date().toISOString() }).eq("id", convId);
-  };
 
   const onKey = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); sendText(); }
@@ -1149,20 +1043,6 @@ Por favor, analise: há perda de pacote? jitter alto sugere instabilidade de rot
                 </Button>
               </div>
             )}
-            {isTradutora && (
-              <div className="flex flex-wrap justify-center gap-2">
-                <Button
-                  onClick={() => setBookDialogOpen(true)}
-                  disabled={streaming}
-                  variant="outline"
-                  size="sm"
-                  className="border-amber-500/40 text-amber-400 hover:bg-amber-500/10 hover:text-amber-300 gap-2"
-                >
-                  <BookOpen className="size-4" />
-                  Traduzir livro inteiro (PDF / EPUB / TXT)
-                </Button>
-              </div>
-            )}
             {attachments.length > 0 && (
               <div className="flex flex-wrap gap-2">
                 {attachments.map((a, i) => (
@@ -1343,11 +1223,6 @@ Por favor, analise: há perda de pacote? jitter alto sugere instabilidade de rot
         />
       )}
       <GalleryDialog open={galleryOpen} onOpenChange={setGalleryOpen} userId={userId} />
-      <BookTranslateDialog
-        open={bookDialogOpen}
-        onOpenChange={setBookDialogOpen}
-        onTranslateChapter={translateBookChapter}
-      />
     </div>
   );
 };
