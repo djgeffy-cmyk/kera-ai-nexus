@@ -9,7 +9,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, Di
 import { toast } from "sonner";
 import { ShieldCheck, KeyRound, Mail } from "lucide-react";
 import keraAvatar from "@/assets/kera-avatar.png";
-import keraAvatarVideo from "@/assets/kera-avatar.mp4.asset.json";
+import keraAvatarVideo from "@/assets/kera-avatar-rain.mp4.asset.json";
 import ParticlesOverlay from "@/components/ParticlesOverlay";
 
 type Mode = "signin" | "signup" | "totp";
