@@ -8,7 +8,7 @@ import { toast } from "sonner";
 import {
   Plus, LogOut, Send, MessageSquare, Trash2, Menu, Settings,
   Image as ImageIcon, LayoutGrid, FolderPlus, Mic, MicOff, Volume2, VolumeX, Bot, ChevronRight,
-  Paperclip, X, FileText, ShieldCheck, Activity, Download, Ear, Sun, Moon,
+  Paperclip, X, FileText, ShieldCheck, Activity, Download, Ear, Sun, Moon, Sparkles,
 } from "lucide-react";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -55,7 +55,7 @@ const IMAGE_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/generate-im
 
 const Chat = () => {
   const navigate = useNavigate();
-  const { theme, toggle: toggleTheme } = useTheme();
+  const { theme, setTheme } = useTheme();
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [customAgents, setCustomAgents] = useState<CustomAgent[]>([]);
   const [currentId, setCurrentId] = useState<string | null>(null);
@@ -816,15 +816,33 @@ Por favor, analise: há perda de pacote? jitter alto sugere instabilidade de rot
           </Button>
 
           <div className="ml-auto flex items-center gap-1.5 md:gap-2 shrink-0">
-            <Button
-              variant="ghost" size="icon"
-              onClick={toggleTheme}
-              aria-label={theme === "dark" ? "Ativar tema claro" : "Ativar tema escuro"}
-              title={theme === "dark" ? "Tema claro" : "Tema escuro"}
-              className="text-muted-foreground hover:text-primary shrink-0 h-9 w-9"
-            >
-              {theme === "dark" ? <Sun className="size-5" /> : <Moon className="size-5" />}
-            </Button>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button
+                  variant="ghost" size="icon"
+                  aria-label="Trocar tema"
+                  title={`Tema atual: ${theme === "dark" ? "Escuro" : theme === "light" ? "Claro" : "Kera"}`}
+                  className="text-muted-foreground hover:text-primary shrink-0 h-9 w-9"
+                >
+                  {theme === "dark" && <Moon className="size-5" />}
+                  {theme === "light" && <Sun className="size-5" />}
+                  {theme === "kera" && <Sparkles className="size-5 text-primary" />}
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-44">
+                <DropdownMenuLabel>Tema</DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={() => setTheme("dark")} className="gap-2">
+                  <Moon className="size-4" /> Escuro {theme === "dark" && <span className="ml-auto text-primary">●</span>}
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setTheme("light")} className="gap-2">
+                  <Sun className="size-4" /> Claro {theme === "light" && <span className="ml-auto text-primary">●</span>}
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setTheme("kera")} className="gap-2">
+                  <Sparkles className="size-4" /> Kera Mode {theme === "kera" && <span className="ml-auto text-primary">●</span>}
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
             <Select value={provider} onValueChange={(v) => { setProvider(v as ProviderId); setPreferredProvider(v as ProviderId); }}>
               <SelectTrigger className="h-8 w-[92px] sm:w-[140px] md:w-[180px] text-xs bg-input/40 border-border px-2">
                 <SelectValue />
