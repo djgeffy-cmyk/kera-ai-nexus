@@ -9,7 +9,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, Di
 import { toast } from "sonner";
 import { ShieldCheck, KeyRound, Mail } from "lucide-react";
 import keraAvatar from "@/assets/kera-avatar.png";
-import keraAvatarVideo from "@/assets/kera-avatar.mp4.asset.json";
+import keraAvatarVideo from "@/assets/kera-avatar-rain.mp4.asset.json";
 import ParticlesOverlay from "@/components/ParticlesOverlay";
 
 type Mode = "signin" | "signup" | "totp";
@@ -193,7 +193,7 @@ const Auth = () => {
   };
 
   return (
-    <main ref={mainRef} className="relative min-h-screen flex items-center justify-center md:justify-end p-4 md:px-10 lg:px-16 overflow-hidden">
+    <main ref={mainRef} className="relative min-h-screen flex items-center justify-center p-4 overflow-hidden">
       {/* Vídeo Kera de fundo — em alta qualidade, com overlay leve pra ela aparecer */}
       <video
         ref={bgVideoRef}
@@ -210,22 +210,13 @@ const Auth = () => {
       <div aria-hidden className="absolute inset-0 bg-background/30" />
       {/* Partículas/poeira luminosa flutuando sobre a Kera — dá profundidade */}
       <ParticlesOverlay />
-      {/* Vinheta lateral direita — escurece atrás do card sem cobrir o rosto da Kera */}
+      {/* Vinheta radial — centro um pouco mais translúcido pra Kera respirar atrás do card */}
       <div
         aria-hidden
-        className="absolute inset-0 pointer-events-none hidden md:block"
+        className="absolute inset-0 pointer-events-none"
         style={{
           background:
-            "linear-gradient(90deg, transparent 0%, transparent 55%, hsl(var(--background) / 0.55) 80%, hsl(var(--background) / 0.85) 100%)",
-        }}
-      />
-      {/* Vinheta mobile — radial padrão */}
-      <div
-        aria-hidden
-        className="absolute inset-0 pointer-events-none md:hidden"
-        style={{
-          background:
-            "radial-gradient(ellipse at center, transparent 30%, hsl(var(--background) / 0.55) 75%, hsl(var(--background) / 0.85) 100%)",
+            "radial-gradient(ellipse at center, hsl(var(--background) / 0.35) 0%, hsl(var(--background) / 0.55) 60%, hsl(var(--background) / 0.85) 100%)",
         }}
       />
 
