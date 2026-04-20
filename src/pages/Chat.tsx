@@ -545,8 +545,21 @@ Por favor, analise: há perda de pacote? jitter alto sugere instabilidade de rot
 
   const Sidebar = () => (
     <aside className="h-full w-full md:w-72 panel border-r border-border flex flex-col">
-      <div className="p-5 border-b border-border flex items-center justify-center">
-        <img src={keraLogo} alt="Kera AI" className="h-12 drop-shadow-[0_0_12px_hsl(var(--primary)/0.5)]" />
+      <div className="flex justify-center py-[30px] border-b border-border">
+        <div
+          className="w-[120px] h-[120px] rounded-full overflow-hidden border"
+          style={{
+            boxShadow: "0 0 20px hsl(var(--primary) / 0.3)",
+            borderColor: "hsl(var(--foreground) / 0.1)",
+          }}
+        >
+          <img
+            src={keraLogo}
+            alt="Kera AI"
+            className="w-full h-full object-cover"
+            style={{ transform: "scale(1.1)" }}
+          />
+        </div>
       </div>
 
       {/* Quick actions */}
