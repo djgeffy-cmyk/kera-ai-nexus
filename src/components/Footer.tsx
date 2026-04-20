@@ -2,7 +2,10 @@ import keraSpaceLogo from "@/assets/kera-spaceincloud-logo.png";
 
 const Footer = () => {
   return (
-    <div className="fixed bottom-0 left-0 right-0 z-30 pointer-events-none">
+    <div
+      className="fixed bottom-0 right-0 z-30 pointer-events-none transition-[left] duration-300 ease-in-out"
+      style={{ left: "var(--chat-sidebar-w, 0px)" }}
+    >
       <div className="mx-auto w-fit max-w-[95vw] mb-2 px-4 py-2 rounded-full bg-background/80 backdrop-blur-md border border-border/60 pointer-events-auto flex items-center gap-3 shadow-lg shadow-background/40">
         <a
           href="https://app.spaceincloud.com.br/"
