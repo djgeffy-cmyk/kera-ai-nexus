@@ -550,6 +550,9 @@ const Chat = () => {
           conversation_id: convId, user_id: userId, role: "assistant", content: assistantText,
         });
         await supabase.from("conversations").update({ updated_at: new Date().toISOString() }).eq("id", convId);
+        // Atualiza o texto pro avatar 3D detectar emoção / sincronizar boca
+        lastAssistantTextRef.current = assistantText;
+        setLastAssistantText(assistantText);
         if (voiceMode) voice.speak(assistantText.replace(/```[\s\S]*?```/g, "(bloco de código)").replace(/[#*_`>]/g, ""));
       }
     } catch (e: any) {
