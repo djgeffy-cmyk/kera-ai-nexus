@@ -1,12 +1,18 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { ArrowLeft, FolderOpen, Power, RotateCcw, Moon, Lock, FileText, Trash2, Save, RefreshCw, Monitor, ShieldCheck, Plus, X } from "lucide-react";
+import {
+  ArrowLeft, FolderOpen, Power, RotateCcw, Moon, Lock, FileText, Trash2, Save, RefreshCw,
+  Monitor, ShieldCheck, Plus, X, ClipboardCopy, ClipboardPaste, Camera, Terminal, Rocket, Cpu, Globe,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
-import { isKeraDesktop, getKera, type KeraFsEntry, type KeraPlatformInfo } from "@/lib/keraDesktop";
+import {
+  isKeraDesktop, getKera,
+  type KeraFsEntry, type KeraPlatformInfo, type KeraSystemStatus, type KeraExecResult,
+} from "@/lib/keraDesktop";
 
 const KeraDesktopPage = () => {
   const [info, setInfo] = useState<KeraPlatformInfo | null>(null);
