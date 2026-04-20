@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { ArrowLeft, FolderOpen, Power, RotateCcw, Moon, Lock, FileText, Trash2, Save, RefreshCw, Monitor } from "lucide-react";
+import { ArrowLeft, FolderOpen, Power, RotateCcw, Moon, Lock, FileText, Trash2, Save, RefreshCw, Monitor, ShieldCheck, Plus, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -18,13 +18,19 @@ const KeraDesktopPage = () => {
 
   const desktop = isKeraDesktop();
 
+  const [allowlist, setAllowlist] = useState<string[]>([]);
+
+  const refreshAllowlist = async () => {
+    const k = getKera();
+    if (!k) return;
+    setAllowlist(await k.allowlist.get());
+  };
+
   useEffect(() => {
     const k = getKera();
     if (!k) return;
-    k.platform().then((p) => {
-      setInfo(p);
-      setCwd(p.homedir);
-    });
+    k.platform().then(setInfo);
+    refreshAllowlist();
   }, []);
 
   useEffect(() => {
@@ -93,6 +99,31 @@ const KeraDesktopPage = () => {
     if (!k) return;
     const f = await k.fs.pickFolder();
     if (f) setCwd(f);
+  };
+
+  const addAllowed = async () => {
+    const k = getKera();
+    if (!k) return;
+    const r = await k.allowlist.add();
+    if (r.cancelled) return;
+    if (r.ok) {
+      toast.success("Pasta autorizada");
+      await refreshAllowlist();
+    }
+  };
+
+  const removeAllowed = async (folder: string) => {
+    const k = getKera();
+    if (!k) return;
+    const r = await k.allowlist.remove(folder);
+    setAllowlist(r.list);
+    if (cwd === folder) {
+      setCwd("");
+      setEntries([]);
+      setSelected(null);
+      setContent("");
+    }
+    toast.success("Pasta removida");
   };
 
   const power = async (kind: "shutdown" | "restart" | "hibernate" | "lock") => {
