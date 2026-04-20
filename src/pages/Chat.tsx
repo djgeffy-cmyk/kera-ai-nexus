@@ -718,8 +718,8 @@ Por favor, analise: há perda de pacote? jitter alto sugere instabilidade de rot
           }
         }}
       >
-        {agentKey === "kera-dev" && (
-          <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none">
+        {AGENT_BG_VIDEOS[agentKey] && (
+          <div key={agentKey} className="absolute inset-0 z-0 overflow-hidden pointer-events-none">
             <video
               autoPlay
               loop
@@ -727,7 +727,7 @@ Por favor, analise: há perda de pacote? jitter alto sugere instabilidade de rot
               playsInline
               className="w-full h-full object-cover opacity-30 mix-blend-screen"
             >
-              <source src={keraDevBgVideo.url} type="video/mp4" />
+              <source src={AGENT_BG_VIDEOS[agentKey]} type="video/mp4" />
             </video>
             <div className="absolute inset-0 bg-gradient-to-b from-background/40 via-background/60 to-background/90" />
           </div>
