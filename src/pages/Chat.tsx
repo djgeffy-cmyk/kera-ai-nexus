@@ -719,7 +719,10 @@ Por favor, analise: há perda de pacote? jitter alto sugere instabilidade de rot
         }}
       >
         {AGENT_BG_VIDEOS[agentKey] && (
-          <div key={agentKey} className="absolute inset-0 z-0 overflow-hidden pointer-events-none">
+          <div
+            key={agentKey}
+            className="absolute inset-0 z-0 overflow-hidden pointer-events-none animate-[fade-in_800ms_ease-out]"
+          >
             <video
               autoPlay
               loop
