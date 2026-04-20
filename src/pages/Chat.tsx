@@ -975,7 +975,7 @@ Por favor, analise: há perda de pacote? jitter alto sugere instabilidade de rot
             <img
               src={keraSpaceLogo}
               alt="Kera AI Space in Cloud"
-              className="relative w-48 xl:w-56 2xl:w-64 drop-shadow-[0_6px_18px_hsl(var(--primary)/0.35)] transition-transform duration-300 group-hover:scale-[1.03] bg-transparent"
+              className="relative w-64 xl:w-72 2xl:w-80 drop-shadow-[0_6px_18px_hsl(var(--primary)/0.35)] transition-transform duration-300 group-hover:scale-[1.03] bg-transparent"
               loading="eager"
               decoding="async"
               style={{ background: "transparent" }}
