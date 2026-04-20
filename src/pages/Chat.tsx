@@ -8,7 +8,7 @@ import { toast } from "sonner";
 import {
   Plus, LogOut, Send, MessageSquare, Trash2, Menu, Settings,
   Image as ImageIcon, LayoutGrid, FolderPlus, Mic, MicOff, Volume2, VolumeX, Bot, ChevronRight,
-  Paperclip, X, FileText, ShieldCheck, Activity, Download, Ear,
+  Paperclip, X, FileText, ShieldCheck, Activity, Download, Ear, Sun, Moon,
 } from "lucide-react";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -42,6 +42,7 @@ import { fileToAttachment, buildUserContent, type Attachment } from "@/lib/attac
 import { isImageRequest, extractImagePrompt } from "@/lib/imageDetect";
 import { exportConversationToPdf } from "@/lib/exportPdf";
 import { VoiceStatusIndicator } from "@/components/VoiceStatusIndicator";
+import { useTheme } from "@/hooks/useTheme";
 
 type Conversation = { id: string; title: string; updated_at: string; agent_key: string };
 type CustomAgent = { id: string; name: string; system_prompt: string; description: string | null };
@@ -54,6 +55,7 @@ const IMAGE_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/generate-im
 
 const Chat = () => {
   const navigate = useNavigate();
+  const { theme, toggle: toggleTheme } = useTheme();
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [customAgents, setCustomAgents] = useState<CustomAgent[]>([]);
   const [currentId, setCurrentId] = useState<string | null>(null);
@@ -811,6 +813,15 @@ Por favor, analise: há perda de pacote? jitter alto sugere instabilidade de rot
           </Button>
 
           <div className="ml-auto flex items-center gap-1.5 md:gap-2 shrink-0">
+            <Button
+              variant="ghost" size="icon"
+              onClick={toggleTheme}
+              aria-label={theme === "dark" ? "Ativar tema claro" : "Ativar tema escuro"}
+              title={theme === "dark" ? "Tema claro" : "Tema escuro"}
+              className="text-muted-foreground hover:text-primary shrink-0 h-9 w-9"
+            >
+              {theme === "dark" ? <Sun className="size-5" /> : <Moon className="size-5" />}
+            </Button>
             <Select value={provider} onValueChange={(v) => { setProvider(v as ProviderId); setPreferredProvider(v as ProviderId); }}>
               <SelectTrigger className="h-8 w-[92px] sm:w-[140px] md:w-[180px] text-xs bg-input/40 border-border px-2">
                 <SelectValue />
