@@ -55,6 +55,7 @@ const IMAGE_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/generate-im
 
 const Chat = () => {
   const navigate = useNavigate();
+  const { theme, toggle: toggleTheme } = useTheme();
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [customAgents, setCustomAgents] = useState<CustomAgent[]>([]);
   const [currentId, setCurrentId] = useState<string | null>(null);
