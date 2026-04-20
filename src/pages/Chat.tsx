@@ -817,12 +817,12 @@ Por favor, analise: há perda de pacote? jitter alto sugere instabilidade de rot
               {group.items.map(c => (
                 <div
                   key={c.id}
-                  className={`group flex items-center gap-1 rounded-md px-2.5 py-1.5 text-sm cursor-pointer transition ${
+                  className={`group flex items-start gap-1 rounded-md px-2.5 py-1.5 text-sm cursor-pointer transition ${
                     currentId === c.id ? "bg-secondary/80 text-foreground" : "hover:bg-secondary/60 text-muted-foreground hover:text-foreground"
                   }`}
                   onClick={() => selectConversation(c.id, c.agent_key)}
                 >
-                  <span className="truncate flex-1">{c.title}</span>
+                  <span className="flex-1 min-w-0 break-words leading-snug">{c.title}</span>
                   <button
                     onClick={(e) => { e.stopPropagation(); renameConversation(c.id, c.title); }}
                     className="opacity-0 group-hover:opacity-100 text-muted-foreground hover:text-foreground transition p-0.5"
