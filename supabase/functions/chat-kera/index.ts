@@ -378,7 +378,11 @@ ${intensityRules}`;
     const firstCfg = chain[0];
     const supportsTools = toolCapableProviders.some((p) => firstCfg.label.toLowerCase().includes(p === "openai" ? "openai" : p));
 
-    if (supportsTools && shouldProbeIpm(messages)) {
+    // Combina tools server-side (ipm_query) + tools desktop (vindas do cliente Electron).
+    const serverTools = shouldProbeIpm(messages) ? TOOLS : [];
+    const combinedTools = hasDesktopTools ? [...serverTools, ...desktopTools] : serverTools;
+
+    if (supportsTools && combinedTools.length > 0) {
       try {
         const probe = await fetch(firstCfg.url, {
           method: "POST",
@@ -390,7 +394,7 @@ ${intensityRules}`;
           body: JSON.stringify({
             model: firstCfg.model,
             stream: false,
-            tools: TOOLS,
+            tools: combinedTools,
             tool_choice: "auto",
             messages: [{ role: "system", content: finalSystem }, ...messages],
           }),
@@ -401,13 +405,47 @@ ${intensityRules}`;
           const toolCalls = msg?.tool_calls;
           if (Array.isArray(toolCalls) && toolCalls.length > 0) {
             console.log(`[chat-kera] Tool calls: ${toolCalls.length}`);
-            const toolResults: Array<{ role: string; tool_call_id: string; content: string }> = [];
+
+            // Separa tools server-side (executa aqui) vs desktop (devolve pro cliente).
+            const serverCalls: any[] = [];
+            const desktopCalls: any[] = [];
             for (const tc of toolCalls) {
+              const tname = tc.function?.name;
+              if (desktopToolNames.has(tname)) desktopCalls.push(tc);
+              else serverCalls.push(tc);
+            }
+
+            // Se tem tools desktop, devolve JSON pro cliente executar e reenviar.
+            if (desktopCalls.length > 0) {
+              return new Response(
+                JSON.stringify({
+                  kind: "desktop_tool_calls",
+                  assistant_message: { role: "assistant", content: msg.content || "", tool_calls: toolCalls },
+                  // Resultados já resolvidos server-side (pra o cliente anexar direto)
+                  server_tool_results: await Promise.all(
+                    serverCalls.map(async (tc: any) => ({
+                      role: "tool",
+                      tool_call_id: tc.id,
+                      content: await executeTool(tc.function?.name, JSON.parse(tc.function?.arguments || "{}")),
+                    })),
+                  ),
+                  desktop_tool_calls: desktopCalls.map((tc: any) => ({
+                    id: tc.id,
+                    name: tc.function?.name,
+                    arguments: JSON.parse(tc.function?.arguments || "{}"),
+                  })),
+                }),
+                { headers: { ...corsHeaders, "Content-Type": "application/json" } },
+              );
+            }
+
+            // Só tools server — executa e segue pro stream final.
+            const toolResults: Array<{ role: string; tool_call_id: string; content: string }> = [];
+            for (const tc of serverCalls) {
               const args = JSON.parse(tc.function?.arguments || "{}");
               const result = await executeTool(tc.function?.name, args);
               toolResults.push({ role: "tool", tool_call_id: tc.id, content: result });
             }
-            // Injeta assistant + tool messages pra resposta final stream
             workingMessages = [
               ...messages,
               { role: "assistant", content: msg.content || "", tool_calls: toolCalls },
