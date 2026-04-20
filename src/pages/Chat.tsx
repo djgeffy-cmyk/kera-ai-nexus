@@ -964,52 +964,25 @@ Por favor, analise: há perda de pacote? jitter alto sugere instabilidade de rot
         </div>
 
         <div className="relative z-10 border-t border-border panel p-3 md:p-4 pb-10 md:pb-12">
-          {/* Space in Cloud — logo flutuante clicável + badge animado (desktop) */}
+          {/* Space in Cloud — logo estática clicável (desktop) */}
           <a
             href="https://app.spaceincloud.com.br/"
             target="_blank"
             rel="noopener noreferrer"
             aria-label="Acessar Kera AI Space in Cloud"
             title="Kera AI · Space in Cloud — Soluções em Nuvem"
-            className="hidden xl:flex absolute right-4 bottom-12 z-20 group flex-col items-center justify-center gap-3"
+            className="hidden xl:flex absolute right-4 bottom-12 z-20 group flex-col items-center justify-center gap-2"
           >
-            {/* Halo rotativo cônico (efeito cinematográfico) */}
-            <span
-              aria-hidden
-              className="pointer-events-none absolute -top-6 left-1/2 -translate-x-1/2 w-56 h-56 xl:w-64 xl:h-64 2xl:w-72 2xl:h-72 rounded-full opacity-60 group-hover:opacity-90 transition-opacity animate-halo-spin"
-              style={{
-                background:
-                  "conic-gradient(from 0deg, hsl(var(--primary) / 0.55), transparent 30%, hsl(var(--primary-glow) / 0.45) 55%, transparent 80%, hsl(var(--primary) / 0.55))",
-                filter: "blur(22px)",
-              }}
-            />
-            {/* Halo radial pulsante (atrás da logo) */}
-            <span
-              aria-hidden
-              className="pointer-events-none absolute -top-2 left-1/2 -translate-x-1/2 w-48 h-48 xl:w-56 xl:h-56 2xl:w-64 2xl:h-64 rounded-full bg-[radial-gradient(closest-side,hsl(var(--primary)/0.55),transparent_70%)] blur-2xl opacity-70 group-hover:opacity-100 transition-opacity animate-pulse"
-            />
-
-            {/* Logo com flutuação suave + brilho realista */}
             <img
               src={keraSpaceLogo}
               alt="Kera AI Space in Cloud"
-              className="relative w-40 xl:w-48 2xl:w-56 drop-shadow-[0_8px_28px_hsl(var(--primary)/0.55)] transition-all duration-500 group-hover:scale-105 group-hover:drop-shadow-[0_10px_40px_hsl(var(--primary)/0.85)] animate-logo-float"
-              loading="lazy"
+              className="relative w-48 xl:w-56 2xl:w-64 drop-shadow-[0_8px_24px_hsl(var(--primary)/0.45)] transition-transform duration-300 group-hover:scale-[1.03]"
+              loading="eager"
+              decoding="async"
             />
-
-            {/* Badge animado "Powered by Space in Cloud" */}
-            <span
-              className="relative inline-flex items-center gap-2 rounded-full border border-primary/40 bg-background/70 backdrop-blur-md px-3 py-1.5 text-[11px] font-semibold uppercase tracking-[0.18em] text-foreground/90 animate-badge-glow"
-            >
-              <span
-                aria-hidden
-                className="size-1.5 rounded-full bg-primary shadow-[0_0_8px_hsl(var(--primary))] animate-pulse"
-              />
-              <span
-                className="bg-clip-text text-transparent bg-[linear-gradient(110deg,hsl(var(--foreground))_0%,hsl(var(--primary))_45%,hsl(var(--primary-glow))_55%,hsl(var(--foreground))_100%)] bg-[length:200%_100%] animate-shimmer"
-              >
-                Powered by Space in Cloud
-              </span>
+            <span className="inline-flex items-center gap-2 rounded-full border border-primary/40 bg-background/70 backdrop-blur-md px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-foreground/90">
+              <span aria-hidden className="size-1.5 rounded-full bg-primary" />
+              Powered by Space in Cloud
             </span>
           </a>
           <div className="max-w-3xl mx-auto space-y-2">
