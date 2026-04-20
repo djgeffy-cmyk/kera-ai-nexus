@@ -16,6 +16,7 @@ import {
 } from "@/lib/keraDesktop";
 
 const KeraDesktopPage = () => {
+  const navigate = useNavigate();
   const [info, setInfo] = useState<KeraPlatformInfo | null>(null);
   const [cwd, setCwd] = useState<string>("");
   const [entries, setEntries] = useState<KeraFsEntry[]>([]);
@@ -296,6 +297,47 @@ const KeraDesktopPage = () => {
             </div>
           )}
         </div>
+
+        {/* EXEMPLOS DO QUE PEDIR — atalhos pro chat */}
+        <Card className="p-4 space-y-3 border-primary/30 bg-primary/5">
+          <div className="flex items-center gap-2">
+            <Sparkles className="size-4 text-primary" />
+            <h2 className="text-sm uppercase tracking-wider text-muted-foreground">Exemplos do que pedir pra Kera no chat</h2>
+          </div>
+          <p className="text-xs text-muted-foreground">
+            Clique em um atalho — ele abre o chat e envia a frase automaticamente. A Kera vai usar as ferramentas do desktop pra executar.
+          </p>
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+            {[
+              { label: "Status do PC", icon: Cpu, ask: "Mostra o status do meu PC (CPU, RAM, disco e uptime)." },
+              { label: "Tirar print", icon: Camera, ask: "Tira um print da minha tela." },
+              { label: "Abrir Firefox", icon: Globe, ask: "Abre o Firefox pra mim." },
+              { label: "Abrir VSCode", icon: Terminal, ask: "Abre o VSCode pra mim." },
+              { label: "Listar Downloads", icon: FolderOpen, ask: "Lista os arquivos da minha pasta Downloads." },
+              { label: "Espaço em disco", icon: Cpu, ask: "Quanto espaço livre eu tenho no disco?" },
+              { label: "Copiar pro clipboard", icon: ClipboardCopy, ask: "Copia o texto 'Olá da Kera' pra área de transferência." },
+              { label: "Instalar Spotify", icon: Rocket, ask: "Instala o Spotify aqui no meu PC via Flatpak." },
+              { label: "Buscar app no Flathub", icon: Globe, ask: "Procura o app Discord no Flathub e me diz o ID." },
+            ].map((ex) => {
+              const Icon = ex.icon;
+              return (
+                <Button
+                  key={ex.label}
+                  variant="outline"
+                  size="sm"
+                  className="gap-2 justify-start text-left h-auto py-2 hover:bg-primary/10 hover:border-primary/50"
+                  onClick={() => navigate(`/chat?ask=${encodeURIComponent(ex.ask)}`)}
+                >
+                  <Icon className="size-3.5 shrink-0 text-primary" />
+                  <span className="text-xs truncate">{ex.label}</span>
+                </Button>
+              );
+            })}
+          </div>
+          <div className="text-[11px] text-muted-foreground/80 italic pt-1">
+            💡 Dica: você também pode digitar livremente no chat — tipo "lista os PDFs do meu Documentos" ou "cria um arquivo notas.txt em /home/usuario/Documentos com a frase 'lembrete'".
+          </div>
+        </Card>
 
         {/* CONTROLES DE ENERGIA */}
         <Card className="p-4 space-y-3">
