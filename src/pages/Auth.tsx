@@ -210,17 +210,17 @@ const Auth = () => {
       <div aria-hidden className="absolute inset-0 bg-background/30" />
       {/* Partículas/poeira luminosa flutuando sobre a Kera — dá profundidade */}
       <ParticlesOverlay />
-      {/* Vinheta radial — centro um pouco mais translúcido pra Kera respirar atrás do card */}
+      {/* Vinheta bem leve — quase transparente pra Kera aparecer no fundo */}
       <div
         aria-hidden
         className="absolute inset-0 pointer-events-none"
         style={{
           background:
-            "radial-gradient(ellipse at center, hsl(var(--background) / 0.35) 0%, hsl(var(--background) / 0.55) 60%, hsl(var(--background) / 0.85) 100%)",
+            "radial-gradient(ellipse at center, transparent 0%, hsl(var(--background) / 0.25) 65%, hsl(var(--background) / 0.6) 100%)",
         }}
       />
 
-      <Card className="panel relative w-full max-w-md p-6 sm:p-7 border-primary/30 shadow-glow z-10 backdrop-blur-md bg-card/70 max-h-[calc(100vh-2rem)] overflow-y-auto scrollbar-thin">
+      <Card className="panel relative w-full max-w-sm p-5 sm:p-6 border-primary/25 shadow-glow z-10 backdrop-blur-md bg-card/35 max-h-[calc(100vh-2rem)] overflow-y-auto scrollbar-thin">
         <div className="flex flex-col items-center mb-4">
           <div className="relative size-20 sm:size-24 rounded-full overflow-hidden border-2 border-primary/70 shadow-glow mb-3 bg-background ring-4 ring-primary/20">
             <video
