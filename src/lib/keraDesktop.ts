@@ -19,10 +19,16 @@ export type KeraPlatformInfo = {
 export type KeraDesktopApi = {
   isDesktop: true;
   platform: () => Promise<KeraPlatformInfo>;
+  allowlist: {
+    get: () => Promise<string[]>;
+    add: () => Promise<{ ok: boolean; cancelled?: boolean; list?: string[] }>;
+    remove: (folder: string) => Promise<{ ok: boolean; list: string[] }>;
+    check: (p: string) => Promise<boolean>;
+  };
   fs: {
     list: (dirPath?: string) => Promise<KeraFsEntry[]>;
     read: (filePath: string) => Promise<string>;
-    write: (filePath: string, content: string) => Promise<{ ok: boolean }>;
+    write: (filePath: string, content: string) => Promise<{ ok: boolean; cancelled?: boolean }>;
     delete: (filePath: string) => Promise<{ ok: boolean; cancelled?: boolean }>;
     pickFolder: () => Promise<string | null>;
   };

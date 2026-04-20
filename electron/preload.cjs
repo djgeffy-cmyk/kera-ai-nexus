@@ -1,10 +1,15 @@
 // Ponte segura renderer <-> main. Expõe APIs no `window.kera`.
-// Tudo aqui é controlado: nada de require/fs no renderer puro.
 const { contextBridge, ipcRenderer } = require("electron");
 
 contextBridge.exposeInMainWorld("kera", {
   isDesktop: true,
   platform: () => ipcRenderer.invoke("kera:platform"),
+  allowlist: {
+    get: () => ipcRenderer.invoke("kera:allowlist:get"),
+    add: () => ipcRenderer.invoke("kera:allowlist:add"),
+    remove: (folder) => ipcRenderer.invoke("kera:allowlist:remove", folder),
+    check: (p) => ipcRenderer.invoke("kera:allowlist:check", p),
+  },
   fs: {
     list: (dirPath) => ipcRenderer.invoke("kera:fs:list", dirPath),
     read: (filePath) => ipcRenderer.invoke("kera:fs:read", filePath),
