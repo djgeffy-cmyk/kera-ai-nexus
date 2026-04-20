@@ -90,7 +90,7 @@ const Chat = () => {
   useEffect(() => {
     const apply = () => {
       const isDesktop = window.matchMedia("(min-width: 768px)").matches;
-      const w = isDesktop && sidebarOpen ? "18rem" : "0px";
+      const w = isDesktop && sidebarOpen ? "20rem" : "0px";
       document.documentElement.style.setProperty("--chat-sidebar-w", w);
     };
     apply();
@@ -644,7 +644,7 @@ Por favor, analise: há perda de pacote? jitter alto sugere instabilidade de rot
   })();
 
   const Sidebar = () => (
-    <aside className="h-full w-full md:w-72 panel border-r border-border flex flex-col">
+    <aside className="h-full w-full md:w-80 panel border-r border-border flex flex-col">
       {/* Topo: avatar minimalista */}
       <div className="px-3 pt-4 pb-2 flex items-center gap-2">
         <div
@@ -758,7 +758,7 @@ Por favor, analise: há perda de pacote? jitter alto sugere instabilidade de rot
     <div className="h-screen flex">
       <div
         className={`hidden md:flex transition-all duration-300 ease-in-out overflow-hidden ${
-          sidebarOpen ? "w-72 opacity-100" : "w-0 opacity-0 pointer-events-none"
+          sidebarOpen ? "w-80 opacity-100" : "w-0 opacity-0 pointer-events-none"
         }`}
       >
         <Sidebar />
@@ -842,7 +842,7 @@ Por favor, analise: há perda de pacote? jitter alto sugere instabilidade de rot
             <SheetTrigger asChild>
               <Button variant="ghost" size="icon" className="md:hidden shrink-0 h-9 w-9"><Menu className="size-5" /></Button>
             </SheetTrigger>
-            <SheetContent side="left" className="p-0 w-72 bg-transparent border-r-0"><Sidebar /></SheetContent>
+            <SheetContent side="left" className="p-0 w-80 bg-transparent border-r-0"><Sidebar /></SheetContent>
           </Sheet>
 
           <DropdownMenu>
