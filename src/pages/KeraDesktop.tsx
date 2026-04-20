@@ -1,8 +1,9 @@
 import { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import {
   ArrowLeft, FolderOpen, Power, RotateCcw, Moon, Lock, FileText, Trash2, Save, RefreshCw,
   Monitor, ShieldCheck, Plus, X, ClipboardCopy, ClipboardPaste, Camera, Terminal, Rocket, Cpu, Globe, Download,
+  Sparkles, MessageSquare,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
