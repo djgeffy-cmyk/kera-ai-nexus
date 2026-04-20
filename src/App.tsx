@@ -14,6 +14,7 @@ import KeraDesktopPage from "./pages/KeraDesktop.tsx";
 import { ProtectedRoute } from "./components/ProtectedRoute";
 import Footer from "./components/Footer";
 import { LicitacoesAlertsListener } from "./components/LicitacoesAlertsListener";
+import { AskKeraFab } from "./components/AskKeraFab";
 
 const queryClient = new QueryClient();
 
@@ -35,6 +36,7 @@ const App = () => (
           <Route path="*" element={<NotFound />} />
         </Routes>
         <Footer />
+        <AskKeraFab />
       </HashRouter>
     </TooltipProvider>
   </QueryClientProvider>
