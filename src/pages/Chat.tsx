@@ -787,6 +787,23 @@ Por favor, analise: há perda de pacote? jitter alto sugere instabilidade de rot
               <button className="flex items-center gap-1.5 md:gap-2 hover:bg-secondary/60 px-1.5 md:px-2 py-1 rounded-lg transition min-w-0 max-w-[42vw] md:max-w-none">
                 <span className="size-2 rounded-full bg-primary shadow-glow animate-pulse-glow shrink-0" />
                 <h1 className="font-display text-sm md:text-lg text-glow truncate">{currentAgentName.toUpperCase()}</h1>
+                <a
+                  href="https://app.spaceincloud.com.br/"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  aria-label="Acessar Kera AI Space in Cloud"
+                  title="Kera AI · Space in Cloud"
+                  onClick={(e) => e.stopPropagation()}
+                  className="hidden md:inline-flex items-center shrink-0 ml-1 hover:opacity-80 transition"
+                >
+                  <img
+                    src={keraSpaceLogo}
+                    alt="Kera AI Space in Cloud"
+                    className="h-8 w-auto drop-shadow-[0_2px_8px_hsl(var(--primary)/0.4)] bg-transparent"
+                    loading="eager"
+                    decoding="async"
+                  />
+                </a>
                 <ChevronRight className="size-4 rotate-90 text-muted-foreground shrink-0" />
               </button>
             </DropdownMenuTrigger>
@@ -963,24 +980,6 @@ Por favor, analise: há perda de pacote? jitter alto sugere instabilidade de rot
         </div>
 
         <div className="relative z-10 border-t border-border panel p-3 md:p-4 pb-10 md:pb-12">
-          {/* Space in Cloud — logo estática clicável (desktop), sem caixa de fundo */}
-          <a
-            href="https://app.spaceincloud.com.br/"
-            target="_blank"
-            rel="noopener noreferrer"
-            aria-label="Acessar Kera AI Space in Cloud"
-            title="Kera AI · Space in Cloud — Soluções em Nuvem"
-            className="hidden xl:flex absolute right-4 bottom-16 z-20 group flex-col items-center justify-center gap-1 bg-transparent"
-          >
-            <img
-              src={keraSpaceLogo}
-              alt="Kera AI Space in Cloud"
-              className="relative w-64 xl:w-72 2xl:w-80 drop-shadow-[0_6px_18px_hsl(var(--primary)/0.35)] transition-transform duration-300 group-hover:scale-[1.03] bg-transparent"
-              loading="eager"
-              decoding="async"
-              style={{ background: "transparent" }}
-            />
-          </a>
           <div className="max-w-3xl mx-auto space-y-2">
             {isSentinela && (
               <div className="flex flex-wrap justify-center gap-2">
