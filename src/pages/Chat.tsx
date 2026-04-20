@@ -1019,26 +1019,23 @@ Por favor, analise: há perda de pacote? jitter alto sugere instabilidade de rot
         </div>
 
         <div className="relative z-10 border-t border-border panel p-3 md:p-4 pb-10 md:pb-12">
-          {/* Space in Cloud — logo estática clicável (desktop) */}
+          {/* Space in Cloud — logo estática clicável (desktop), sem caixa de fundo */}
           <a
             href="https://app.spaceincloud.com.br/"
             target="_blank"
             rel="noopener noreferrer"
             aria-label="Acessar Kera AI Space in Cloud"
             title="Kera AI · Space in Cloud — Soluções em Nuvem"
-            className="hidden xl:flex absolute right-4 bottom-12 z-20 group flex-col items-center justify-center gap-2"
+            className="hidden xl:flex absolute right-4 bottom-16 z-20 group flex-col items-center justify-center gap-1 bg-transparent"
           >
             <img
               src={keraSpaceLogo}
               alt="Kera AI Space in Cloud"
-              className="relative w-48 xl:w-56 2xl:w-64 drop-shadow-[0_8px_24px_hsl(var(--primary)/0.45)] transition-transform duration-300 group-hover:scale-[1.03]"
+              className="relative w-48 xl:w-56 2xl:w-64 drop-shadow-[0_6px_18px_hsl(var(--primary)/0.35)] transition-transform duration-300 group-hover:scale-[1.03] bg-transparent"
               loading="eager"
               decoding="async"
+              style={{ background: "transparent" }}
             />
-            <span className="inline-flex items-center gap-2 rounded-full border border-primary/40 bg-background/70 backdrop-blur-md px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-foreground/90">
-              <span aria-hidden className="size-1.5 rounded-full bg-primary" />
-              Powered by Space in Cloud
-            </span>
           </a>
           <div className="max-w-3xl mx-auto space-y-2">
             {isSentinela && (
