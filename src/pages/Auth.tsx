@@ -23,6 +23,63 @@ const Auth = () => {
   const [challengeId, setChallengeId] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
+  // Refs pro parallax (movimento sutil via CSS vars — não re-renderiza React)
+  const mainRef = useRef<HTMLElement | null>(null);
+  const bgVideoRef = useRef<HTMLVideoElement | null>(null);
+  const rafRef = useRef<number | null>(null);
+
+  useEffect(() => {
+    const el = mainRef.current;
+    const video = bgVideoRef.current;
+    if (!el || !video) return;
+    // Respeita preferência de movimento reduzido
+    const prefersReduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    if (prefersReduced) return;
+
+    const MAX = 14; // deslocamento máximo em px — bem sutil
+    let targetX = 0, targetY = 0, currX = 0, currY = 0;
+
+    const onMove = (e: PointerEvent) => {
+      const rect = el.getBoundingClientRect();
+      const nx = (e.clientX - rect.left) / rect.width - 0.5;  // -0.5..0.5
+      const ny = (e.clientY - rect.top) / rect.height - 0.5;
+      targetX = -nx * MAX * 2; // inverso pro efeito parallax natural
+      targetY = -ny * MAX * 2;
+      if (rafRef.current == null) tick();
+    };
+
+    const onLeave = () => {
+      targetX = 0;
+      targetY = 0;
+      if (rafRef.current == null) tick();
+    };
+
+    const tick = () => {
+      // easing — aproxima 12% por frame, dá uma sensação suave/orgânica
+      currX += (targetX - currX) * 0.12;
+      currY += (targetY - currY) * 0.12;
+      video.style.transform = `scale(1.08) translate3d(${currX.toFixed(2)}px, ${currY.toFixed(2)}px, 0)`;
+      if (Math.abs(targetX - currX) > 0.1 || Math.abs(targetY - currY) > 0.1) {
+        rafRef.current = requestAnimationFrame(tick);
+      } else {
+        rafRef.current = null;
+      }
+    };
+
+    // estado inicial — escala leve pra esconder bordas no movimento
+    video.style.transform = "scale(1.08) translate3d(0,0,0)";
+    video.style.transition = "transform 120ms linear";
+    video.style.willChange = "transform";
+
+    el.addEventListener("pointermove", onMove);
+    el.addEventListener("pointerleave", onLeave);
+    return () => {
+      el.removeEventListener("pointermove", onMove);
+      el.removeEventListener("pointerleave", onLeave);
+      if (rafRef.current != null) cancelAnimationFrame(rafRef.current);
+    };
+  }, []);
+
   // Reset password modal
   const [resetOpen, setResetOpen] = useState(false);
   const [resetEmail, setResetEmail] = useState("");
