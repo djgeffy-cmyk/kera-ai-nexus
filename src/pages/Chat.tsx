@@ -968,12 +968,53 @@ Por favor, analise: há perda de pacote? jitter alto sugere instabilidade de rot
                 speaking={voice.speaking}
                 audioElement={voice.audioRef.current}
                 lastReplyText={lastAssistantText}
+                vrmUrl={customVrmUrl ? customVrmUrl : undefined}
               />
               {/* Indicador "ao vivo" */}
               <div className="absolute top-2 left-2 flex items-center gap-1.5 text-[10px] font-medium text-primary bg-background/70 backdrop-blur-sm px-2 py-0.5 rounded-full border border-primary/30">
                 <span className={`size-1.5 rounded-full ${voice.speaking ? "bg-primary animate-pulse" : "bg-muted-foreground"}`} />
                 Kera 3D
               </div>
+              {/* Controles de upload do VRM personalizado */}
+              <div className="pointer-events-auto absolute top-2 right-2 flex gap-1">
+                <input
+                  ref={vrmFileInputRef}
+                  type="file"
+                  accept=".vrm"
+                  className="hidden"
+                  onChange={(e) => {
+                    const f = e.target.files?.[0];
+                    if (f) handleVrmUpload(f);
+                    e.currentTarget.value = "";
+                  }}
+                />
+                <Button
+                  size="icon"
+                  variant="ghost"
+                  onClick={() => vrmFileInputRef.current?.click()}
+                  title="Subir seu .vrm da Kera (VRoid Studio)"
+                  className="h-7 w-7 bg-background/70 backdrop-blur-sm border border-primary/30 hover:bg-primary/20"
+                >
+                  <Plus className="size-3.5" />
+                </Button>
+                {customVrmUrl ? (
+                  <Button
+                    size="icon"
+                    variant="ghost"
+                    onClick={handleVrmReset}
+                    title="Voltar ao modelo padrão"
+                    className="h-7 w-7 bg-background/70 backdrop-blur-sm border border-primary/30 hover:bg-destructive/20"
+                  >
+                    <Trash2 className="size-3.5" />
+                  </Button>
+                ) : null}
+              </div>
+              {/* Hint quando ainda está no modelo padrão */}
+              {customVrmUrl === "" && (
+                <div className="pointer-events-none absolute bottom-2 left-2 right-2 text-[10px] text-muted-foreground bg-background/70 backdrop-blur-sm rounded-md px-2 py-1 border border-border/50 text-center">
+                  Modelo padrão · clique <Plus className="inline size-2.5 -mt-0.5" /> pra subir seu .vrm
+                </div>
+              )}
             </div>
           </div>
         )}
