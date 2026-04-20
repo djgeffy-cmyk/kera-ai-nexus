@@ -15,7 +15,7 @@ const Footer = () => {
           <img
             src={keraSpaceLogo}
             alt="Kera AI Space in Cloud"
-            className="h-9 w-auto bg-transparent"
+            className="h-14 w-auto bg-transparent"
             loading="lazy"
             decoding="async"
             style={{ background: "transparent" }}
