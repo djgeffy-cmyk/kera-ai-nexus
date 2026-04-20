@@ -593,25 +593,15 @@ Por favor, analise: há perda de pacote? jitter alto sugere instabilidade de rot
 
   const Sidebar = () => (
     <aside className="h-full w-full md:w-72 panel border-r border-border flex flex-col">
-      {/* Topo: avatar minimalista + nova conversa */}
-      <div className="px-3 pt-4 pb-2 flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <div
-            className="w-8 h-8 rounded-full overflow-hidden ring-1 ring-border"
-            style={{ boxShadow: "0 0 12px hsl(var(--primary) / 0.25)" }}
-          >
-            <img src={keraLogo} alt="Kera AI" className="w-full h-full object-cover" style={{ transform: "scale(1.1)" }} />
-          </div>
-          <span className="font-display text-sm tracking-wide">Kera</span>
-        </div>
-        <button
-          onClick={() => newConversation()}
-          aria-label="Nova conversa"
-          title="Nova conversa"
-          className="text-muted-foreground hover:text-primary p-1.5 rounded-md hover:bg-secondary/60 transition"
+      {/* Topo: avatar minimalista */}
+      <div className="px-3 pt-4 pb-2 flex items-center gap-2">
+        <div
+          className="w-8 h-8 rounded-full overflow-hidden ring-1 ring-border"
+          style={{ boxShadow: "0 0 12px hsl(var(--primary) / 0.25)" }}
         >
-          <Plus className="size-4" />
-        </button>
+          <img src={keraLogo} alt="Kera AI" className="w-full h-full object-cover" style={{ transform: "scale(1.1)" }} />
+        </div>
+        <span className="font-display text-sm tracking-wide">Kera</span>
       </div>
 
       {/* Ações principais — estilo Grok (linhas limpas) */}
@@ -817,16 +807,6 @@ Por favor, analise: há perda de pacote? jitter alto sugere instabilidade de rot
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
-
-          <Button
-            variant="ghost" size="icon"
-            onClick={() => newConversation()}
-            aria-label="Nova conversa"
-            title="Nova conversa"
-            className="text-muted-foreground hover:text-primary shrink-0 h-9 w-9"
-          >
-            <Plus className="size-5" />
-          </Button>
 
           <Button
             variant="ghost" size="icon"
