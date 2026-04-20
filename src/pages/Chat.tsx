@@ -813,6 +813,15 @@ Por favor, analise: há perda de pacote? jitter alto sugere instabilidade de rot
           </Button>
 
           <div className="ml-auto flex items-center gap-1.5 md:gap-2 shrink-0">
+            <Button
+              variant="ghost" size="icon"
+              onClick={toggleTheme}
+              aria-label={theme === "dark" ? "Ativar tema claro" : "Ativar tema escuro"}
+              title={theme === "dark" ? "Tema claro" : "Tema escuro"}
+              className="text-muted-foreground hover:text-primary shrink-0 h-9 w-9"
+            >
+              {theme === "dark" ? <Sun className="size-5" /> : <Moon className="size-5" />}
+            </Button>
             <Select value={provider} onValueChange={(v) => { setProvider(v as ProviderId); setPreferredProvider(v as ProviderId); }}>
               <SelectTrigger className="h-8 w-[92px] sm:w-[140px] md:w-[180px] text-xs bg-input/40 border-border px-2">
                 <SelectValue />
