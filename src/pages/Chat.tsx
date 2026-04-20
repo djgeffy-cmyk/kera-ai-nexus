@@ -1020,15 +1020,15 @@ Por favor, analise: há perda de pacote? jitter alto sugere instabilidade de rot
               </div>
             </div>
           </div>
-          <div className="flex justify-center mt-2">
-            <p className="text-[11px] text-muted-foreground/90 text-center px-3 py-1 rounded-full bg-background/60 backdrop-blur-sm border border-border/40 max-w-[90%] truncate">
-              {alwaysListen.isActive
-                ? '👂 Modo sempre escutando ativo — diga "Kera" + sua pergunta'
-                : voiceMode
-                  ? "🔊 Modo voz ativo — respostas serão faladas"
-                  : "Anexe imagens (PNG/JPG) ou arquivos de texto · Cole prints com Ctrl+V"}
-            </p>
-          </div>
+          {(alwaysListen.isActive || voiceMode) && (
+            <div className="flex justify-center mt-2">
+              <p className="text-[11px] text-muted-foreground/90 text-center px-3 py-1 rounded-full bg-background/60 backdrop-blur-sm border border-border/40">
+                {alwaysListen.isActive
+                  ? '👂 Modo sempre escutando ativo — diga "Kera" + sua pergunta'
+                  : "🔊 Modo voz ativo — respostas serão faladas"}
+              </p>
+            </div>
+          )}
         </div>
       </div>
       {voiceMode && (
