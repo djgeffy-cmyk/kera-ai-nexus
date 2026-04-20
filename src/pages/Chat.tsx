@@ -852,7 +852,7 @@ Por favor, analise: há perda de pacote? jitter alto sugere instabilidade de rot
           </div>
         </div>
 
-        <div className="border-t border-border panel p-3 md:p-4">
+        <div className="border-t border-border panel p-3 md:p-4 pb-10 md:pb-12">
           <div className="max-w-3xl mx-auto space-y-2">
             {isSentinela && (
               <div className="flex flex-wrap justify-center gap-2">
@@ -1020,13 +1020,15 @@ Por favor, analise: há perda de pacote? jitter alto sugere instabilidade de rot
               </div>
             </div>
           </div>
-          <p className="text-[11px] text-muted-foreground text-center mt-2">
-            {alwaysListen.isActive
-              ? '👂 Modo sempre escutando ativo — diga "Kera" + sua pergunta'
-              : voiceMode
-                ? "🔊 Modo voz ativo — respostas serão faladas"
-                : "Anexe imagens (PNG/JPG) ou arquivos de texto · Cole prints com Ctrl+V"}
-          </p>
+          <div className="flex justify-center mt-2">
+            <p className="text-[11px] text-muted-foreground/90 text-center px-3 py-1 rounded-full bg-background/60 backdrop-blur-sm border border-border/40 max-w-[90%] truncate">
+              {alwaysListen.isActive
+                ? '👂 Modo sempre escutando ativo — diga "Kera" + sua pergunta'
+                : voiceMode
+                  ? "🔊 Modo voz ativo — respostas serão faladas"
+                  : "Anexe imagens (PNG/JPG) ou arquivos de texto · Cole prints com Ctrl+V"}
+            </p>
+          </div>
         </div>
       </div>
       {voiceMode && (
