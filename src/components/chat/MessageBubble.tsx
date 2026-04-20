@@ -1,8 +1,10 @@
+import { useState } from "react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import keraAvatar from "@/assets/kera-avatar.png";
-import { User, FileText, Volume2, Square, Sparkles, ArrowRight } from "lucide-react";
+import { User, FileText, Volume2, Square, Sparkles, ArrowRight, Copy, Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { toast } from "sonner";
 
 // Detecta se a resposta do especialista sugere trocar pra Kera principal.
 // Heurística: cobre frases como "use a Kera", "troca pra Kera", "Kera principal",
@@ -89,10 +91,19 @@ export const MessageBubble = ({
   showSwitchToKera?: boolean;
   onSwitchToKera?: () => void;
 }) => {
+  const [copied, setCopied] = useState(false);
   const isUser = msg.role === "user";
   const plainText = typeof msg.content === "string" ? msg.content : "";
   const shouldOfferSwitch =
     !isUser && !streaming && !!showSwitchToKera && !!onSwitchToKera && suggestsKeraSwitch(plainText);
+
+  const handleCopy = () => {
+    navigator.clipboard.writeText(plainText);
+    setCopied(true);
+    toast.success("Resposta copiada!");
+    setTimeout(() => setCopied(false), 2000);
+  };
+
   return (
     <div className={`flex gap-3 ${isUser ? "flex-row-reverse" : ""} animate-in fade-in slide-in-from-bottom-2 duration-300`}>
       <div className={`shrink-0 size-10 rounded-full overflow-hidden border ${isUser ? "border-border bg-secondary flex items-center justify-center" : "border-primary/50 shadow-glow bg-background ring-2 ring-primary/20"}`}>
@@ -133,22 +144,35 @@ export const MessageBubble = ({
                 </Button>
               </div>
             )}
-            {!streaming && onSpeak && plainText.trim() && (
-              <div className="mt-2 -mb-1 flex justify-end">
+            {!streaming && plainText.trim() && (
+              <div className="mt-2 -mb-1 flex justify-end items-center gap-1">
                 <Button
                   size="sm"
                   variant="ghost"
                   className="h-7 px-2 text-xs text-muted-foreground hover:text-primary"
-                  onClick={() => {
-                    if (isSpeaking) onStopSpeak?.();
-                    else onSpeak(plainText.replace(/```[\s\S]*?```/g, "(bloco de código)").replace(/[#*_`>]/g, ""));
-                  }}
-                  aria-label={isSpeaking ? "Parar áudio" : "Ouvir resposta"}
-                  title={isSpeaking ? "Parar" : "Ouvir com voz da Kera"}
+                  onClick={handleCopy}
+                  title="Copiar resposta"
                 >
-                  {isSpeaking ? <Square className="size-3.5 mr-1" /> : <Volume2 className="size-3.5 mr-1" />}
-                  {isSpeaking ? "Parar" : "Ouvir"}
+                  {copied ? <Check className="size-3.5 mr-1 text-green-500" /> : <Copy className="size-3.5 mr-1" />}
+                  {copied ? "Copiado" : "Copiar"}
                 </Button>
+                
+                {onSpeak && (
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    className="h-7 px-2 text-xs text-muted-foreground hover:text-primary"
+                    onClick={() => {
+                      if (isSpeaking) onStopSpeak?.();
+                      else onSpeak(plainText.replace(/```[\s\S]*?```/g, "(bloco de código)").replace(/[#*_`>]/g, ""));
+                    }}
+                    aria-label={isSpeaking ? "Parar áudio" : "Ouvir resposta"}
+                    title={isSpeaking ? "Parar" : "Ouvir com voz da Kera"}
+                  >
+                    {isSpeaking ? <Square className="size-3.5 mr-1" /> : <Volume2 className="size-3.5 mr-1" />}
+                    {isSpeaking ? "Parar" : "Ouvir"}
+                  </Button>
+                )}
               </div>
             )}
           </>
