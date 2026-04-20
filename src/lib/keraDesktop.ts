@@ -81,6 +81,11 @@ export type KeraDesktopApi = {
     lock: () => Promise<{ ok: boolean; cancelled?: boolean; error?: string }>;
     cancel: () => Promise<{ ok: boolean; error?: string }>;
   };
+  update: {
+    check: () => Promise<{ ok: boolean; skipped?: boolean; reason?: string; updateInfo?: { version?: string } | null; error?: string }>;
+    install: () => Promise<{ ok: boolean }>;
+    onStatus: (cb: (payload: { state: string; version?: string; percent?: number; message?: string }) => void) => () => void;
+  };
 };
 
 declare global {

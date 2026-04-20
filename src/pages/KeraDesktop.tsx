@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import {
   ArrowLeft, FolderOpen, Power, RotateCcw, Moon, Lock, FileText, Trash2, Save, RefreshCw,
-  Monitor, ShieldCheck, Plus, X, ClipboardCopy, ClipboardPaste, Camera, Terminal, Rocket, Cpu, Globe,
+  Monitor, ShieldCheck, Plus, X, ClipboardCopy, ClipboardPaste, Camera, Terminal, Rocket, Cpu, Globe, Download,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -32,6 +32,43 @@ const KeraDesktopPage = () => {
   const [appName, setAppName] = useState("");
   const [cmd, setCmd] = useState("");
   const [execResult, setExecResult] = useState<KeraExecResult | null>(null);
+  const [updateStatus, setUpdateStatus] = useState<{ state: string; version?: string; percent?: number; message?: string } | null>(null);
+  const [checkingUpdate, setCheckingUpdate] = useState(false);
+
+  useEffect(() => {
+    const k = getKera();
+    if (!k) return;
+    const off = k.update.onStatus((payload) => setUpdateStatus(payload));
+    return () => { off?.(); };
+  }, []);
+
+  const checkUpdate = async () => {
+    const k = getKera(); if (!k) return;
+    setCheckingUpdate(true);
+    setUpdateStatus({ state: "checking" });
+    try {
+      const r = await k.update.check();
+      if (r.skipped) {
+        toast.info(`Auto-update desativado (${r.reason || "modo dev"})`);
+        setUpdateStatus({ state: "skipped", message: r.reason });
+      } else if (!r.ok) {
+        toast.error(r.error || "Falha ao verificar");
+      } else if (r.updateInfo?.version) {
+        toast.success(`Atualização disponível: v${r.updateInfo.version}`);
+      } else {
+        toast.success("Você está na versão mais recente");
+      }
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Erro ao verificar");
+    } finally {
+      setCheckingUpdate(false);
+    }
+  };
+
+  const installUpdate = async () => {
+    const k = getKera(); if (!k) return;
+    await k.update.install();
+  };
 
   const refreshAllowlist = async () => {
     const k = getKera();
@@ -258,6 +295,40 @@ const KeraDesktopPage = () => {
               <Lock className="size-4" /> Bloquear
             </Button>
           </div>
+        </Card>
+
+        {/* ATUALIZAÇÕES */}
+        <Card className="p-4 space-y-3">
+          <div className="flex items-center justify-between gap-2 flex-wrap">
+            <div className="flex items-center gap-2">
+              <Download className="size-4 text-primary" />
+              <h2 className="text-sm uppercase tracking-wider text-muted-foreground">Atualizações</h2>
+            </div>
+            <div className="flex gap-2">
+              <Button onClick={checkUpdate} size="sm" variant="outline" className="gap-2" disabled={checkingUpdate}>
+                <RefreshCw className={`size-4 ${checkingUpdate ? "animate-spin" : ""}`} /> Verificar atualizações
+              </Button>
+              {updateStatus?.state === "downloaded" && (
+                <Button onClick={installUpdate} size="sm" className="gap-2">
+                  <Download className="size-4" /> Reiniciar e instalar
+                </Button>
+              )}
+            </div>
+          </div>
+          <p className="text-xs text-muted-foreground">
+            Versão atual: <span className="font-mono text-foreground">v{info?.version || "—"}</span>. Atualizações são baixadas automaticamente em background.
+          </p>
+          {updateStatus && (
+            <div className="text-xs font-mono px-3 py-2 rounded-md bg-secondary/40">
+              {updateStatus.state === "checking" && "Verificando..."}
+              {updateStatus.state === "available" && `📦 Disponível: v${updateStatus.version} — baixando…`}
+              {updateStatus.state === "downloading" && `⬇ Baixando: ${updateStatus.percent ?? 0}%`}
+              {updateStatus.state === "downloaded" && `✅ v${updateStatus.version} pronta. Reinicie pra instalar.`}
+              {updateStatus.state === "up-to-date" && "✓ Você está na versão mais recente."}
+              {updateStatus.state === "skipped" && `⚠ Auto-update desativado (${updateStatus.message || "dev"}).`}
+              {updateStatus.state === "error" && `✗ Erro: ${updateStatus.message}`}
+            </div>
+          )}
         </Card>
 
         {/* PASTAS AUTORIZADAS — allow-list de segurança */}
