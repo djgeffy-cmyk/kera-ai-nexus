@@ -23,6 +23,7 @@ import keraJuridicaBgVideo from "@/assets/kera-juridica-bg.mp4.asset.json";
 import keraSentinelaBgVideo from "@/assets/kera-sentinela-bg.mp4.asset.json";
 import keraNutriBgVideo from "@/assets/kera-nutri-bg.mp4.asset.json";
 import keraGamerBgVideo from "@/assets/kera-gamer-bg.mp4.asset.json";
+import keraSpaceLogo from "@/assets/kera-spaceincloud-logo.png";
 
 const AGENT_BG_VIDEOS: Record<string, string> = {
   "kera": keraBgVideo.url,
@@ -939,6 +940,23 @@ Por favor, analise: há perda de pacote? jitter alto sugere instabilidade de rot
         </div>
 
         <div className="relative z-10 border-t border-border panel p-3 md:p-4 pb-10 md:pb-12">
+          {/* Space in Cloud — logo flutuante clicável ao lado do chat (desktop) */}
+          <a
+            href="https://app.spaceincloud.com.br/"
+            target="_blank"
+            rel="noopener noreferrer"
+            aria-label="Acessar Kera AI Space in Cloud"
+            title="Kera AI · Space in Cloud — Soluções em Nuvem"
+            className="hidden xl:flex absolute right-4 bottom-12 z-20 group items-center justify-center"
+          >
+            <span className="absolute inset-0 -m-4 rounded-full bg-[radial-gradient(closest-side,hsl(var(--primary)/0.45),transparent_70%)] blur-xl opacity-70 group-hover:opacity-100 transition-opacity animate-pulse" />
+            <img
+              src={keraSpaceLogo}
+              alt="Kera AI Space in Cloud"
+              className="relative w-40 xl:w-48 2xl:w-56 drop-shadow-[0_0_22px_hsl(var(--primary)/0.55)] transition-transform duration-300 group-hover:scale-105 group-hover:drop-shadow-[0_0_30px_hsl(var(--primary)/0.8)]"
+              loading="lazy"
+            />
+          </a>
           <div className="max-w-3xl mx-auto space-y-2">
             {isSentinela && (
               <div className="flex flex-wrap justify-center gap-2">
