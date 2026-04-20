@@ -810,16 +810,6 @@ Por favor, analise: há perda de pacote? jitter alto sugere instabilidade de rot
 
           <Button
             variant="ghost" size="icon"
-            onClick={() => newConversation()}
-            aria-label="Nova conversa"
-            title="Nova conversa"
-            className="text-muted-foreground hover:text-primary shrink-0 h-9 w-9"
-          >
-            <Plus className="size-5" />
-          </Button>
-
-          <Button
-            variant="ghost" size="icon"
             onClick={handleExportPdf}
             aria-label="Exportar conversa em PDF"
             title="Exportar PDF"
