@@ -39,6 +39,7 @@ const KeraDesktopPage = () => {
   const [videosStatus, setVideosStatus] = useState<{ cached: string[]; missing: string[]; total: number; dir: string } | null>(null);
   const [videosDownloading, setVideosDownloading] = useState(false);
   const [videosProgress, setVideosProgress] = useState<{ name: string; received: number; total: number } | null>(null);
+  const [mascotVisible, setMascotVisible] = useState(false);
 
   useEffect(() => {
     const k = getKera();
@@ -48,6 +49,7 @@ const KeraDesktopPage = () => {
     k.videos.status().then((s) =>
       setVideosStatus({ cached: s.cached, missing: s.missing, total: s.total, dir: s.dir }),
     ).catch(() => undefined);
+    k.mascot?.status().then((s) => setMascotVisible(s.visible)).catch(() => undefined);
     return () => { off?.(); offV?.(); };
   }, []);
 
