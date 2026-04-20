@@ -6,8 +6,15 @@ const { execSync } = require('child_process');
 
 const ROOT = path.resolve(__dirname, '..');
 
+// Plataforma alvo: definida pela env BUILD_PLATFORM (win32 | linux | darwin).
+// Default = win32 pra manter retrocompatibilidade.
+const PLATFORM = process.env.BUILD_PLATFORM || 'win32';
+const ARCH = process.env.BUILD_ARCH || 'x64';
+const ARTIFACT_NAME = `KeraDesktop-${PLATFORM}-${ARCH}`;
+
 async function bundle() {
     console.log('--- Geverson, iniciando o empacotamento... segura a onda ---');
+    console.log(`Alvo: ${PLATFORM}-${ARCH}`);
     
     // 1. Build Vite
     console.log('[1/3] Gerando build do Vite...');
@@ -29,8 +36,8 @@ async function bundle() {
     const appPaths = await packager({
         dir: '.',
         name: 'KeraDesktop',
-        platform: 'win32',
-        arch: 'x64',
+        platform: PLATFORM,
+        arch: ARCH,
         out: 'dist-electron',
         overwrite: true,
         asar: true,
@@ -51,7 +58,7 @@ async function bundle() {
 
     // 3. Compactar para ZIP
     const releaseDir = path.join(ROOT, 'release-builds');
-    const outputZip = path.join(releaseDir, 'KeraDesktop-win32-x64.zip');
+    const outputZip = path.join(releaseDir, `${ARTIFACT_NAME}.zip`);
     
     if (!fs.existsSync(releaseDir)) {
         fs.mkdirSync(releaseDir, { recursive: true });
