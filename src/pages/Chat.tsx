@@ -45,6 +45,7 @@ import { isImageRequest, extractImagePrompt } from "@/lib/imageDetect";
 import { exportConversationToPdf } from "@/lib/exportPdf";
 import { VoiceStatusIndicator } from "@/components/VoiceStatusIndicator";
 import { useTheme } from "@/hooks/useTheme";
+import { GalleryDialog } from "@/components/GalleryDialog";
 
 type Conversation = { id: string; title: string; updated_at: string; agent_key: string };
 type CustomAgent = { id: string; name: string; system_prompt: string; description: string | null };
@@ -66,6 +67,7 @@ const Chat = () => {
   const [input, setInput] = useState("");
   const [streaming, setStreaming] = useState(false);
   const [userId, setUserId] = useState<string | null>(null);
+  const [galleryOpen, setGalleryOpen] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
   const [provider, setProvider] = useState<ProviderId>(getPreferredProvider());
   // Modo voz NÃO persiste — sempre começa desligado a cada sessão para evitar
@@ -629,7 +631,7 @@ Por favor, analise: há perda de pacote? jitter alto sugere instabilidade de rot
           <span>Agentes</span>
         </button>
         <button
-          onClick={() => toast.info("Galeria em breve")}
+          onClick={() => setGalleryOpen(true)}
           className="w-full flex items-center gap-3 px-2.5 py-2 rounded-md hover:bg-secondary/60 transition text-sm"
         >
           <ImageIcon className="size-4 text-muted-foreground" />
@@ -638,48 +640,6 @@ Por favor, analise: há perda de pacote? jitter alto sugere instabilidade de rot
       </nav>
 
       <ScrollArea className="flex-1">
-        {/* Agentes */}
-        <div className="px-2 pt-3 pb-1">
-          <h3 className="text-[11px] uppercase tracking-wider text-muted-foreground/70 px-2.5 mb-1">Agentes</h3>
-          <button
-            onClick={() => navigate("/agents")}
-            className="w-full flex items-center gap-3 px-2.5 py-1.5 rounded-md hover:bg-secondary/60 transition text-sm text-muted-foreground"
-          >
-            <FolderPlus className="size-4" />
-            <span>Novo agente</span>
-          </button>
-          {BUILTIN_AGENTS.map(a => {
-            const Icon = a.icon;
-            const active = agentKey === a.key;
-            return (
-              <button
-                key={a.key}
-                onClick={() => { setAgentKey(a.key); newConversation(a.key); }}
-                className={`w-full flex items-center gap-3 px-2.5 py-1.5 rounded-md transition text-sm ${
-                  active ? "bg-primary/10 text-primary" : "hover:bg-secondary/60"
-                }`}
-              >
-                <Icon className={`size-4 ${a.iconColor}`} />
-                <span className="truncate">{a.name}</span>
-              </button>
-            );
-          })}
-          {customAgents.map(a => {
-            const active = agentKey === a.id;
-            return (
-              <button
-                key={a.id}
-                onClick={() => { setAgentKey(a.id); newConversation(a.id); }}
-                className={`w-full flex items-center gap-3 px-2.5 py-1.5 rounded-md transition text-sm ${
-                  active ? "bg-primary/10 text-primary" : "hover:bg-secondary/60"
-                }`}
-              >
-                <Bot className="size-4 text-cyan-400" />
-                <span className="truncate">{a.name}</span>
-              </button>
-            );
-          })}
-        </div>
 
         {/* Histórico agrupado */}
         <div className="px-2 pt-3 pb-4">
@@ -1188,6 +1148,7 @@ Por favor, analise: há perda de pacote? jitter alto sugere instabilidade de rot
           speaking={voice.speaking}
         />
       )}
+      <GalleryDialog open={galleryOpen} onOpenChange={setGalleryOpen} userId={userId} />
     </div>
   );
 };
