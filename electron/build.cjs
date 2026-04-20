@@ -1,105 +1,22 @@
-const path = require('path');
-const fs = require('fs');
-const zip = require('bestzip');
-const { execSync } = require('child_process');
+// Build local opcional. No CI, prefira `npm run electron:release`
+// que usa electron-builder direto e publica no GitHub Releases.
+const { execSync } = require("child_process");
+const path = require("path");
 
-const ROOT = path.resolve(__dirname, '..');
+const ROOT = path.resolve(__dirname, "..");
 
-// Plataforma alvo: definida pela env BUILD_PLATFORM (win32 | linux | darwin).
-const PLATFORM = process.env.BUILD_PLATFORM || (process.platform === 'win32' ? 'win32' : 'linux');
-const ARCH = process.env.BUILD_ARCH || 'x64';
-const ARTIFACT_NAME = `KeraDesktop-${PLATFORM}-${ARCH}`;
+console.log("[1/2] Vite build...");
+execSync("npm run build", {
+  stdio: "inherit",
+  cwd: ROOT,
+  env: { ...process.env, ELECTRON_BUILD: "true" },
+});
 
-async function bundle() {
-    console.log('--- Geverson, iniciando o empacotamento... segura a onda ---');
-    console.log(`Alvo: ${PLATFORM}-${ARCH}`);
+console.log("[2/2] electron-builder (AppImage)...");
+execSync("npx electron-builder --linux AppImage --config electron-builder.config.cjs", {
+  stdio: "inherit",
+  cwd: ROOT,
+  env: { ...process.env },
+});
 
-    // Alerta de Espaços no Caminho (Linux/Bug 1)
-    if (ROOT.includes(' ')) {
-        console.warn('\n⚠️  ATENÇÃO: O diretório atual contém espaços. No Linux, isso pode quebrar o Electron.');
-        console.warn('Sugestão: Mova o projeto para uma pasta sem espaços (ex: ~/KeraApp).\n');
-    }
-
-    // @electron/packager v19+ é ESM puro — precisamos de import() dinâmico aqui no CJS.
-    const packagerMod = await import('@electron/packager');
-    const { packager } = packagerMod;
-
-    if (typeof packager !== 'function') {
-        console.error('Falha ao carregar @electron/packager. Exports disponíveis:', Object.keys(packagerMod));
-        process.exit(1);
-    }
-
-    // 1. Build Vite
-    console.log('[1/3] Gerando build do Vite...');
-    try {
-        execSync('npm run build', { stdio: 'inherit', cwd: ROOT, env: { ...process.env, ELECTRON_BUILD: 'true' } });
-    } catch (err) {
-        console.error('Erro no build do Vite:', err);
-        process.exit(1);
-    }
-
-    // 2. Empacotar com Electron Packager
-    console.log('[2/3] Empacotando com Electron Packager...');
-    const outDir = path.join(ROOT, 'dist-package');
-
-    if (fs.existsSync(outDir)) {
-        fs.rmSync(outDir, { recursive: true, force: true });
-    }
-
-    const appPaths = await packager({
-        dir: ROOT,
-        name: 'KeraDesktop',
-        platform: PLATFORM,
-        arch: ARCH,
-        out: outDir,
-        overwrite: true,
-        asar: true,
-        prune: true,
-        electronVersion: '41.2.1', // Sincronizado com devDependencies
-        ignore: [
-            /^\/src/,
-            /^\/public/,
-            /^\/supabase/,
-            /^\/\.git/,
-            /^\/dist-package/,
-            /^\/dist-electron/,
-            /^\/release-builds/
-        ]
-    });
-
-    const buildPath = appPaths[0];
-    const folderName = path.basename(buildPath);
-    console.log(`Build finalizado em: ${buildPath}`);
-
-    // 3. Compactar para ZIP
-    const releaseDir = path.join(ROOT, 'release-builds');
-    const outputZip = path.join(releaseDir, `${ARTIFACT_NAME}.zip`);
-
-    if (!fs.existsSync(releaseDir)) {
-        fs.mkdirSync(releaseDir, { recursive: true });
-    }
-
-    if (fs.existsSync(outputZip)) {
-        fs.unlinkSync(outputZip);
-    }
-
-    console.log('[3/3] Compactando para ZIP...');
-
-    try {
-        await zip({
-            source: folderName,
-            cwd: outDir,
-            destination: outputZip
-        });
-        console.log(`\n✅ Build ZIP pronto, Geverson! Arquivo disponível em: ${outputZip}`);
-        console.log('\n🐧 NOTA PARA LINUX (Bug 3):');
-        console.log('Se o chrome-sandbox falhar, rode:');
-        console.log('sudo chown root:root chrome-sandbox && sudo chmod 4755 chrome-sandbox');
-        console.log('Ou inicie com --no-sandbox');
-    } catch (err) {
-        console.error('Erro na compressão:', err);
-        process.exit(1);
-    }
-}
-
-bundle();
+console.log("\n✅ Pronto! Veja em release-builds/*.AppImage");
