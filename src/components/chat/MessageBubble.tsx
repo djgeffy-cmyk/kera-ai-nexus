@@ -1,6 +1,43 @@
 import { useState } from "react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
+
+const CodeBlock = ({ inline, className, children, ...props }: any) => {
+  const [copied, setCopied] = useState(false);
+  const text = String(children).replace(/\n$/, "");
+
+  if (inline) {
+    return (
+      <code className="px-1.5 py-0.5 rounded bg-muted text-primary text-[0.9em] font-mono" {...props}>
+        {children}
+      </code>
+    );
+  }
+
+  const handleCopy = () => {
+    navigator.clipboard.writeText(text);
+    setCopied(true);
+    toast.success("Código copiado!");
+    setTimeout(() => setCopied(false), 2000);
+  };
+
+  return (
+    <div className="relative group my-3 rounded-lg overflow-hidden border border-border bg-muted/50">
+      <button
+        onClick={handleCopy}
+        className="absolute top-2 right-2 z-10 flex items-center gap-1 px-2 py-1 rounded-md text-xs bg-background/80 backdrop-blur border border-border text-muted-foreground hover:text-primary hover:border-primary/50 transition-colors opacity-0 group-hover:opacity-100 focus:opacity-100"
+        title="Copiar código"
+        aria-label="Copiar código"
+      >
+        {copied ? <Check className="size-3.5 text-green-500" /> : <Copy className="size-3.5" />}
+        {copied ? "Copiado" : "Copiar"}
+      </button>
+      <pre className="overflow-x-auto p-3 pr-20 text-[13px] leading-relaxed">
+        <code className={className} {...props}>{children}</code>
+      </pre>
+    </div>
+  );
+};
 import keraAvatar from "@/assets/kera-avatar.png";
 import { User, FileText, Volume2, Square, Sparkles, ArrowRight, Copy, Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -126,7 +163,7 @@ export const MessageBubble = ({
           renderUserContent(msg.content)
         ) : (
           <>
-            <ReactMarkdown remarkPlugins={[remarkGfm]}>{plainText || ""}</ReactMarkdown>
+            <ReactMarkdown remarkPlugins={[remarkGfm]} components={{ code: CodeBlock }}>{plainText || ""}</ReactMarkdown>
             {streaming && <span className="inline-block w-2 h-4 bg-primary ml-1 align-middle animate-blink" />}
             {shouldOfferSwitch && (
               <div className="mt-3 flex items-center gap-2 px-3 py-2 rounded-lg bg-primary/10 border border-primary/30">
