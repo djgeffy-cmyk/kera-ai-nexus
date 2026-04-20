@@ -23,7 +23,6 @@ import keraJuridicaBgVideo from "@/assets/kera-juridica-bg.mp4.asset.json";
 import keraSentinelaBgVideo from "@/assets/kera-sentinela-bg.mp4.asset.json";
 import keraNutriBgVideo from "@/assets/kera-nutri-bg.mp4.asset.json";
 import keraGamerBgVideo from "@/assets/kera-gamer-bg.mp4.asset.json";
-import keraGamerMonitorVideo from "@/assets/kera-gamer-monitor.mp4";
 
 const AGENT_BG_VIDEOS: Record<string, string> = {
   "kera": keraBgVideo.url,
@@ -735,37 +734,6 @@ Por favor, analise: há perda de pacote? jitter alto sugere instabilidade de rot
             >
               <source src={AGENT_BG_VIDEOS[agentKey]} type="video/mp4" />
             </video>
-            {/* Overlay do MONITOR — apenas no agente Kera Gamer.
-                Calibrado para o vídeo da Kera com monitor curvo à esquerda. */}
-            {agentKey === "kera-gamer" && (
-              <div
-                className="absolute pointer-events-none"
-                style={{
-                  top: "5%",
-                  left: "4%",
-                  width: "47%",
-                  height: "67%",
-                  transform: "perspective(1400px) rotateY(8deg)",
-                  transformOrigin: "right center",
-                  borderRadius: "10px",
-                  overflow: "hidden",
-                  boxShadow: "inset 0 0 30px rgba(0,0,0,0.7)",
-                }}
-              >
-                <video
-                  autoPlay
-                  loop
-                  muted
-                  playsInline
-                  className="w-full h-full object-cover"
-                  style={{ filter: "brightness(1.05) contrast(1.1) saturate(1.1)" }}
-                >
-                  <source src={keraGamerMonitorVideo} type="video/mp4" />
-                </video>
-                {/* leve brilho do vidro do monitor */}
-                <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(255,255,255,0.06)_0%,transparent_25%,transparent_75%,rgba(0,0,0,0.3)_100%)]" />
-              </div>
-            )}
             {/* Overlay padrão (modo escuro) */}
             <div className="absolute inset-0 bg-gradient-to-b from-background/20 via-background/35 to-background/75 [.light_&]:hidden" />
             {/* Overlay leitoso modo claro: branco translúcido top/bottom, transparente no centro */}
