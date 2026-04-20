@@ -702,6 +702,21 @@ Por favor, analise: há perda de pacote? jitter alto sugere instabilidade de rot
           }
         }}
       >
+        {agentKey === "kera-dev" && (
+          <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none">
+            <video
+              autoPlay
+              loop
+              muted
+              playsInline
+              className="w-full h-full object-cover opacity-30 mix-blend-screen"
+            >
+              <source src={keraDevBgVideo.url} type="video/mp4" />
+            </video>
+            <div className="absolute inset-0 bg-gradient-to-b from-background/40 via-background/60 to-background/90" />
+          </div>
+        )}
+
         {dragging && (
           <div className="absolute inset-0 z-50 pointer-events-none flex items-center justify-center bg-primary/10 backdrop-blur-sm border-4 border-dashed border-primary rounded-lg m-2">
             <div className="text-center">
@@ -711,7 +726,7 @@ Por favor, analise: há perda de pacote? jitter alto sugere instabilidade de rot
             </div>
           </div>
         )}
-        <header className="h-14 border-b border-border panel flex items-center px-2 md:px-6 gap-1.5 md:gap-3 overflow-hidden">
+        <header className="relative z-10 h-14 border-b border-border panel flex items-center px-2 md:px-6 gap-1.5 md:gap-3 overflow-hidden">
           <Sheet>
             <SheetTrigger asChild>
               <Button variant="ghost" size="icon" className="md:hidden shrink-0 h-9 w-9"><Menu className="size-5" /></Button>
