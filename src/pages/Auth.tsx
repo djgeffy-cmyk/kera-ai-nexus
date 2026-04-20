@@ -220,7 +220,15 @@ const Auth = () => {
         }}
       />
 
-      <Card className="panel relative w-full max-w-sm p-5 sm:p-6 border-primary/25 shadow-glow z-10 backdrop-blur-md bg-card/35 max-h-[calc(100vh-2rem)] overflow-y-auto scrollbar-thin">
+      <Card
+        className="relative w-full max-w-sm p-5 sm:p-6 shadow-glow z-10 max-h-[calc(100vh-2rem)] overflow-y-auto scrollbar-thin rounded-2xl"
+        style={{
+          background: "rgba(255, 255, 255, 0.08)",
+          backdropFilter: "blur(14px)",
+          WebkitBackdropFilter: "blur(14px)",
+          border: "1px solid rgba(255, 255, 255, 0.18)",
+        }}
+      >
         <div className="flex flex-col items-center mb-4">
           <div className="relative size-20 sm:size-24 rounded-full overflow-hidden border-2 border-primary/70 shadow-glow mb-3 bg-background ring-4 ring-primary/20">
             <video
