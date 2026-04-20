@@ -736,21 +736,20 @@ Por favor, analise: há perda de pacote? jitter alto sugere instabilidade de rot
               <source src={AGENT_BG_VIDEOS[agentKey]} type="video/mp4" />
             </video>
             {/* Overlay do MONITOR — apenas no agente Kera Gamer.
-                Posicionado para coincidir com a tela do monitor no vídeo de fundo da Kera jogando. */}
+                Calibrado para o vídeo da Kera com monitor curvo à esquerda. */}
             {agentKey === "kera-gamer" && (
               <div
                 className="absolute pointer-events-none"
                 style={{
-                  // ajuste fino da posição da tela do monitor no vídeo de fundo
-                  top: "30%",
-                  left: "38%",
-                  width: "28%",
-                  height: "32%",
-                  transform: "perspective(900px) rotateY(-6deg) rotateX(2deg)",
-                  transformOrigin: "center",
-                  borderRadius: "6px",
+                  top: "5%",
+                  left: "4%",
+                  width: "47%",
+                  height: "67%",
+                  transform: "perspective(1400px) rotateY(8deg)",
+                  transformOrigin: "right center",
+                  borderRadius: "10px",
                   overflow: "hidden",
-                  boxShadow: "0 0 40px rgba(0,229,255,0.25), inset 0 0 20px rgba(0,0,0,0.6)",
+                  boxShadow: "inset 0 0 30px rgba(0,0,0,0.7)",
                 }}
               >
                 <video
@@ -759,12 +758,12 @@ Por favor, analise: há perda de pacote? jitter alto sugere instabilidade de rot
                   muted
                   playsInline
                   className="w-full h-full object-cover"
-                  style={{ filter: "brightness(1.1) contrast(1.15) saturate(1.1)" }}
+                  style={{ filter: "brightness(1.05) contrast(1.1) saturate(1.1)" }}
                 >
                   <source src={keraGamerMonitorVideo} type="video/mp4" />
                 </video>
-                {/* leve scanline / brilho do vidro do monitor */}
-                <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(255,255,255,0.08)_0%,transparent_30%,transparent_70%,rgba(0,0,0,0.25)_100%)]" />
+                {/* leve brilho do vidro do monitor */}
+                <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(255,255,255,0.06)_0%,transparent_25%,transparent_75%,rgba(0,0,0,0.3)_100%)]" />
               </div>
             )}
             {/* Overlay padrão (modo escuro) */}
