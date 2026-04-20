@@ -4,14 +4,14 @@ import { OrbitControls, Environment } from "@react-three/drei";
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
 import { VRM, VRMLoaderPlugin, VRMUtils, VRMExpressionPresetName } from "@pixiv/three-vrm";
 import * as THREE from "three";
+import bundledDefaultVrm from "@/assets/default-kera.vrm";
 
 /**
  * URL pública de um VRM gratuito (sample oficial pixiv/three-vrm, MIT).
  * Usuário pode substituir mandando seu próprio .vrm e trocando esta URL,
  * ou colocando um arquivo em /public/avatars/kera.vrm e usando "/avatars/kera.vrm".
  */
-const DEFAULT_VRM_URL =
-  "https://cdn.jsdelivr.net/gh/pixiv/three-vrm@dev/packages/three-vrm/examples/models/VRM1_Constraint_Twist_Sample.vrm";
+const DEFAULT_VRM_URL = bundledDefaultVrm;
 
 type Emotion = "neutral" | "happy" | "sad" | "angry" | "surprised" | "relaxed";
 

@@ -11,6 +11,7 @@ import { ShieldCheck, KeyRound, Mail } from "lucide-react";
 import keraAvatar from "@/assets/kera-avatar.png";
 import keraAvatarVideo from "@/assets/kera-avatar-rain.mp4.asset.json";
 import ParticlesOverlay from "@/components/ParticlesOverlay";
+import { assetUrl } from "@/lib/assetUrl";
 
 type Mode = "signin" | "signup" | "totp";
 
@@ -86,6 +87,7 @@ const Auth = () => {
   const [resetEmail, setResetEmail] = useState("");
   const [resetNote, setResetNote] = useState("");
   const [resetLoading, setResetLoading] = useState(false);
+  const rainVideoUrl = assetUrl(keraAvatarVideo);
 
   useEffect(() => {
     document.title = "Kera AI — Entrar";
@@ -203,7 +205,7 @@ const Auth = () => {
         muted
         playsInline
         className="absolute inset-0 w-full h-full object-cover"
-        src={keraAvatarVideo.url}
+        src={rainVideoUrl}
         poster={keraAvatar}
       />
       {/* Overlay sutil — só o suficiente pra dar contraste no card, sem apagar a Kera */}
@@ -238,7 +240,7 @@ const Auth = () => {
               loop
               muted
               playsInline
-              src={keraAvatarVideo.url}
+              src={rainVideoUrl}
               poster={keraAvatar}
               className="w-full h-full object-cover"
             />

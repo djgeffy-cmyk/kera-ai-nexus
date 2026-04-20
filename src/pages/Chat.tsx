@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -27,16 +27,6 @@ import keraGamerBgVideo from "@/assets/kera-gamer-bg.mp4.asset.json";
 import keraSpaceLogo from "@/assets/kera-spaceincloud-logo.png";
 
 import { assetUrl } from "@/lib/assetUrl";
-
-const AGENT_BG_VIDEOS: Record<string, string> = {
-  "kera": assetUrl(keraBgVideo),
-  "kera-dev": assetUrl(keraDevBgVideo),
-  "kera-sec": assetUrl(keraSecBgVideo),
-  "kera-juridica": assetUrl(keraJuridicaBgVideo),
-  "kera-sentinela": assetUrl(keraSentinelaBgVideo),
-  "kera-nutri": assetUrl(keraNutriBgVideo),
-  "kera-gamer": assetUrl(keraGamerBgVideo),
-};
 import { MessageBubble, type ChatMessage } from "@/components/chat/MessageBubble";
 import { PROVIDERS, getPreferredProvider, setPreferredProvider, type ProviderId } from "@/lib/providers";
 import { BUILTIN_AGENTS, getBuiltinAgent, DEFAULT_AGENT_KEY } from "@/lib/agents";
@@ -73,6 +63,15 @@ const Chat = () => {
   const [input, setInput] = useState("");
   const [streaming, setStreaming] = useState(false);
   const [userId, setUserId] = useState<string | null>(null);
+  const agentBgVideos = useMemo<Record<string, string>>(() => ({
+    "kera": assetUrl(keraBgVideo),
+    "kera-dev": assetUrl(keraDevBgVideo),
+    "kera-sec": assetUrl(keraSecBgVideo),
+    "kera-juridica": assetUrl(keraJuridicaBgVideo),
+    "kera-sentinela": assetUrl(keraSentinelaBgVideo),
+    "kera-nutri": assetUrl(keraNutriBgVideo),
+    "kera-gamer": assetUrl(keraGamerBgVideo),
+  }), []);
   const [galleryOpen, setGalleryOpen] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
   const [provider, setProvider] = useState<ProviderId>(getPreferredProvider());
@@ -939,7 +938,7 @@ Por favor, analise: há perda de pacote? jitter alto sugere instabilidade de rot
           }
         }}
       >
-        {AGENT_BG_VIDEOS[agentKey] && (
+        {agentBgVideos[agentKey] && (
           <div
             key={agentKey}
             className="absolute inset-0 z-0 overflow-hidden pointer-events-none animate-[fade-in_800ms_ease-out]"
@@ -951,7 +950,7 @@ Por favor, analise: há perda de pacote? jitter alto sugere instabilidade de rot
               playsInline
               className="w-full h-full object-cover opacity-45 mix-blend-screen [.light_&]:opacity-100 [.light_&]:mix-blend-normal [.light_&]:[filter:brightness(0.9)_contrast(1.1)]"
             >
-              <source src={AGENT_BG_VIDEOS[agentKey]} type="video/mp4" />
+                <source src={agentBgVideos[agentKey]} type="video/mp4" />
             </video>
             {/* Overlay padrão (modo escuro) */}
             <div className="absolute inset-0 bg-gradient-to-b from-background/20 via-background/35 to-background/75 [.light_&]:hidden" />

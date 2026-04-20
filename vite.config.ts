@@ -4,6 +4,7 @@ import path from "path";
 
 export default defineConfig(({ command }) => ({
   base: command === "build" ? "./" : "/",
+  assetsInclude: ["**/*.vrm"],
   server: {
     host: "::",
     port: 8080,
