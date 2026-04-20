@@ -9,7 +9,7 @@ import {
   Plus, LogOut, Send, MessageSquare, Trash2, Menu, Settings,
   Image as ImageIcon, LayoutGrid, FolderPlus, Mic, MicOff, Volume2, VolumeX, Bot, ChevronRight,
   Paperclip, X, FileText, ShieldCheck, Activity, Download, Ear, Sun, Moon, Sparkles, Gem,
-  PanelLeftClose, PanelLeftOpen, Camera, Pencil, Eraser,
+  PanelLeftClose, PanelLeftOpen, Camera, Pencil, Eraser, Monitor,
 } from "lucide-react";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -741,6 +741,11 @@ Por favor, analise: há perda de pacote? jitter alto sugere instabilidade de rot
       </ScrollArea>
 
       <div className="p-3 border-t border-border space-y-1">
+        {typeof window !== "undefined" && (window as unknown as { kera?: { isDesktop: boolean } }).kera?.isDesktop && (
+          <Button variant="ghost" onClick={() => navigate("/desktop")} className="w-full justify-start text-primary hover:text-primary">
+            <Monitor className="size-4 mr-2" /> Kera Desktop (PC)
+          </Button>
+        )}
         <Button variant="ghost" onClick={() => navigate("/security")} className="w-full justify-start text-muted-foreground hover:text-foreground">
           <ShieldCheck className="size-4 mr-2" /> Segurança (2FA)
         </Button>
