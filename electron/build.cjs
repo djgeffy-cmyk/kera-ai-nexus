@@ -35,7 +35,7 @@ async function bundle() {
         overwrite: true,
         asar: true,
         prune: true,
-        electronVersion: '33.0.2', // Versão estável LTS
+        electronVersion: '41.2.1', // Sincronizado com devDependencies
         ignore: [
             /^\/src/,
             /^\/public/,
