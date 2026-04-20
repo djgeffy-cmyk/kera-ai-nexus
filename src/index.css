@@ -106,6 +106,72 @@
     --sidebar-border: 215 25% 85%;
     --sidebar-ring: 187 85% 38%;
   }
+
+  .kera {
+    /* Kera Mode — preto aquecido + ouro + mel */
+    /* #1A1612 → 30 22% 9% | #26211B → 30 17% 13% | #F3D9A1 → 39 78% 79% */
+    /* #D4AF37 (ouro) → 46 65% 52% | #E29547 (mel) → 28 75% 58% */
+    --background: 30 22% 9%;
+    --foreground: 39 78% 79%;
+
+    --card: 30 17% 13%;
+    --card-foreground: 39 78% 79%;
+
+    --popover: 30 17% 13%;
+    --popover-foreground: 39 78% 79%;
+
+    --primary: 46 65% 52%;
+    --primary-foreground: 30 22% 9%;
+    --primary-glow: 46 80% 65%;
+
+    --secondary: 30 15% 17%;
+    --secondary-foreground: 39 78% 79%;
+
+    --muted: 30 13% 15%;
+    --muted-foreground: 39 30% 65%;
+
+    --accent: 28 75% 58%;
+    --accent-foreground: 30 22% 9%;
+
+    --destructive: 0 70% 55%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 46 35% 28%;
+    --input: 30 15% 17%;
+    --ring: 46 65% 52%;
+
+    --gradient-cyber: linear-gradient(135deg, hsl(46 65% 52%) 0%, hsl(28 75% 58%) 100%);
+    --gradient-bg: radial-gradient(ellipse at top, hsl(46 50% 18% / 0.6), transparent 60%),
+                   radial-gradient(ellipse at bottom right, hsl(28 75% 30% / 0.25), transparent 55%),
+                   hsl(30 22% 9%);
+    --gradient-panel: linear-gradient(180deg, hsl(30 17% 13% / 0.9), hsl(30 22% 9% / 0.9));
+
+    --shadow-glow: 0 0 30px hsl(46 65% 52% / 0.45), 0 0 80px hsl(46 65% 52% / 0.2);
+    --shadow-soft: 0 10px 40px -10px hsl(46 65% 52% / 0.3);
+
+    --sidebar-background: 30 22% 8%;
+    --sidebar-foreground: 39 60% 75%;
+    --sidebar-primary: 46 65% 52%;
+    --sidebar-primary-foreground: 30 22% 9%;
+    --sidebar-accent: 30 15% 14%;
+    --sidebar-accent-foreground: 39 78% 79%;
+    --sidebar-border: 46 35% 22%;
+    --sidebar-ring: 46 65% 52%;
+  }
+
+  /* Kera Mode: realça borda dourada em inputs e botões */
+  .kera input,
+  .kera textarea,
+  .kera [role="combobox"],
+  .kera button:not([data-no-gold]) {
+    border-color: hsl(46 65% 52% / 0.45);
+  }
+  .kera input:focus-visible,
+  .kera textarea:focus-visible,
+  .kera button:focus-visible {
+    box-shadow: 0 0 0 2px hsl(46 65% 52% / 0.55), 0 0 16px hsl(46 65% 52% / 0.35);
+    border-color: hsl(46 65% 52%);
+  }
 }
 
 @layer base {

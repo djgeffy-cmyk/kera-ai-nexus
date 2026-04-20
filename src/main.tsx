@@ -6,6 +6,7 @@ import "./index.css";
 try {
   const saved = localStorage.getItem("kera:theme");
   if (saved === "light") document.documentElement.classList.add("light");
+  else if (saved === "kera") document.documentElement.classList.add("kera");
 } catch {}
 
 createRoot(document.getElementById("root")!).render(<App />);
