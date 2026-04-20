@@ -396,63 +396,118 @@ const Chat = () => {
 
     try {
       const { data: sess } = await supabase.auth.getSession();
-      const resp = await fetch(CHAT_URL, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          ...(sess.session ? { Authorization: `Bearer ${sess.session.access_token}` } : {}),
-        },
-        body: JSON.stringify({
-          messages: next.map(m => ({ role: m.role, content: m.content })),
-          provider: provider === "auto" ? undefined : provider,
-          systemPrompt: resolveSystemPrompt(agentKey),
-          agentKey,
-        }),
-      });
+      const desktopTools = getAvailableDesktopTools();
 
-      if (!resp.ok || !resp.body) {
-        const j = await resp.json().catch(() => ({}));
-        if (resp.status === 429) toast.error("Muitas requisições. Aguarde alguns segundos.");
-        else if (resp.status === 402) toast.error("Créditos de IA esgotados.");
-        else toast.error(j.error || "Falha ao chamar a Kera.");
-        setMessages(prev => prev.slice(0, -1));
-        setStreaming(false);
-        return;
-      }
+      // Histórico enviado à edge function. Pode crescer no loop de tool-calling.
+      let history = next.map(m => ({ role: m.role, content: m.content })) as any[];
+      const MAX_TOOL_ROUNDS = 5;
 
-      const reader = resp.body.getReader();
-      const decoder = new TextDecoder();
-      let buffer = "";
-      let done = false;
-      while (!done) {
-        const { done: d, value } = await reader.read();
-        if (d) break;
-        buffer += decoder.decode(value, { stream: true });
-        let idx: number;
-        while ((idx = buffer.indexOf("\n")) !== -1) {
-          let line = buffer.slice(0, idx);
-          buffer = buffer.slice(idx + 1);
-          if (line.endsWith("\r")) line = line.slice(0, -1);
-          if (!line || line.startsWith(":")) continue;
-          if (!line.startsWith("data: ")) continue;
-          const payload = line.slice(6).trim();
-          if (payload === "[DONE]") { done = true; break; }
-          try {
-            const parsed = JSON.parse(payload);
-            const delta = parsed.choices?.[0]?.delta?.content;
-            if (delta) {
-              assistantText += delta;
-              setMessages(prev => {
-                const copy = [...prev];
-                copy[copy.length - 1] = { role: "assistant", content: assistantText };
-                return copy;
-              });
+      // Loop de tool-calling: enquanto a edge function retornar JSON com tool_calls desktop,
+      // executamos no Electron e reenviamos. Na última iteração (sem tool_calls) vem o stream.
+      let round = 0;
+      while (round < MAX_TOOL_ROUNDS) {
+        round++;
+        const resp = await fetch(CHAT_URL, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            ...(sess.session ? { Authorization: `Bearer ${sess.session.access_token}` } : {}),
+          },
+          body: JSON.stringify({
+            messages: history,
+            provider: provider === "auto" ? undefined : provider,
+            systemPrompt: resolveSystemPrompt(agentKey),
+            agentKey,
+            desktopTools: desktopTools ?? undefined,
+          }),
+        });
+
+        if (!resp.ok || !resp.body) {
+          const j = await resp.json().catch(() => ({}));
+          if (resp.status === 429) toast.error("Muitas requisições. Aguarde alguns segundos.");
+          else if (resp.status === 402) toast.error("Créditos de IA esgotados.");
+          else toast.error(j.error || "Falha ao chamar a Kera.");
+          setMessages(prev => prev.slice(0, -1));
+          setStreaming(false);
+          return;
+        }
+
+        // Resposta JSON (não stream) = tool_calls desktop pra executar no Electron.
+        const ctype = resp.headers.get("content-type") || "";
+        if (ctype.includes("application/json")) {
+          const payload = await resp.json();
+          if (payload?.kind === "desktop_tool_calls") {
+            const { assistant_message, desktop_tool_calls, server_tool_results } = payload;
+            // Mostra na bolha "Usando ferramentas: …" pra o usuário saber o que tá rolando.
+            const toolNames = (desktop_tool_calls as any[]).map((c) => c.name).join(", ");
+            setMessages(prev => {
+              const copy = [...prev];
+              copy[copy.length - 1] = {
+                role: "assistant",
+                content: `🔧 Usando: ${toolNames}…`,
+              };
+              return copy;
+            });
+
+            // Executa cada tool desktop (cada uma pode abrir diálogo nativo de confirmação)
+            const desktopResults: Array<{ role: string; tool_call_id: string; content: string }> = [];
+            for (const call of desktop_tool_calls as any[]) {
+              const result = await executeDesktopTool(call.name, call.arguments || {});
+              desktopResults.push({ role: "tool", tool_call_id: call.id, content: result });
             }
-          } catch {
-            buffer = line + "\n" + buffer;
-            break;
+
+            // Monta histórico pro próximo round: assistant (com tool_calls) + todos os tool results
+            history = [
+              ...history,
+              assistant_message,
+              ...(server_tool_results ?? []),
+              ...desktopResults,
+            ];
+            continue; // próxima iteração — edge function vai gerar resposta final (stream)
+          }
+          // JSON sem tool_calls = erro inesperado
+          toast.error(payload?.error || "Resposta inesperada");
+          setMessages(prev => prev.slice(0, -1));
+          setStreaming(false);
+          return;
+        }
+
+        // Resposta streaming normal — consome SSE até [DONE]
+        const reader = resp.body.getReader();
+        const decoder = new TextDecoder();
+        let buffer = "";
+        let done = false;
+        while (!done) {
+          const { done: d, value } = await reader.read();
+          if (d) break;
+          buffer += decoder.decode(value, { stream: true });
+          let idx: number;
+          while ((idx = buffer.indexOf("\n")) !== -1) {
+            let line = buffer.slice(0, idx);
+            buffer = buffer.slice(idx + 1);
+            if (line.endsWith("\r")) line = line.slice(0, -1);
+            if (!line || line.startsWith(":")) continue;
+            if (!line.startsWith("data: ")) continue;
+            const payload = line.slice(6).trim();
+            if (payload === "[DONE]") { done = true; break; }
+            try {
+              const parsed = JSON.parse(payload);
+              const delta = parsed.choices?.[0]?.delta?.content;
+              if (delta) {
+                assistantText += delta;
+                setMessages(prev => {
+                  const copy = [...prev];
+                  copy[copy.length - 1] = { role: "assistant", content: assistantText };
+                  return copy;
+                });
+              }
+            } catch {
+              buffer = line + "\n" + buffer;
+              break;
+            }
           }
         }
+        break; // stream consumido — sai do loop de rounds
       }
 
       if (assistantText) {
