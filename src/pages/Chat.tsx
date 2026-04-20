@@ -685,7 +685,19 @@ Por favor, analise: há perda de pacote? jitter alto sugere instabilidade de rot
 
         {/* Histórico agrupado */}
         <div className="px-2 pt-3 pb-4">
-          <h3 className="text-[11px] uppercase tracking-wider text-muted-foreground/70 px-2.5 mb-1">Histórico</h3>
+          <div className="flex items-center justify-between px-2.5 mb-1">
+            <h3 className="text-[11px] uppercase tracking-wider text-muted-foreground/70">Histórico</h3>
+            {conversations.length > 0 && (
+              <button
+                onClick={clearEmptyConversations}
+                className="text-[10px] uppercase tracking-wider text-muted-foreground/60 hover:text-foreground transition flex items-center gap-1"
+                title="Excluir conversas vazias (sem mensagens)"
+              >
+                <Eraser className="size-3" />
+                Limpar vazias
+              </button>
+            )}
+          </div>
           {groupedConversations.length === 0 && (
             <p className="text-xs text-muted-foreground/70 text-center py-4 px-2">Sem conversas ainda.</p>
           )}
@@ -697,16 +709,25 @@ Por favor, analise: há perda de pacote? jitter alto sugere instabilidade de rot
               {group.items.map(c => (
                 <div
                   key={c.id}
-                  className={`group flex items-center gap-2 rounded-md px-2.5 py-1.5 text-sm cursor-pointer transition ${
+                  className={`group flex items-center gap-1 rounded-md px-2.5 py-1.5 text-sm cursor-pointer transition ${
                     currentId === c.id ? "bg-secondary/80 text-foreground" : "hover:bg-secondary/60 text-muted-foreground hover:text-foreground"
                   }`}
                   onClick={() => selectConversation(c.id, c.agent_key)}
                 >
                   <span className="truncate flex-1">{c.title}</span>
                   <button
+                    onClick={(e) => { e.stopPropagation(); renameConversation(c.id, c.title); }}
+                    className="opacity-0 group-hover:opacity-100 text-muted-foreground hover:text-foreground transition p-0.5"
+                    aria-label="Renomear conversa"
+                    title="Renomear"
+                  >
+                    <Pencil className="size-3.5" />
+                  </button>
+                  <button
                     onClick={(e) => { e.stopPropagation(); deleteConversation(c.id); }}
-                    className="opacity-0 group-hover:opacity-100 text-muted-foreground hover:text-destructive transition"
+                    className="opacity-0 group-hover:opacity-100 text-muted-foreground hover:text-destructive transition p-0.5"
                     aria-label="Excluir conversa"
+                    title="Excluir"
                   >
                     <Trash2 className="size-3.5" />
                   </button>
