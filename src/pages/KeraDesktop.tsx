@@ -139,7 +139,57 @@ const KeraDesktopPage = () => {
     toast.success("Pasta removida");
   };
 
-  const power = async (kind: "shutdown" | "restart" | "hibernate" | "lock") => {
+  const readClip = async () => {
+    const k = getKera(); if (!k) return;
+    const t = await k.clipboard.read();
+    setClip(t);
+    toast.success("Clipboard lido");
+  };
+  const writeClip = async () => {
+    const k = getKera(); if (!k) return;
+    await k.clipboard.write(clip);
+    toast.success("Copiado para a área de transferência");
+  };
+
+  const takeShot = async () => {
+    const k = getKera(); if (!k) return;
+    const r = await k.screenshot();
+    if (r.cancelled) return;
+    if (r.ok && r.dataUrl) { setShot(r.dataUrl); toast.success("Captura feita"); }
+    else toast.error(r.error || "Falha ao capturar");
+  };
+
+  const loadStatus = async () => {
+    const k = getKera(); if (!k) return;
+    setSysStatus(await k.system.status());
+  };
+
+  const openPath = async () => {
+    const k = getKera(); if (!k || !openTarget.trim()) return;
+    const r = await k.open.path(openTarget.trim());
+    if (r.cancelled) return;
+    if (r.ok) toast.success("Abrindo…");
+    else toast.error(r.error || "Falha ao abrir");
+  };
+
+  const openApp = async () => {
+    const k = getKera(); if (!k || !appName.trim()) return;
+    const r = await k.open.app(appName.trim());
+    if (r.cancelled) return;
+    if (r.ok) toast.success(`Abrindo ${appName}`);
+    else toast.error(r.error || "Falha ao abrir");
+  };
+
+  const runCmd = async () => {
+    const k = getKera(); if (!k || !cmd.trim()) return;
+    setExecResult(null);
+    const r = await k.exec(cmd);
+    setExecResult(r);
+    if (r.cancelled) return;
+    if (r.ok) toast.success("Comando executado");
+    else toast.error(r.error || "Falha no comando");
+  };
+
     const k = getKera();
     if (!k) return;
     const r = await k.power[kind]();
