@@ -9,7 +9,7 @@ import {
   Plus, LogOut, Send, MessageSquare, Trash2, Menu, Settings,
   Image as ImageIcon, LayoutGrid, FolderPlus, Mic, MicOff, Volume2, VolumeX, Bot, ChevronRight,
   Paperclip, X, FileText, ShieldCheck, Activity, Download, Ear, Sun, Moon, Sparkles, Gem,
-  PanelLeftClose, PanelLeftOpen,
+  PanelLeftClose, PanelLeftOpen, Camera,
 } from "lucide-react";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -102,6 +102,7 @@ const Chat = () => {
   }, [sidebarOpen]);
   const dragCounter = useRef(0);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const cameraInputRef = useRef<HTMLInputElement>(null);
   const scrollerRef = useRef<HTMLDivElement>(null);
   const handsFreeRef = useRef(false);
   const lastInputViaVoiceRef = useRef(false);
@@ -1020,6 +1021,14 @@ Por favor, analise: há perda de pacote? jitter alto sugere instabilidade de rot
                 className="hidden"
                 onChange={(e) => { if (e.target.files) addFiles(e.target.files); e.target.value = ""; }}
               />
+              <input
+                ref={cameraInputRef}
+                type="file"
+                accept="image/*"
+                capture="environment"
+                className="hidden"
+                onChange={(e) => { if (e.target.files) addFiles(e.target.files); e.target.value = ""; }}
+              />
 
               <Textarea
                 value={input}
@@ -1051,6 +1060,17 @@ Por favor, analise: há perda de pacote? jitter alto sugere instabilidade de rot
                     disabled={streaming}
                   >
                     <Paperclip className="size-4" />
+                  </Button>
+                  <Button
+                    onClick={() => cameraInputRef.current?.click()}
+                    variant="ghost"
+                    size="icon"
+                    className="md:hidden h-9 w-9 rounded-full text-muted-foreground hover:text-foreground hover:bg-muted/50"
+                    aria-label="Tirar foto com a câmera"
+                    title="Tirar foto"
+                    disabled={streaming}
+                  >
+                    <Camera className="size-4" />
                   </Button>
                   <Button
                     onClick={() => {
