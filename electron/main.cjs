@@ -1,6 +1,6 @@
 // Janela principal da Kera Desktop. Sempre CommonJS (.cjs) porque o package.json
 // declara "type":"module" e .js viraria ESM, quebrando __dirname.
-const { app, BrowserWindow, ipcMain, dialog, shell, clipboard, desktopCapturer, screen, protocol, net } = require("electron");
+const { app, BrowserWindow, ipcMain, dialog, shell, clipboard, desktopCapturer, screen, protocol, net, Tray, Menu, nativeImage } = require("electron");
 const path = require("path");
 const fs = require("fs/promises");
 const fsSync = require("fs");
@@ -9,6 +9,8 @@ const os = require("os");
 const { setupAutoUpdater, autoUpdater } = require("./updater.cjs");
 
 let mainWindow = null;
+let mascotWindow = null;
+let tray = null;
 
 // ============= CACHE DE VÍDEOS (offline) =============
 const VIDEO_FILES = [
