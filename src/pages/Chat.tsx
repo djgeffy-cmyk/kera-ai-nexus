@@ -918,6 +918,24 @@ Por favor, analise: há perda de pacote? jitter alto sugere instabilidade de rot
           </div>
         )}
 
+        {/* Kera 3D — boneca volumétrica que reage à voz e às emoções da resposta */}
+        {avatar3D && (
+          <div className="hidden md:block absolute right-4 bottom-24 z-10 w-[320px] h-[480px] pointer-events-none animate-[fade-in_500ms_ease-out]">
+            <div className="relative w-full h-full rounded-3xl overflow-hidden border border-primary/30 bg-gradient-to-b from-primary/10 via-transparent to-primary/5 shadow-[0_0_60px_-10px_hsl(var(--primary)/0.4)] backdrop-blur-sm">
+              <KeraAvatar3D
+                speaking={voice.speaking}
+                audioElement={voice.audioRef.current}
+                lastReplyText={lastAssistantText}
+              />
+              {/* Indicador "ao vivo" */}
+              <div className="absolute top-2 left-2 flex items-center gap-1.5 text-[10px] font-medium text-primary bg-background/70 backdrop-blur-sm px-2 py-0.5 rounded-full border border-primary/30">
+                <span className={`size-1.5 rounded-full ${voice.speaking ? "bg-primary animate-pulse" : "bg-muted-foreground"}`} />
+                Kera 3D
+              </div>
+            </div>
+          </div>
+        )}
+
         {dragging && (
           <div className="absolute inset-0 z-50 pointer-events-none flex items-center justify-center bg-primary/10 backdrop-blur-sm border-4 border-dashed border-primary rounded-lg m-2">
             <div className="text-center">
