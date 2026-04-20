@@ -86,6 +86,12 @@ export type KeraDesktopApi = {
     install: () => Promise<{ ok: boolean }>;
     onStatus: (cb: (payload: { state: string; version?: string; percent?: number; message?: string }) => void) => () => void;
   };
+  videos: {
+    status: () => Promise<{ cached: string[]; missing: string[]; total: number; map: Record<string, string>; dir: string }>;
+    download: () => Promise<{ ok: boolean; errors: { name: string; error: string }[]; map: Record<string, string> }>;
+    clear: () => Promise<{ ok: boolean }>;
+    onProgress: (cb: (p: { name: string; received: number; total: number }) => void) => () => void;
+  };
 };
 
 declare global {
