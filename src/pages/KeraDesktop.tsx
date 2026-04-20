@@ -190,6 +190,7 @@ const KeraDesktopPage = () => {
     else toast.error(r.error || "Falha no comando");
   };
 
+  const power = async (kind: "shutdown" | "restart" | "hibernate" | "lock") => {
     const k = getKera();
     if (!k) return;
     const r = await k.power[kind]();
