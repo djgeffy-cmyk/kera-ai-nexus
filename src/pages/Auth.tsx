@@ -223,10 +223,11 @@ const Auth = () => {
       <Card
         className="relative w-full max-w-sm p-5 sm:p-6 shadow-glow z-10 max-h-[calc(100vh-2rem)] overflow-y-auto scrollbar-thin rounded-2xl"
         style={{
-          background: "rgba(255, 255, 255, 0.08)",
-          backdropFilter: "blur(14px)",
-          WebkitBackdropFilter: "blur(14px)",
-          border: "1px solid rgba(255, 255, 255, 0.18)",
+          background: "rgba(0, 0, 0, 0.03)",
+          backdropFilter: "blur(2px)",
+          WebkitBackdropFilter: "blur(2px)",
+          border: "1px solid rgba(255, 255, 255, 0.1)",
+          textShadow: "0px 0px 5px rgba(0, 0, 0, 0.8)",
         }}
       >
         <div className="flex flex-col items-center mb-4">
