@@ -210,19 +210,28 @@ const Auth = () => {
       <div aria-hidden className="absolute inset-0 bg-background/30" />
       {/* Partículas/poeira luminosa flutuando sobre a Kera — dá profundidade */}
       <ParticlesOverlay />
-      {/* Vinheta nas bordas, centro limpo pra Kera respirar */}
+      {/* Vinheta lateral direita — escurece atrás do card sem cobrir o rosto da Kera */}
       <div
         aria-hidden
-        className="absolute inset-0 pointer-events-none"
+        className="absolute inset-0 pointer-events-none hidden md:block"
+        style={{
+          background:
+            "linear-gradient(90deg, transparent 0%, transparent 55%, hsl(var(--background) / 0.55) 80%, hsl(var(--background) / 0.85) 100%)",
+        }}
+      />
+      {/* Vinheta mobile — radial padrão */}
+      <div
+        aria-hidden
+        className="absolute inset-0 pointer-events-none md:hidden"
         style={{
           background:
             "radial-gradient(ellipse at center, transparent 30%, hsl(var(--background) / 0.55) 75%, hsl(var(--background) / 0.85) 100%)",
         }}
       />
 
-      <Card className="panel relative w-full max-w-md p-7 sm:p-8 border-primary/30 shadow-glow z-10 backdrop-blur-md bg-card/70">
-        <div className="flex flex-col items-center mb-5">
-          <div className="relative size-28 rounded-full overflow-hidden border-2 border-primary/70 shadow-glow mb-3 bg-background ring-4 ring-primary/20">
+      <Card className="panel relative w-full max-w-md p-6 sm:p-7 border-primary/30 shadow-glow z-10 backdrop-blur-md bg-card/70 max-h-[calc(100vh-2rem)] overflow-y-auto scrollbar-thin">
+        <div className="flex flex-col items-center mb-4">
+          <div className="relative size-20 sm:size-24 rounded-full overflow-hidden border-2 border-primary/70 shadow-glow mb-3 bg-background ring-4 ring-primary/20">
             <video
               aria-hidden
               autoPlay
