@@ -17,6 +17,19 @@ contextBridge.exposeInMainWorld("kera", {
     delete: (filePath) => ipcRenderer.invoke("kera:fs:delete", filePath),
     pickFolder: () => ipcRenderer.invoke("kera:fs:pickFolder"),
   },
+  clipboard: {
+    read: () => ipcRenderer.invoke("kera:clipboard:read"),
+    write: (text) => ipcRenderer.invoke("kera:clipboard:write", text),
+  },
+  screenshot: () => ipcRenderer.invoke("kera:screenshot"),
+  system: {
+    status: () => ipcRenderer.invoke("kera:system:status"),
+  },
+  open: {
+    path: (target) => ipcRenderer.invoke("kera:open:path", target),
+    app: (appName, args) => ipcRenderer.invoke("kera:open:app", appName, args),
+  },
+  exec: (command) => ipcRenderer.invoke("kera:exec", command),
   power: {
     shutdown: () => ipcRenderer.invoke("kera:power", "shutdown"),
     restart: () => ipcRenderer.invoke("kera:power", "restart"),
