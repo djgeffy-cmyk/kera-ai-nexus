@@ -9,7 +9,7 @@ import {
   Plus, LogOut, Send, MessageSquare, Trash2, Menu, Settings,
   Image as ImageIcon, LayoutGrid, FolderPlus, Mic, MicOff, Volume2, VolumeX, Bot, ChevronRight,
   Paperclip, X, FileText, ShieldCheck, Activity, Download, Ear, Sun, Moon, Sparkles, Gem,
-  PanelLeftClose, PanelLeftOpen, Camera,
+  PanelLeftClose, PanelLeftOpen, Camera, Pencil, Eraser,
 } from "lucide-react";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -205,6 +205,42 @@ const Chat = () => {
     if (error) return toast.error(error.message);
     setConversations(conversations.filter(c => c.id !== id));
     if (currentId === id) { setCurrentId(null); setMessages([]); }
+  };
+
+  const renameConversation = async (id: string, currentTitle: string) => {
+    const next = window.prompt("Renomear conversa:", currentTitle);
+    if (next == null) return;
+    const trimmed = next.trim();
+    if (!trimmed || trimmed === currentTitle) return;
+    const { error } = await supabase.from("conversations").update({ title: trimmed.slice(0, 80) }).eq("id", id);
+    if (error) return toast.error(error.message);
+    setConversations(prev => prev.map(c => c.id === id ? { ...c, title: trimmed.slice(0, 80) } : c));
+    toast.success("Conversa renomeada");
+  };
+
+  const clearEmptyConversations = async () => {
+    if (!userId) return;
+    // Busca contagem de mensagens por conversa do usuário
+    const { data: msgs, error: msgErr } = await supabase
+      .from("messages")
+      .select("conversation_id")
+      .eq("user_id", userId);
+    if (msgErr) return toast.error(msgErr.message);
+    const withMsgs = new Set((msgs ?? []).map(m => m.conversation_id));
+    const emptyIds = conversations
+      .filter(c => !withMsgs.has(c.id) && (c.title === "Nova conversa" || c.title.trim() === ""))
+      .map(c => c.id);
+    if (emptyIds.length === 0) {
+      toast.info("Nenhuma conversa vazia para limpar.");
+      return;
+    }
+    const ok = window.confirm(`Excluir ${emptyIds.length} conversa(s) vazia(s)?`);
+    if (!ok) return;
+    const { error } = await supabase.from("conversations").delete().in("id", emptyIds);
+    if (error) return toast.error(error.message);
+    setConversations(prev => prev.filter(c => !emptyIds.includes(c.id)));
+    if (currentId && emptyIds.includes(currentId)) { setCurrentId(null); setMessages([]); }
+    toast.success(`${emptyIds.length} conversa(s) vazia(s) removida(s).`);
   };
 
   const logout = async () => { await supabase.auth.signOut(); navigate("/auth"); };
