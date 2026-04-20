@@ -550,19 +550,19 @@ Por favor, analise: há perda de pacote? jitter alto sugere instabilidade de rot
       </div>
 
       {/* Quick actions */}
-      <div className="p-3 grid grid-cols-2 gap-2 border-b border-border">
+      <div className="px-4 py-4 grid grid-cols-2 gap-3 border-b border-border">
         <button
-          className="flex items-center justify-center gap-2 px-3 py-2.5 rounded-xl bg-secondary/60 hover:bg-secondary border border-border/60 hover:border-primary/40 transition group"
+          className="flex items-center justify-center gap-2 p-3 rounded-xl bg-secondary/70 hover:bg-secondary border border-border/70 hover:border-primary/50 transition-all group shadow-sm"
           onClick={() => toast.info("Galeria em breve")}
         >
-          <ImageIcon className="size-4 text-muted-foreground group-hover:text-primary transition" />
+          <ImageIcon className="size-[18px] text-muted-foreground group-hover:text-primary transition" />
           <span className="text-sm font-medium">Galeria</span>
         </button>
         <button
-          className="flex items-center justify-center gap-2 px-3 py-2.5 rounded-xl bg-secondary/60 hover:bg-secondary border border-border/60 hover:border-primary/40 transition group"
+          className="flex items-center justify-center gap-2 p-3 rounded-xl bg-secondary/70 hover:bg-secondary border border-border/70 hover:border-primary/50 transition-all group shadow-sm"
           onClick={() => navigate("/agents")}
         >
-          <LayoutGrid className="size-4 text-muted-foreground group-hover:text-primary transition" />
+          <LayoutGrid className="size-[18px] text-muted-foreground group-hover:text-primary transition" />
           <span className="text-sm font-medium">Agentes</span>
         </button>
       </div>
