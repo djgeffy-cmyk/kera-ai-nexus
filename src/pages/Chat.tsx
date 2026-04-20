@@ -822,7 +822,7 @@ Por favor, analise: há perda de pacote? jitter alto sugere instabilidade de rot
                   }`}
                   onClick={() => selectConversation(c.id, c.agent_key)}
                 >
-                  <span className="flex-1 min-w-0 break-words leading-snug">{c.title}</span>
+                  <span className="flex-1 min-w-0 break-words leading-snug line-clamp-2">{c.title}</span>
                   <button
                     onClick={(e) => { e.stopPropagation(); renameConversation(c.id, c.title); }}
                     className="opacity-0 group-hover:opacity-100 text-muted-foreground hover:text-foreground transition p-0.5"
