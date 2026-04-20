@@ -616,6 +616,7 @@ const Chat = () => {
   const currentAgent = getBuiltinAgent(agentKey) || customAgents.find(a => a.id === agentKey);
   const currentAgentName = currentAgent?.name || "Kera";
   const isSentinela = agentKey === "kera-sentinela";
+  const isTradutora = agentKey === "kera-tradutora";
 
   const runSentinelaCheck = async () => {
     if (streaming) return;
@@ -1148,6 +1149,20 @@ Por favor, analise: há perda de pacote? jitter alto sugere instabilidade de rot
                 </Button>
               </div>
             )}
+            {isTradutora && (
+              <div className="flex flex-wrap justify-center gap-2">
+                <Button
+                  onClick={() => setBookDialogOpen(true)}
+                  disabled={streaming}
+                  variant="outline"
+                  size="sm"
+                  className="border-amber-500/40 text-amber-400 hover:bg-amber-500/10 hover:text-amber-300 gap-2"
+                >
+                  <BookOpen className="size-4" />
+                  Traduzir livro inteiro (PDF / EPUB / TXT)
+                </Button>
+              </div>
+            )}
             {attachments.length > 0 && (
               <div className="flex flex-wrap gap-2">
                 {attachments.map((a, i) => (
@@ -1328,6 +1343,11 @@ Por favor, analise: há perda de pacote? jitter alto sugere instabilidade de rot
         />
       )}
       <GalleryDialog open={galleryOpen} onOpenChange={setGalleryOpen} userId={userId} />
+      <BookTranslateDialog
+        open={bookDialogOpen}
+        onOpenChange={setBookDialogOpen}
+        onTranslateChapter={translateBookChapter}
+      />
     </div>
   );
 };
