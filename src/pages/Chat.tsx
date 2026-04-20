@@ -17,6 +17,22 @@ import keraLogo from "@/assets/kera-logo.png";
 import keraAvatar from "@/assets/kera-avatar.png";
 import keraAvatarVideo from "@/assets/kera-avatar.mp4.asset.json";
 import keraDevBgVideo from "@/assets/kera-dev-bg.mp4.asset.json";
+import keraBgVideo from "@/assets/kera-bg.mp4.asset.json";
+import keraSecBgVideo from "@/assets/kera-sec-bg.mp4.asset.json";
+import keraJuridicaBgVideo from "@/assets/kera-juridica-bg.mp4.asset.json";
+import keraSentinelaBgVideo from "@/assets/kera-sentinela-bg.mp4.asset.json";
+import keraNutriBgVideo from "@/assets/kera-nutri-bg.mp4.asset.json";
+import keraGamerBgVideo from "@/assets/kera-gamer-bg.mp4.asset.json";
+
+const AGENT_BG_VIDEOS: Record<string, string> = {
+  "kera": keraBgVideo.url,
+  "kera-dev": keraDevBgVideo.url,
+  "kera-sec": keraSecBgVideo.url,
+  "kera-juridica": keraJuridicaBgVideo.url,
+  "kera-sentinela": keraSentinelaBgVideo.url,
+  "kera-nutri": keraNutriBgVideo.url,
+  "kera-gamer": keraGamerBgVideo.url,
+};
 import { MessageBubble, type ChatMessage } from "@/components/chat/MessageBubble";
 import { PROVIDERS, getPreferredProvider, setPreferredProvider, type ProviderId } from "@/lib/providers";
 import { BUILTIN_AGENTS, getBuiltinAgent, DEFAULT_AGENT_KEY } from "@/lib/agents";
@@ -702,8 +718,8 @@ Por favor, analise: há perda de pacote? jitter alto sugere instabilidade de rot
           }
         }}
       >
-        {agentKey === "kera-dev" && (
-          <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none">
+        {AGENT_BG_VIDEOS[agentKey] && (
+          <div key={agentKey} className="absolute inset-0 z-0 overflow-hidden pointer-events-none">
             <video
               autoPlay
               loop
@@ -711,7 +727,7 @@ Por favor, analise: há perda de pacote? jitter alto sugere instabilidade de rot
               playsInline
               className="w-full h-full object-cover opacity-30 mix-blend-screen"
             >
-              <source src={keraDevBgVideo.url} type="video/mp4" />
+              <source src={AGENT_BG_VIDEOS[agentKey]} type="video/mp4" />
             </video>
             <div className="absolute inset-0 bg-gradient-to-b from-background/40 via-background/60 to-background/90" />
           </div>
