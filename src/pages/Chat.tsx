@@ -46,8 +46,6 @@ import { exportConversationToPdf } from "@/lib/exportPdf";
 import { VoiceStatusIndicator } from "@/components/VoiceStatusIndicator";
 import { useTheme } from "@/hooks/useTheme";
 import { GalleryDialog } from "@/components/GalleryDialog";
-import { BookTranslateDialog } from "@/components/chat/BookTranslateDialog";
-import type { Chapter } from "@/lib/bookParser";
 
 type Conversation = { id: string; title: string; updated_at: string; agent_key: string };
 type CustomAgent = { id: string; name: string; system_prompt: string; description: string | null };
