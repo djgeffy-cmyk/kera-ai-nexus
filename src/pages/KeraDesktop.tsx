@@ -25,6 +25,13 @@ const KeraDesktopPage = () => {
   const desktop = isKeraDesktop();
 
   const [allowlist, setAllowlist] = useState<string[]>([]);
+  const [clip, setClip] = useState("");
+  const [shot, setShot] = useState<string | null>(null);
+  const [sysStatus, setSysStatus] = useState<KeraSystemStatus | null>(null);
+  const [openTarget, setOpenTarget] = useState("");
+  const [appName, setAppName] = useState("");
+  const [cmd, setCmd] = useState("");
+  const [execResult, setExecResult] = useState<KeraExecResult | null>(null);
 
   const refreshAllowlist = async () => {
     const k = getKera();
