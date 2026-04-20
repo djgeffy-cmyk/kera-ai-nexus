@@ -1017,7 +1017,7 @@ Por favor, analise: há perda de pacote? jitter alto sugere instabilidade de rot
           </div>
         </div>
 
-        <div className="relative z-10 border-t border-border panel p-3 md:p-4 pb-24 md:pb-28">
+        <div className="relative z-10 border-t border-border panel p-3 md:p-4 pb-28 md:pb-32">
           <div className="max-w-3xl mx-auto space-y-2">
             {isSentinela && (
               <div className="flex flex-wrap justify-center gap-2">
