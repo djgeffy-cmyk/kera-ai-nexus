@@ -1,0 +1,41 @@
+name: Build Kera Desktop (Windows)
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'electron/**'
+      - 'src/**'
+      - 'package.json'
+      - '.github/workflows/electron-build.yml'
+  workflow_dispatch:
+
+jobs:
+  build-windows:
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install Dependencies
+        run: npm ci
+
+      - name: Run Build Script
+        run: npm run electron:build
+        env:
+          ELECTRON_BUILD: 'true'
+
+      - name: Upload ZIP Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: KeraDesktop-win32-x64
+          path: release-builds/KeraDesktop-win32-x64.zip
+          if-no-files-found: error
+          retention-days: 30
