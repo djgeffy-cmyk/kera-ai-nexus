@@ -1,6 +1,6 @@
 // Janela principal da Kera Desktop. Sempre CommonJS (.cjs) porque o package.json
 // declara "type":"module" e .js viraria ESM, quebrando __dirname.
-const { app, BrowserWindow, ipcMain, dialog, shell, clipboard, desktopCapturer, screen, protocol, net } = require("electron");
+const { app, BrowserWindow, ipcMain, dialog, shell, clipboard, desktopCapturer, screen, protocol, net, Tray, Menu, nativeImage } = require("electron");
 const path = require("path");
 const fs = require("fs/promises");
 const fsSync = require("fs");
@@ -9,6 +9,8 @@ const os = require("os");
 const { setupAutoUpdater, autoUpdater } = require("./updater.cjs");
 
 let mainWindow = null;
+let mascotWindow = null;
+let tray = null;
 
 // ============= CACHE DE VÍDEOS (offline) =============
 const VIDEO_FILES = [
@@ -145,6 +147,82 @@ function createWindow() {
   });
 }
 
+// ============= JANELA MASCOTE (Kera flutuante no desktop) =============
+// Janela transparente, sem moldura, sempre no topo. Contém o vídeo da Kera
+// rodando em loop. Anda sozinha pela tela. Hands-free: escuta hotword "kera".
+function createMascotWindow() {
+  if (mascotWindow && !mascotWindow.isDestroyed()) {
+    mascotWindow.show();
+    return mascotWindow;
+  }
+  const display = screen.getPrimaryDisplay();
+  const W = 220;
+  const H = 380;
+  mascotWindow = new BrowserWindow({
+    width: W,
+    height: H,
+    x: display.workArea.width - W - 40,
+    y: display.workArea.height - H - 40,
+    frame: false,
+    transparent: true,
+    resizable: false,
+    skipTaskbar: true,
+    alwaysOnTop: true,
+    hasShadow: false,
+    focusable: true,
+    backgroundColor: "#00000000",
+    webPreferences: {
+      preload: path.join(__dirname, "preload.cjs"),
+      contextIsolation: true,
+      nodeIntegration: false,
+      sandbox: false,
+      backgroundThrottling: false,
+    },
+  });
+  mascotWindow.setAlwaysOnTop(true, "screen-saver");
+  mascotWindow.setVisibleOnAllWorkspaces(true, { visibleOnFullScreen: true });
+  mascotWindow.loadFile(path.join(__dirname, "mascot.html"));
+  mascotWindow.on("closed", () => { mascotWindow = null; });
+  return mascotWindow;
+}
+
+function destroyMascotWindow() {
+  if (mascotWindow && !mascotWindow.isDestroyed()) mascotWindow.close();
+  mascotWindow = null;
+}
+
+// ============= TRAY ICON =============
+function createTray() {
+  if (tray) return tray;
+  // Ícone fallback: pega o icon.png do build se existir, senão um vazio.
+  let iconPath = path.join(__dirname, "..", "build", "icon.png");
+  if (!fsSync.existsSync(iconPath)) iconPath = path.join(__dirname, "..", "public", "icon-512.png");
+  let icon;
+  try {
+    icon = nativeImage.createFromPath(iconPath).resize({ width: 22, height: 22 });
+  } catch {
+    icon = nativeImage.createEmpty();
+  }
+  tray = new Tray(icon);
+  tray.setToolTip("Kera AI");
+  const rebuildMenu = () => {
+    const menu = Menu.buildFromTemplate([
+      { label: "Abrir Kera", click: () => { if (mainWindow) { mainWindow.show(); mainWindow.focus(); } else { createWindow(); } } },
+      { type: "separator" },
+      {
+        label: mascotWindow ? "Esconder mascote" : "Mostrar mascote",
+        click: () => { mascotWindow ? destroyMascotWindow() : createMascotWindow(); rebuildMenu(); },
+      },
+      { type: "separator" },
+      { label: "Sair", click: () => { app.quit(); } },
+    ]);
+    tray.setContextMenu(menu);
+  };
+  rebuildMenu();
+  tray.on("click", () => { if (mainWindow) { mainWindow.show(); mainWindow.focus(); } });
+  return tray;
+}
+
 // Registra o esquema ANTES de app.whenReady para ser tratado como standard.
 protocol.registerSchemesAsPrivileged([
   { scheme: "kera-video", privileges: { standard: true, secure: true, supportFetchAPI: true, stream: true, bypassCSP: true } },
@@ -164,6 +242,7 @@ app.whenReady().then(() => {
 
   createWindow();
   setupAutoUpdater();
+  createTray();
   app.on("activate", () => {
     if (BrowserWindow.getAllWindows().length === 0) createWindow();
   });
@@ -621,4 +700,26 @@ ipcMain.handle("kera:power", async (_e, action) => {
       else resolve({ ok: true, command: cmd });
     });
   });
+});
+
+// ============= MASCOTE =============
+ipcMain.handle("kera:mascot:show", () => { createMascotWindow(); return { ok: true }; });
+ipcMain.handle("kera:mascot:hide", () => { destroyMascotWindow(); return { ok: true }; });
+ipcMain.handle("kera:mascot:status", () => ({ visible: !!(mascotWindow && !mascotWindow.isDestroyed()) }));
+
+// Mascote pediu pra abrir o chat (foi acionada por hotword "kera")
+ipcMain.handle("kera:mascot:wake", () => {
+  if (!mainWindow || mainWindow.isDestroyed()) createWindow();
+  else { mainWindow.show(); mainWindow.focus(); }
+  // Avisa o renderer principal que veio da hotword
+  if (mainWindow && !mainWindow.isDestroyed()) {
+    mainWindow.webContents.send("kera:hotword", { source: "mascot" });
+  }
+  return { ok: true };
+});
+
+// Mascote precisa do caminho local do vídeo (kera-video:// URL)
+ipcMain.handle("kera:mascot:videoUrl", () => {
+  const map = cachedVideoMap();
+  return map["kera-avatar.mp4"] || null;
 });

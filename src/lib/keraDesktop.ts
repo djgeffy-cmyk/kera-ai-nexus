@@ -92,6 +92,14 @@ export type KeraDesktopApi = {
     clear: () => Promise<{ ok: boolean }>;
     onProgress: (cb: (p: { name: string; received: number; total: number }) => void) => () => void;
   };
+  mascot: {
+    show: () => Promise<{ ok: boolean }>;
+    hide: () => Promise<{ ok: boolean }>;
+    status: () => Promise<{ visible: boolean }>;
+    wake: () => Promise<{ ok: boolean }>;
+    videoUrl: () => Promise<string | null>;
+    onHotword: (cb: (payload: { source: string }) => void) => () => void;
+  };
 };
 
 declare global {

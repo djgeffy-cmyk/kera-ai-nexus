@@ -61,4 +61,16 @@ contextBridge.exposeInMainWorld("kera", {
       return () => ipcRenderer.removeListener("kera:videos:progress", handler);
     },
   },
+  mascot: {
+    show: () => ipcRenderer.invoke("kera:mascot:show"),
+    hide: () => ipcRenderer.invoke("kera:mascot:hide"),
+    status: () => ipcRenderer.invoke("kera:mascot:status"),
+    wake: () => ipcRenderer.invoke("kera:mascot:wake"),
+    videoUrl: () => ipcRenderer.invoke("kera:mascot:videoUrl"),
+    onHotword: (cb) => {
+      const handler = (_e, payload) => cb(payload);
+      ipcRenderer.on("kera:hotword", handler);
+      return () => ipcRenderer.removeListener("kera:hotword", handler);
+    },
+  },
 });

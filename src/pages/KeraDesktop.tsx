@@ -39,6 +39,7 @@ const KeraDesktopPage = () => {
   const [videosStatus, setVideosStatus] = useState<{ cached: string[]; missing: string[]; total: number; dir: string } | null>(null);
   const [videosDownloading, setVideosDownloading] = useState(false);
   const [videosProgress, setVideosProgress] = useState<{ name: string; received: number; total: number } | null>(null);
+  const [mascotVisible, setMascotVisible] = useState(false);
 
   useEffect(() => {
     const k = getKera();
@@ -48,6 +49,7 @@ const KeraDesktopPage = () => {
     k.videos.status().then((s) =>
       setVideosStatus({ cached: s.cached, missing: s.missing, total: s.total, dir: s.dir }),
     ).catch(() => undefined);
+    k.mascot?.status().then((s) => setMascotVisible(s.visible)).catch(() => undefined);
     return () => { off?.(); offV?.(); };
   }, []);
 
@@ -395,6 +397,31 @@ const KeraDesktopPage = () => {
               <Lock className="size-4" /> Bloquear
             </Button>
           </div>
+        </Card>
+
+        {/* MASCOTE — Kera flutuante no desktop */}
+        <Card className="p-4 space-y-3">
+          <div className="flex items-center justify-between gap-2 flex-wrap">
+            <div className="flex items-center gap-2">
+              <Sparkles className="size-4 text-primary" />
+              <h2 className="text-sm uppercase tracking-wider text-muted-foreground">Mascote da Kera</h2>
+            </div>
+            <Button
+              size="sm"
+              variant={mascotVisible ? "default" : "outline"}
+              className="gap-2"
+              onClick={async () => {
+                const k = getKera(); if (!k?.mascot) return;
+                if (mascotVisible) { await k.mascot.hide(); setMascotVisible(false); toast.success("Mascote escondido"); }
+                else { await k.mascot.show(); setMascotVisible(true); toast.success("Mascote ativado — diga \"Kera\" pra me chamar"); }
+              }}
+            >
+              <Sparkles className="size-4" /> {mascotVisible ? "Esconder mascote" : "Mostrar mascote"}
+            </Button>
+          </div>
+          <p className="text-xs text-muted-foreground">
+            Janela transparente sempre no topo. A Kera anda sozinha pela tela e fica escutando — fale <span className="text-primary font-medium">"Kera"</span> e ela abre o chat. Hands-free.
+          </p>
         </Card>
 
         {/* ATUALIZAÇÕES */}
