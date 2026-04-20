@@ -8,7 +8,7 @@ import { toast } from "sonner";
 import {
   Plus, LogOut, Send, MessageSquare, Trash2, Menu, Settings,
   Image as ImageIcon, LayoutGrid, FolderPlus, Mic, MicOff, Volume2, VolumeX, Bot, ChevronRight,
-  Paperclip, X, FileText, ShieldCheck, Activity, Download, Ear, Sun, Moon, Sparkles,
+  Paperclip, X, FileText, ShieldCheck, Activity, Download, Ear, Sun, Moon, Sparkles, Gem,
 } from "lucide-react";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -821,15 +821,16 @@ Por favor, analise: há perda de pacote? jitter alto sugere instabilidade de rot
                 <Button
                   variant="ghost" size="icon"
                   aria-label="Trocar tema"
-                  title={`Tema atual: ${theme === "dark" ? "Escuro" : theme === "light" ? "Claro" : "Kera"}`}
+                  title={`Tema: ${theme === "dark" ? "Escuro" : theme === "light" ? "Claro" : theme === "kera" ? "Kera Mode" : "Kera Premium"}`}
                   className="text-muted-foreground hover:text-primary shrink-0 h-9 w-9"
                 >
                   {theme === "dark" && <Moon className="size-5" />}
                   {theme === "light" && <Sun className="size-5" />}
                   {theme === "kera" && <Sparkles className="size-5 text-primary" />}
+                  {theme === "kera-premium" && <Gem className="size-5 text-primary" />}
                 </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-44">
+              <DropdownMenuContent align="end" className="w-48">
                 <DropdownMenuLabel>Tema</DropdownMenuLabel>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem onClick={() => setTheme("dark")} className="gap-2">
@@ -840,6 +841,9 @@ Por favor, analise: há perda de pacote? jitter alto sugere instabilidade de rot
                 </DropdownMenuItem>
                 <DropdownMenuItem onClick={() => setTheme("kera")} className="gap-2">
                   <Sparkles className="size-4" /> Kera Mode {theme === "kera" && <span className="ml-auto text-primary">●</span>}
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setTheme("kera-premium")} className="gap-2">
+                  <Gem className="size-4" /> Kera Premium {theme === "kera-premium" && <span className="ml-auto text-primary">●</span>}
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>

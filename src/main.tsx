@@ -7,6 +7,7 @@ try {
   const saved = localStorage.getItem("kera:theme");
   if (saved === "light") document.documentElement.classList.add("light");
   else if (saved === "kera") document.documentElement.classList.add("kera");
+  else if (saved === "kera-premium") document.documentElement.classList.add("kera-premium");
 } catch {}
 
 createRoot(document.getElementById("root")!).render(<App />);
