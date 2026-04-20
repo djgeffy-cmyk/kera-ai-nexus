@@ -1,0 +1,223 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8" />
+<meta http-equiv="Content-Security-Policy" content="default-src 'self' kera-video: https://*.supabase.co data: blob:; media-src 'self' kera-video: https://*.supabase.co blob:; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline';" />
+<title>Kera Mascote</title>
+<style>
+  html, body {
+    margin: 0; padding: 0; height: 100%; width: 100%;
+    background: transparent !important;
+    overflow: hidden;
+    -webkit-user-select: none;
+    cursor: default;
+  }
+  #stage {
+    position: relative;
+    width: 100vw;
+    height: 100vh;
+    background: transparent;
+    /* Toda a janela é arrastável, exceto botões */
+    -webkit-app-region: drag;
+  }
+  #avatar {
+    position: absolute;
+    inset: 20px 10px 40px 10px;
+    border-radius: 50%;
+    overflow: hidden;
+    box-shadow:
+      0 0 0 2px rgba(0, 220, 255, 0.55),
+      0 0 30px rgba(0, 220, 255, 0.55),
+      0 0 80px rgba(0, 220, 255, 0.35);
+    background: radial-gradient(circle at 50% 35%, rgba(0,220,255,.18), transparent 70%);
+    transition: transform 200ms ease-out, box-shadow 250ms ease-out;
+  }
+  #avatar.listening { box-shadow: 0 0 0 3px rgba(0, 255, 180, 0.85), 0 0 50px rgba(0, 255, 180, 0.7), 0 0 120px rgba(0, 255, 180, 0.45); }
+  #avatar.speaking  { box-shadow: 0 0 0 3px rgba(255, 200, 0, 0.85), 0 0 50px rgba(255, 200, 0, 0.7), 0 0 120px rgba(255, 200, 0, 0.45); }
+  #avatar video, #avatar img {
+    width: 100%; height: 100%; object-fit: cover; pointer-events: none;
+  }
+  /* glow flutuante atrás (partículas) */
+  #stage::before {
+    content: "";
+    position: absolute;
+    inset: 30%;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(0,220,255,0.35), transparent 65%);
+    filter: blur(20px);
+    animation: pulse 3s ease-in-out infinite;
+    pointer-events: none;
+  }
+  @keyframes pulse {
+    0%, 100% { opacity: .5; transform: scale(1); }
+    50%      { opacity: .9; transform: scale(1.08); }
+  }
+  /* badge "ouvindo" */
+  #status {
+    position: absolute;
+    bottom: 6px;
+    left: 50%;
+    transform: translateX(-50%);
+    font: 10px/1 -apple-system, system-ui, sans-serif;
+    color: rgba(255,255,255,.8);
+    background: rgba(0,0,0,.55);
+    backdrop-filter: blur(6px);
+    padding: 4px 8px;
+    border-radius: 999px;
+    border: 1px solid rgba(0,220,255,.4);
+    -webkit-app-region: no-drag;
+    pointer-events: none;
+    white-space: nowrap;
+  }
+  /* botões mini canto */
+  #controls {
+    position: absolute;
+    top: 4px; right: 4px;
+    display: flex; gap: 2px;
+    -webkit-app-region: no-drag;
+    opacity: 0;
+    transition: opacity 200ms;
+  }
+  #stage:hover #controls { opacity: 1; }
+  .btn {
+    width: 22px; height: 22px;
+    border: 1px solid rgba(0,220,255,.4);
+    background: rgba(0,0,0,.55);
+    color: #fff;
+    border-radius: 50%;
+    font: 12px/1 sans-serif;
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .btn:hover { background: rgba(0,220,255,.3); }
+</style>
+</head>
+<body>
+<div id="stage">
+  <div id="avatar">
+    <video id="vid" autoplay loop muted playsinline></video>
+  </div>
+  <div id="controls">
+    <button class="btn" id="muteBtn" title="Pausar escuta">🎤</button>
+    <button class="btn" id="closeBtn" title="Esconder mascote">×</button>
+  </div>
+  <div id="status">aguardando "Kera"</div>
+</div>
+
+<script>
+  // ===== Carrega vídeo da Kera (cacheado offline pelo main) =====
+  (async () => {
+    const url = await window.kera?.mascot?.videoUrl?.();
+    const vid = document.getElementById("vid");
+    if (url) {
+      vid.src = url;
+    } else {
+      // Fallback online
+      vid.src = "https://ytixqgkzqgeoxrbmjqbo.supabase.co/storage/v1/object/public/kera-videos/kera-avatar.mp4";
+    }
+    vid.play().catch(() => {});
+  })();
+
+  // ===== Movimento autônomo: anda sozinha pela tela =====
+  // A janela é movida via window.moveTo (Electron suporta).
+  let moveEnabled = true;
+  function wander() {
+    if (!moveEnabled) return;
+    const sw = screen.availWidth;
+    const sh = screen.availHeight;
+    const ww = window.outerWidth;
+    const wh = window.outerHeight;
+    const margin = 30;
+    const targetX = Math.floor(margin + Math.random() * (sw - ww - margin * 2));
+    const targetY = Math.floor(margin + Math.random() * (sh - wh - margin * 2));
+    // Animação suave via passos
+    const startX = window.screenX, startY = window.screenY;
+    const dur = 1200 + Math.random() * 1800;
+    const t0 = performance.now();
+    function step(t) {
+      const k = Math.min(1, (t - t0) / dur);
+      const ease = k < 0.5 ? 2*k*k : 1 - Math.pow(-2*k+2, 2)/2;
+      const x = Math.round(startX + (targetX - startX) * ease);
+      const y = Math.round(startY + (targetY - startY) * ease);
+      window.moveTo(x, y);
+      if (k < 1) requestAnimationFrame(step);
+    }
+    requestAnimationFrame(step);
+  }
+  // Anda a cada 8-15 segundos
+  setInterval(() => { if (moveEnabled && !document.hidden) wander(); }, 12000);
+
+  // ===== Hotword "kera" (Web Speech API) =====
+  const status = document.getElementById("status");
+  const avatar = document.getElementById("avatar");
+  let recognition = null;
+  let micMuted = false;
+
+  function setStatus(text, cls) {
+    status.textContent = text;
+    avatar.classList.remove("listening", "speaking");
+    if (cls) avatar.classList.add(cls);
+  }
+
+  function startListening() {
+    const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!SR) {
+      setStatus("voz indisponível", null);
+      return;
+    }
+    recognition = new SR();
+    recognition.lang = "pt-BR";
+    recognition.continuous = true;
+    recognition.interimResults = true;
+    recognition.onresult = (ev) => {
+      for (let i = ev.resultIndex; i < ev.results.length; i++) {
+        const transcript = ev.results[i][0].transcript.toLowerCase().trim();
+        if (/\bkera\b/.test(transcript)) {
+          setStatus("ouvi você!", "speaking");
+          window.kera?.mascot?.wake?.();
+          setTimeout(() => setStatus("aguardando \"Kera\"", null), 2500);
+        }
+      }
+    };
+    recognition.onerror = (e) => {
+      // Reinicia em caso de erro recuperável
+      if (e.error === "no-speech" || e.error === "audio-capture" || e.error === "network") {
+        setTimeout(() => { try { recognition.start(); } catch {} }, 1500);
+      } else {
+        setStatus("erro: " + e.error, null);
+      }
+    };
+    recognition.onend = () => {
+      // Continua escutando
+      if (!micMuted) setTimeout(() => { try { recognition.start(); } catch {} }, 500);
+    };
+    try {
+      recognition.start();
+      avatar.classList.add("listening");
+    } catch (e) {
+      setStatus("falha ao iniciar mic", null);
+    }
+  }
+
+  // Pede permissão de microfone primeiro
+  navigator.mediaDevices?.getUserMedia({ audio: true })
+    .then(() => startListening())
+    .catch(() => setStatus("permita o microfone", null));
+
+  // ===== Botões =====
+  document.getElementById("muteBtn").onclick = () => {
+    micMuted = !micMuted;
+    if (micMuted) {
+      try { recognition?.stop(); } catch {}
+      setStatus("mic pausado", null);
+      document.getElementById("muteBtn").textContent = "🔇";
+    } else {
+      startListening();
+      setStatus("aguardando \"Kera\"", "listening");
+      document.getElementById("muteBtn").textContent = "🎤";
+    }
+  };
+  document.getElementById("closeBtn").onclick = () => window.kera?.mascot?.hide?.();
+</script>
+</body>
+</html>
