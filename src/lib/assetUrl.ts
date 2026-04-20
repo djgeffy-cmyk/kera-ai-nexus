@@ -19,6 +19,13 @@ const isElectron = (): boolean =>
 // Match: /__l5e/assets-v1/<uuid>/<filename>.mp4  → kera-videos/<filename>.mp4
 const VIDEO_BUCKET_RE = /^\/__l5e\/assets-v1\/[^/]+\/([^/]+\.mp4)$/i;
 
+// Cache local de vídeos no Kera Desktop (preenchido em boot via window.kera.videos.status()).
+// Mapa { "kera-bg.mp4": "kera-video://local/kera-bg.mp4" }
+let DESKTOP_VIDEO_CACHE: Record<string, string> = {};
+export const setDesktopVideoCache = (map: Record<string, string>) => {
+  DESKTOP_VIDEO_CACHE = map || {};
+};
+
 export const assetUrl = (urlOrAsset: string | { url: string }): string => {
   const raw = typeof urlOrAsset === "string" ? urlOrAsset : urlOrAsset?.url;
   if (!raw) return raw;
@@ -26,7 +33,12 @@ export const assetUrl = (urlOrAsset: string | { url: string }): string => {
 
   // 1) Vídeos migrados para o bucket público kera-videos
   const m = raw.match(VIDEO_BUCKET_RE);
-  if (m) return `${STORAGE_PUBLIC}/${m[1]}`;
+  if (m) {
+    const fname = m[1];
+    // No desktop, se o vídeo já estiver baixado, usa o arquivo local (offline).
+    if (DESKTOP_VIDEO_CACHE[fname]) return DESKTOP_VIDEO_CACHE[fname];
+    return `${STORAGE_PUBLIC}/${fname}`;
+  }
 
   // 2) Demais paths absolutos: no Electron, prefixar com domínio público
   if (isElectron() && raw.startsWith("/")) return `${PUBLIC_HOST}${raw}`;
