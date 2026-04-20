@@ -6,6 +6,7 @@ const fs = require("fs/promises");
 const fsSync = require("fs");
 const { exec, spawn } = require("child_process");
 const os = require("os");
+const { setupAutoUpdater, autoUpdater } = require("./updater.cjs");
 
 let mainWindow = null;
 
@@ -77,9 +78,25 @@ function createWindow() {
 
 app.whenReady().then(() => {
   createWindow();
+  setupAutoUpdater();
   app.on("activate", () => {
     if (BrowserWindow.getAllWindows().length === 0) createWindow();
   });
+});
+
+// IPC: checagem manual de update + status
+ipcMain.handle("kera:update:check", async () => {
+  try {
+    const r = await autoUpdater.checkForUpdates();
+    return { ok: true, version: r?.updateInfo?.version || null };
+  } catch (e) {
+    return { ok: false, error: String(e?.message || e) };
+  }
+});
+
+ipcMain.handle("kera:update:install", () => {
+  autoUpdater.quitAndInstall();
+  return { ok: true };
 });
 
 app.on("window-all-closed", () => {

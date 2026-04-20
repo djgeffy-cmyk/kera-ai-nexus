@@ -1,7 +1,7 @@
 {
   "name": "keradesktop",
   "private": true,
-  "version": "0.0.0",
+  "version": "0.1.0",
   "type": "module",
   "main": "electron/main.cjs",
   "scripts": {
@@ -13,7 +13,8 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "electron:dev": "ELECTRON_DEV_URL=http://localhost:8080 electron .",
-    "electron:build": "node electron/build.cjs"
+    "electron:build": "node electron/build.cjs",
+    "electron:release": "vite build && electron-builder --linux AppImage --config electron-builder.config.cjs --publish always"
   },
   "dependencies": {
     "@dnd-kit/core": "^6.3.1",
@@ -51,11 +52,13 @@
     "@radix-ui/react-tooltip": "^1.2.7",
     "@supabase/supabase-js": "^2.103.3",
     "@tanstack/react-query": "^5.83.0",
-    "bestzip": "^2.2.3",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "cmdk": "^1.1.1",
     "date-fns": "^3.6.0",
+    "electron-builder": "^25.1.8",
+    "electron-log": "^5.2.0",
+    "electron-updater": "^6.3.9",
     "embla-carousel-react": "^8.6.0",
     "input-otp": "^1.4.2",
     "jspdf": "^4.2.1",
