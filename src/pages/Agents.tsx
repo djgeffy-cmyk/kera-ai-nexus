@@ -144,9 +144,14 @@ const AgentsPage = () => {
         </section>
 
         <section>
-          <h2 className="font-display text-sm uppercase tracking-wider text-muted-foreground mb-3">Seus agentes</h2>
+          <h2 className="font-display text-sm uppercase tracking-wider text-muted-foreground mb-1">Seus agentes customizados</h2>
+          <p className="text-xs text-muted-foreground/70 mb-3">Crie aqui agentes extras com prompt personalizado — os agentes prontos acima já estão ativos no chat.</p>
           {agents.length === 0 ? (
-            <p className="text-sm text-muted-foreground">Nenhum agente customizado. Clique em "Novo agente" para criar.</p>
+            <Card className="p-6 panel border-dashed border-border/60 text-center">
+              <Sparkles className="size-6 text-primary/60 mx-auto mb-2" />
+              <p className="text-sm text-muted-foreground">Você ainda não criou nenhum agente customizado.</p>
+              <p className="text-xs text-muted-foreground/70 mt-1">Use "Novo agente" no topo pra montar um especialista do seu jeito.</p>
+            </Card>
           ) : (
             <div className="grid sm:grid-cols-2 gap-3">
               {agents.map(a => (
