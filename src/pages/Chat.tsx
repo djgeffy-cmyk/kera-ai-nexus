@@ -9,7 +9,7 @@ import {
   Plus, LogOut, Send, MessageSquare, Trash2, Menu, Settings,
   Image as ImageIcon, LayoutGrid, FolderPlus, Mic, MicOff, Volume2, VolumeX, Bot, ChevronRight,
   Paperclip, X, FileText, ShieldCheck, Activity, Download, Ear, Sun, Moon, Sparkles, Gem,
-  PanelLeftClose, PanelLeftOpen, Camera,
+  PanelLeftClose, PanelLeftOpen, Camera, Pencil, Eraser,
 } from "lucide-react";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -205,6 +205,42 @@ const Chat = () => {
     if (error) return toast.error(error.message);
     setConversations(conversations.filter(c => c.id !== id));
     if (currentId === id) { setCurrentId(null); setMessages([]); }
+  };
+
+  const renameConversation = async (id: string, currentTitle: string) => {
+    const next = window.prompt("Renomear conversa:", currentTitle);
+    if (next == null) return;
+    const trimmed = next.trim();
+    if (!trimmed || trimmed === currentTitle) return;
+    const { error } = await supabase.from("conversations").update({ title: trimmed.slice(0, 80) }).eq("id", id);
+    if (error) return toast.error(error.message);
+    setConversations(prev => prev.map(c => c.id === id ? { ...c, title: trimmed.slice(0, 80) } : c));
+    toast.success("Conversa renomeada");
+  };
+
+  const clearEmptyConversations = async () => {
+    if (!userId) return;
+    // Busca contagem de mensagens por conversa do usuário
+    const { data: msgs, error: msgErr } = await supabase
+      .from("messages")
+      .select("conversation_id")
+      .eq("user_id", userId);
+    if (msgErr) return toast.error(msgErr.message);
+    const withMsgs = new Set((msgs ?? []).map(m => m.conversation_id));
+    const emptyIds = conversations
+      .filter(c => !withMsgs.has(c.id) && (c.title === "Nova conversa" || c.title.trim() === ""))
+      .map(c => c.id);
+    if (emptyIds.length === 0) {
+      toast.info("Nenhuma conversa vazia para limpar.");
+      return;
+    }
+    const ok = window.confirm(`Excluir ${emptyIds.length} conversa(s) vazia(s)?`);
+    if (!ok) return;
+    const { error } = await supabase.from("conversations").delete().in("id", emptyIds);
+    if (error) return toast.error(error.message);
+    setConversations(prev => prev.filter(c => !emptyIds.includes(c.id)));
+    if (currentId && emptyIds.includes(currentId)) { setCurrentId(null); setMessages([]); }
+    toast.success(`${emptyIds.length} conversa(s) vazia(s) removida(s).`);
   };
 
   const logout = async () => { await supabase.auth.signOut(); navigate("/auth"); };
@@ -649,7 +685,19 @@ Por favor, analise: há perda de pacote? jitter alto sugere instabilidade de rot
 
         {/* Histórico agrupado */}
         <div className="px-2 pt-3 pb-4">
-          <h3 className="text-[11px] uppercase tracking-wider text-muted-foreground/70 px-2.5 mb-1">Histórico</h3>
+          <div className="flex items-center justify-between px-2.5 mb-1">
+            <h3 className="text-[11px] uppercase tracking-wider text-muted-foreground/70">Histórico</h3>
+            {conversations.length > 0 && (
+              <button
+                onClick={clearEmptyConversations}
+                className="text-[10px] uppercase tracking-wider text-muted-foreground/60 hover:text-foreground transition flex items-center gap-1"
+                title="Excluir conversas vazias (sem mensagens)"
+              >
+                <Eraser className="size-3" />
+                Limpar vazias
+              </button>
+            )}
+          </div>
           {groupedConversations.length === 0 && (
             <p className="text-xs text-muted-foreground/70 text-center py-4 px-2">Sem conversas ainda.</p>
           )}
@@ -661,16 +709,25 @@ Por favor, analise: há perda de pacote? jitter alto sugere instabilidade de rot
               {group.items.map(c => (
                 <div
                   key={c.id}
-                  className={`group flex items-center gap-2 rounded-md px-2.5 py-1.5 text-sm cursor-pointer transition ${
+                  className={`group flex items-center gap-1 rounded-md px-2.5 py-1.5 text-sm cursor-pointer transition ${
                     currentId === c.id ? "bg-secondary/80 text-foreground" : "hover:bg-secondary/60 text-muted-foreground hover:text-foreground"
                   }`}
                   onClick={() => selectConversation(c.id, c.agent_key)}
                 >
                   <span className="truncate flex-1">{c.title}</span>
                   <button
+                    onClick={(e) => { e.stopPropagation(); renameConversation(c.id, c.title); }}
+                    className="opacity-0 group-hover:opacity-100 text-muted-foreground hover:text-foreground transition p-0.5"
+                    aria-label="Renomear conversa"
+                    title="Renomear"
+                  >
+                    <Pencil className="size-3.5" />
+                  </button>
+                  <button
                     onClick={(e) => { e.stopPropagation(); deleteConversation(c.id); }}
-                    className="opacity-0 group-hover:opacity-100 text-muted-foreground hover:text-destructive transition"
+                    className="opacity-0 group-hover:opacity-100 text-muted-foreground hover:text-destructive transition p-0.5"
                     aria-label="Excluir conversa"
+                    title="Excluir"
                   >
                     <Trash2 className="size-3.5" />
                   </button>
