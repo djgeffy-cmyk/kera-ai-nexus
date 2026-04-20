@@ -56,6 +56,56 @@
     --sidebar-border: 215 30% 14%;
     --sidebar-ring: 187 100% 55%;
   }
+
+  .light {
+    /* Kera AI — light mode (clean, soft cyan accents) */
+    --background: 210 40% 98%;
+    --foreground: 222 47% 11%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 222 47% 11%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 222 47% 11%;
+
+    --primary: 187 85% 38%;
+    --primary-foreground: 0 0% 100%;
+    --primary-glow: 187 85% 50%;
+
+    --secondary: 210 30% 94%;
+    --secondary-foreground: 222 47% 11%;
+
+    --muted: 210 30% 92%;
+    --muted-foreground: 215 16% 40%;
+
+    --accent: 187 80% 42%;
+    --accent-foreground: 0 0% 100%;
+
+    --destructive: 0 75% 50%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 215 25% 85%;
+    --input: 215 25% 88%;
+    --ring: 187 85% 38%;
+
+    --gradient-cyber: linear-gradient(135deg, hsl(187 85% 38%) 0%, hsl(210 80% 50%) 100%);
+    --gradient-bg: radial-gradient(ellipse at top, hsl(187 60% 90% / 0.6), transparent 60%),
+                   radial-gradient(ellipse at bottom right, hsl(187 85% 75% / 0.25), transparent 55%),
+                   hsl(210 40% 98%);
+    --gradient-panel: linear-gradient(180deg, hsl(0 0% 100% / 0.85), hsl(210 30% 96% / 0.85));
+
+    --shadow-glow: 0 0 30px hsl(187 85% 38% / 0.25), 0 0 80px hsl(187 85% 38% / 0.1);
+    --shadow-soft: 0 10px 40px -10px hsl(187 85% 38% / 0.2);
+
+    --sidebar-background: 210 35% 96%;
+    --sidebar-foreground: 222 30% 20%;
+    --sidebar-primary: 187 85% 38%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 210 30% 92%;
+    --sidebar-accent-foreground: 222 47% 11%;
+    --sidebar-border: 215 25% 85%;
+    --sidebar-ring: 187 85% 38%;
+  }
 }
 
 @layer base {
