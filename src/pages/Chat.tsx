@@ -963,24 +963,6 @@ Por favor, analise: há perda de pacote? jitter alto sugere instabilidade de rot
         </div>
 
         <div className="relative z-10 border-t border-border panel p-3 md:p-4 pb-10 md:pb-12">
-          {/* Space in Cloud — logo discreta no rodapé */}
-          <a
-            href="https://app.spaceincloud.com.br/"
-            target="_blank"
-            rel="noopener noreferrer"
-            aria-label="Acessar Kera AI Space in Cloud"
-            title="Kera AI · Space in Cloud — Soluções em Nuvem"
-            className="hidden md:flex absolute right-4 bottom-2 z-20 items-center gap-1 bg-transparent opacity-70 hover:opacity-100 transition-opacity"
-          >
-            <img
-              src={keraSpaceLogo}
-              alt="Kera AI Space in Cloud"
-              className="h-8 w-auto bg-transparent"
-              loading="lazy"
-              decoding="async"
-              style={{ background: "transparent" }}
-            />
-          </a>
           <div className="max-w-3xl mx-auto space-y-2">
             {isSentinela && (
               <div className="flex flex-wrap justify-center gap-2">
