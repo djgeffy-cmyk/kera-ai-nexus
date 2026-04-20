@@ -196,6 +196,49 @@ const KeraDesktopPage = () => {
           </div>
         </Card>
 
+        {/* PASTAS AUTORIZADAS — allow-list de segurança */}
+        <Card className="p-4 space-y-3">
+          <div className="flex items-center justify-between gap-2 flex-wrap">
+            <div className="flex items-center gap-2">
+              <ShieldCheck className="size-4 text-primary" />
+              <h2 className="text-sm uppercase tracking-wider text-muted-foreground">Pastas autorizadas</h2>
+            </div>
+            <Button onClick={addAllowed} size="sm" className="gap-2">
+              <Plus className="size-4" /> Autorizar pasta
+            </Button>
+          </div>
+          <p className="text-xs text-muted-foreground">
+            A Kera só pode ler, escrever ou apagar arquivos dentro destas pastas. Cada escrita ou exclusão ainda pede confirmação.
+          </p>
+          {allowlist.length === 0 ? (
+            <div className="text-xs text-muted-foreground italic border border-dashed border-border rounded-md p-3">
+              Nenhuma pasta autorizada. Clique em "Autorizar pasta" para liberar acesso.
+            </div>
+          ) : (
+            <ul className="space-y-1">
+              {allowlist.map((p) => (
+                <li
+                  key={p}
+                  className="flex items-center justify-between gap-2 px-3 py-1.5 rounded-md bg-secondary/40 text-xs font-mono"
+                >
+                  <button onClick={() => setCwd(p)} className="truncate text-left hover:text-primary transition flex-1">
+                    {p}
+                  </button>
+                  <Button
+                    onClick={() => removeAllowed(p)}
+                    variant="ghost"
+                    size="sm"
+                    className="h-6 w-6 p-0 shrink-0"
+                    title="Revogar"
+                  >
+                    <X className="size-3" />
+                  </Button>
+                </li>
+              ))}
+            </ul>
+          )}
+        </Card>
+
         {/* EXPLORADOR DE ARQUIVOS */}
         <Card className="p-4 space-y-3">
           <div className="flex items-center justify-between gap-2 flex-wrap">
