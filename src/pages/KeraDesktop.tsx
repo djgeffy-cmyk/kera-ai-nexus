@@ -32,6 +32,43 @@ const KeraDesktopPage = () => {
   const [appName, setAppName] = useState("");
   const [cmd, setCmd] = useState("");
   const [execResult, setExecResult] = useState<KeraExecResult | null>(null);
+  const [updateStatus, setUpdateStatus] = useState<{ state: string; version?: string; percent?: number; message?: string } | null>(null);
+  const [checkingUpdate, setCheckingUpdate] = useState(false);
+
+  useEffect(() => {
+    const k = getKera();
+    if (!k) return;
+    const off = k.update.onStatus((payload) => setUpdateStatus(payload));
+    return () => { off?.(); };
+  }, []);
+
+  const checkUpdate = async () => {
+    const k = getKera(); if (!k) return;
+    setCheckingUpdate(true);
+    setUpdateStatus({ state: "checking" });
+    try {
+      const r = await k.update.check();
+      if (r.skipped) {
+        toast.info(`Auto-update desativado (${r.reason || "modo dev"})`);
+        setUpdateStatus({ state: "skipped", message: r.reason });
+      } else if (!r.ok) {
+        toast.error(r.error || "Falha ao verificar");
+      } else if (r.updateInfo?.version) {
+        toast.success(`Atualização disponível: v${r.updateInfo.version}`);
+      } else {
+        toast.success("Você está na versão mais recente");
+      }
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Erro ao verificar");
+    } finally {
+      setCheckingUpdate(false);
+    }
+  };
+
+  const installUpdate = async () => {
+    const k = getKera(); if (!k) return;
+    await k.update.install();
+  };
 
   const refreshAllowlist = async () => {
     const k = getKera();
