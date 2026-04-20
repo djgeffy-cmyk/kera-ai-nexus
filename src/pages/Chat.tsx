@@ -67,6 +67,7 @@ const Chat = () => {
   const [input, setInput] = useState("");
   const [streaming, setStreaming] = useState(false);
   const [userId, setUserId] = useState<string | null>(null);
+  const [galleryOpen, setGalleryOpen] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
   const [provider, setProvider] = useState<ProviderId>(getPreferredProvider());
   // Modo voz NÃO persiste — sempre começa desligado a cada sessão para evitar
