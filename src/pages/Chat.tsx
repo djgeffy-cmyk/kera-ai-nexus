@@ -50,6 +50,7 @@ import { VoiceStatusIndicator } from "@/components/VoiceStatusIndicator";
 import { useTheme } from "@/hooks/useTheme";
 import { GalleryDialog } from "@/components/GalleryDialog";
 import KeraAvatar3D from "@/components/KeraAvatar3D";
+import { saveVRM, getVRMObjectURL, clearVRM } from "@/lib/vrmStorage";
 
 type Conversation = { id: string; title: string; updated_at: string; agent_key: string };
 type CustomAgent = { id: string; name: string; system_prompt: string; description: string | null };
