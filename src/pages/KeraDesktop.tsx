@@ -399,6 +399,31 @@ const KeraDesktopPage = () => {
           </div>
         </Card>
 
+        {/* MASCOTE — Kera flutuante no desktop */}
+        <Card className="p-4 space-y-3">
+          <div className="flex items-center justify-between gap-2 flex-wrap">
+            <div className="flex items-center gap-2">
+              <Sparkles className="size-4 text-primary" />
+              <h2 className="text-sm uppercase tracking-wider text-muted-foreground">Mascote da Kera</h2>
+            </div>
+            <Button
+              size="sm"
+              variant={mascotVisible ? "default" : "outline"}
+              className="gap-2"
+              onClick={async () => {
+                const k = getKera(); if (!k?.mascot) return;
+                if (mascotVisible) { await k.mascot.hide(); setMascotVisible(false); toast.success("Mascote escondido"); }
+                else { await k.mascot.show(); setMascotVisible(true); toast.success("Mascote ativado — diga \"Kera\" pra me chamar"); }
+              }}
+            >
+              <Sparkles className="size-4" /> {mascotVisible ? "Esconder mascote" : "Mostrar mascote"}
+            </Button>
+          </div>
+          <p className="text-xs text-muted-foreground">
+            Janela transparente sempre no topo. A Kera anda sozinha pela tela e fica escutando — fale <span className="text-primary font-medium">"Kera"</span> e ela abre o chat. Hands-free.
+          </p>
+        </Card>
+
         {/* ATUALIZAÇÕES */}
         <Card className="p-4 space-y-3">
           <div className="flex items-center justify-between gap-2 flex-wrap">
