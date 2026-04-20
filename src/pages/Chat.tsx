@@ -570,61 +570,96 @@ Por favor, analise: há perda de pacote? jitter alto sugere instabilidade de rot
     }
   };
 
+  // Agrupa conversas por período (Hoje / Ontem / Anteriores)
+  const groupedConversations = (() => {
+    const now = new Date();
+    const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
+    const startOfYesterday = startOfToday - 24 * 60 * 60 * 1000;
+    const groups: { label: string; items: Conversation[] }[] = [
+      { label: "Hoje", items: [] },
+      { label: "Ontem", items: [] },
+      { label: "Anteriores", items: [] },
+    ];
+    for (const c of conversations) {
+      const t = new Date(c.updated_at).getTime();
+      if (t >= startOfToday) groups[0].items.push(c);
+      else if (t >= startOfYesterday) groups[1].items.push(c);
+      else groups[2].items.push(c);
+    }
+    return groups.filter(g => g.items.length > 0);
+  })();
+
   const Sidebar = () => (
     <aside className="h-full w-full md:w-72 panel border-r border-border flex flex-col">
-      <div className="flex justify-center py-[30px] border-b border-border">
-        <div
-          className="w-[120px] h-[120px] rounded-full overflow-hidden border"
-          style={{
-            boxShadow: "0 0 20px hsl(var(--primary) / 0.3)",
-            borderColor: "hsl(var(--foreground) / 0.1)",
-          }}
-        >
-          <img
-            src={keraLogo}
-            alt="Kera AI"
-            className="w-full h-full object-cover"
-            style={{ transform: "scale(1.1)" }}
-          />
+      {/* Topo: avatar minimalista + nova conversa */}
+      <div className="px-3 pt-4 pb-2 flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <div
+            className="w-8 h-8 rounded-full overflow-hidden ring-1 ring-border"
+            style={{ boxShadow: "0 0 12px hsl(var(--primary) / 0.25)" }}
+          >
+            <img src={keraLogo} alt="Kera AI" className="w-full h-full object-cover" style={{ transform: "scale(1.1)" }} />
+          </div>
+          <span className="font-display text-sm tracking-wide">Kera</span>
         </div>
+        <button
+          onClick={() => newConversation()}
+          aria-label="Nova conversa"
+          title="Nova conversa"
+          className="text-muted-foreground hover:text-primary p-1.5 rounded-md hover:bg-secondary/60 transition"
+        >
+          <Plus className="size-4" />
+        </button>
       </div>
 
-      {/* Quick actions */}
-      <div className="px-4 py-4 grid grid-cols-2 gap-3 border-b border-border">
+      {/* Ações principais — estilo Grok (linhas limpas) */}
+      <nav className="px-2 pt-1 pb-2">
         <button
-          className="flex items-center justify-center gap-2 p-3 rounded-xl bg-secondary/70 hover:bg-secondary border border-border/70 hover:border-primary/50 transition-all group shadow-sm"
-          onClick={() => toast.info("Galeria em breve")}
+          onClick={() => newConversation()}
+          className="w-full flex items-center gap-3 px-2.5 py-2 rounded-md hover:bg-secondary/60 transition text-sm"
         >
-          <ImageIcon className="size-[18px] text-muted-foreground group-hover:text-primary transition" />
-          <span className="text-sm font-medium">Galeria</span>
+          <MessageSquare className="size-4 text-muted-foreground" />
+          <span>Novo bate-papo</span>
         </button>
         <button
-          className="flex items-center justify-center gap-2 p-3 rounded-xl bg-secondary/70 hover:bg-secondary border border-border/70 hover:border-primary/50 transition-all group shadow-sm"
           onClick={() => navigate("/agents")}
+          className="w-full flex items-center gap-3 px-2.5 py-2 rounded-md hover:bg-secondary/60 transition text-sm"
         >
-          <LayoutGrid className="size-[18px] text-muted-foreground group-hover:text-primary transition" />
-          <span className="text-sm font-medium">Agentes</span>
+          <LayoutGrid className="size-4 text-muted-foreground" />
+          <span>Agentes</span>
         </button>
-      </div>
+        <button
+          onClick={() => toast.info("Galeria em breve")}
+          className="w-full flex items-center gap-3 px-2.5 py-2 rounded-md hover:bg-secondary/60 transition text-sm"
+        >
+          <ImageIcon className="size-4 text-muted-foreground" />
+          <span>Galeria</span>
+        </button>
+      </nav>
 
       <ScrollArea className="flex-1">
         {/* Agentes */}
-        <div className="px-3 pt-4 pb-2">
-          <h3 className="font-display text-sm tracking-wide mb-2 px-1">Agentes</h3>
-          <button onClick={() => navigate("/agents")}
-            className="w-full flex items-center gap-3 px-2 py-2 rounded-lg hover:bg-secondary/60 transition text-sm">
-            <FolderPlus className="size-5 text-muted-foreground" /> Novo agente
+        <div className="px-2 pt-3 pb-1">
+          <h3 className="text-[11px] uppercase tracking-wider text-muted-foreground/70 px-2.5 mb-1">Agentes</h3>
+          <button
+            onClick={() => navigate("/agents")}
+            className="w-full flex items-center gap-3 px-2.5 py-1.5 rounded-md hover:bg-secondary/60 transition text-sm text-muted-foreground"
+          >
+            <FolderPlus className="size-4" />
+            <span>Novo agente</span>
           </button>
           {BUILTIN_AGENTS.map(a => {
             const Icon = a.icon;
             const active = agentKey === a.key;
             return (
-              <button key={a.key}
+              <button
+                key={a.key}
                 onClick={() => { setAgentKey(a.key); newConversation(a.key); }}
-                className={`w-full flex items-center gap-3 px-2 py-2 rounded-lg transition text-sm ${
+                className={`w-full flex items-center gap-3 px-2.5 py-1.5 rounded-md transition text-sm ${
                   active ? "bg-primary/10 text-primary" : "hover:bg-secondary/60"
-                }`}>
-                <Icon className={`size-5 ${a.iconColor}`} />
+                }`}
+              >
+                <Icon className={`size-4 ${a.iconColor}`} />
                 <span className="truncate">{a.name}</span>
               </button>
             );
@@ -632,46 +667,51 @@ Por favor, analise: há perda de pacote? jitter alto sugere instabilidade de rot
           {customAgents.map(a => {
             const active = agentKey === a.id;
             return (
-              <button key={a.id}
+              <button
+                key={a.id}
                 onClick={() => { setAgentKey(a.id); newConversation(a.id); }}
-                className={`w-full flex items-center gap-3 px-2 py-2 rounded-lg transition text-sm ${
+                className={`w-full flex items-center gap-3 px-2.5 py-1.5 rounded-md transition text-sm ${
                   active ? "bg-primary/10 text-primary" : "hover:bg-secondary/60"
-                }`}>
-                <Bot className="size-5 text-cyan-400" />
+                }`}
+              >
+                <Bot className="size-4 text-cyan-400" />
                 <span className="truncate">{a.name}</span>
               </button>
             );
           })}
         </div>
 
-        {/* Conversas */}
-        <div className="px-3 pt-2 pb-4">
-          <div className="flex items-center justify-between mb-2 px-1">
-            <h3 className="font-display text-sm tracking-wide">Conversas</h3>
-            <button onClick={() => newConversation()} className="text-muted-foreground hover:text-primary">
-              <Plus className="size-4" />
-            </button>
-          </div>
-          <div className="space-y-1">
-            {conversations.map(c => (
-              <div key={c.id}
-                className={`group flex items-center gap-2 rounded-lg px-2 py-2 text-sm cursor-pointer transition ${
-                  currentId === c.id ? "bg-secondary text-primary border border-primary/30" : "hover:bg-secondary/60"
-                }`}
-                onClick={() => selectConversation(c.id, c.agent_key)}
-              >
-                <MessageSquare className="size-4 shrink-0 opacity-70" />
-                <span className="truncate flex-1">{c.title}</span>
-                <button onClick={(e) => { e.stopPropagation(); deleteConversation(c.id); }}
-                  className="opacity-0 group-hover:opacity-100 text-muted-foreground hover:text-destructive transition">
-                  <Trash2 className="size-4" />
-                </button>
+        {/* Histórico agrupado */}
+        <div className="px-2 pt-3 pb-4">
+          <h3 className="text-[11px] uppercase tracking-wider text-muted-foreground/70 px-2.5 mb-1">Histórico</h3>
+          {groupedConversations.length === 0 && (
+            <p className="text-xs text-muted-foreground/70 text-center py-4 px-2">Sem conversas ainda.</p>
+          )}
+          {groupedConversations.map(group => (
+            <div key={group.label} className="mt-2">
+              <div className="text-[10px] uppercase tracking-wider text-muted-foreground/60 px-2.5 mb-1">
+                {group.label}
               </div>
-            ))}
-            {!conversations.length && (
-              <p className="text-xs text-muted-foreground text-center py-4 px-2">Sem conversas ainda.</p>
-            )}
-          </div>
+              {group.items.map(c => (
+                <div
+                  key={c.id}
+                  className={`group flex items-center gap-2 rounded-md px-2.5 py-1.5 text-sm cursor-pointer transition ${
+                    currentId === c.id ? "bg-secondary/80 text-foreground" : "hover:bg-secondary/60 text-muted-foreground hover:text-foreground"
+                  }`}
+                  onClick={() => selectConversation(c.id, c.agent_key)}
+                >
+                  <span className="truncate flex-1">{c.title}</span>
+                  <button
+                    onClick={(e) => { e.stopPropagation(); deleteConversation(c.id); }}
+                    className="opacity-0 group-hover:opacity-100 text-muted-foreground hover:text-destructive transition"
+                    aria-label="Excluir conversa"
+                  >
+                    <Trash2 className="size-3.5" />
+                  </button>
+                </div>
+              ))}
+            </div>
+          ))}
         </div>
       </ScrollArea>
 
