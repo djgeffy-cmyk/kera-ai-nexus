@@ -701,6 +701,61 @@ Por favor, analise: há perda de pacote? jitter alto sugere instabilidade de rot
         <Sidebar />
       </div>
 
+      {/* Mini-barra: aparece no desktop quando a sidebar está oculta */}
+      {!sidebarOpen && (
+        <aside className="hidden md:flex w-14 shrink-0 panel border-r border-border flex-col items-center py-3 gap-1">
+          <button
+            onClick={() => setSidebarOpen(true)}
+            className="size-10 flex items-center justify-center rounded-lg hover:bg-secondary/60 text-muted-foreground hover:text-primary transition mb-1"
+            aria-label="Mostrar menu lateral"
+            title="Mostrar menu lateral"
+          >
+            <PanelLeftOpen className="size-5" />
+          </button>
+          <div className="w-8 h-px bg-border mb-1" />
+          <ScrollArea className="flex-1 w-full">
+            <div className="flex flex-col items-center gap-1 px-1">
+              {BUILTIN_AGENTS.map((a) => {
+                const Icon = a.icon;
+                const active = agentKey === a.key;
+                return (
+                  <button
+                    key={a.key}
+                    onClick={() => { setAgentKey(a.key); newConversation(a.key); }}
+                    className={`size-10 flex items-center justify-center rounded-lg transition ${
+                      active
+                        ? "bg-primary/15 ring-1 ring-primary/40"
+                        : "hover:bg-secondary/60"
+                    }`}
+                    title={a.name}
+                    aria-label={a.name}
+                  >
+                    <Icon className={`size-5 ${a.iconColor}`} />
+                  </button>
+                );
+              })}
+              <div className="w-8 h-px bg-border my-1" />
+              <button
+                onClick={() => navigate("/agents")}
+                className="size-10 flex items-center justify-center rounded-lg hover:bg-secondary/60 text-muted-foreground hover:text-primary transition"
+                title="Todos os agentes"
+                aria-label="Todos os agentes"
+              >
+                <LayoutGrid className="size-5" />
+              </button>
+              <button
+                onClick={() => newConversation()}
+                className="size-10 flex items-center justify-center rounded-lg hover:bg-secondary/60 text-muted-foreground hover:text-primary transition"
+                title="Nova conversa"
+                aria-label="Nova conversa"
+              >
+                <Plus className="size-5" />
+              </button>
+            </div>
+          </ScrollArea>
+        </aside>
+      )}
+
       <div
         className="flex-1 flex flex-col min-w-0 relative"
         onDragEnter={(e) => {
