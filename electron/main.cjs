@@ -1,6 +1,6 @@
 // Janela principal da Kera Desktop. Sempre CommonJS (.cjs) porque o package.json
 // declara "type":"module" e .js viraria ESM, quebrando __dirname.
-const { app, BrowserWindow, ipcMain, dialog, shell, clipboard, desktopCapturer, screen } = require("electron");
+const { app, BrowserWindow, ipcMain, dialog, shell, clipboard, desktopCapturer, screen, protocol, net } = require("electron");
 const path = require("path");
 const fs = require("fs/promises");
 const fsSync = require("fs");
@@ -9,6 +9,75 @@ const os = require("os");
 const { setupAutoUpdater, autoUpdater } = require("./updater.cjs");
 
 let mainWindow = null;
+
+// ============= CACHE DE VÍDEOS (offline) =============
+const VIDEO_FILES = [
+  "kera-bg.mp4",
+  "kera-dev-bg.mp4",
+  "kera-sec-bg.mp4",
+  "kera-juridica-bg.mp4",
+  "kera-sentinela-bg.mp4",
+  "kera-nutri-bg.mp4",
+  "kera-gamer-bg.mp4",
+  "kera-avatar.mp4",
+  "kera-avatar-rain.mp4",
+];
+const VIDEO_REMOTE_BASE =
+  "https://ytixqgkzqgeoxrbmjqbo.supabase.co/storage/v1/object/public/kera-videos";
+
+const videosCacheDir = () => path.join(app.getPath("userData"), "videos");
+const videoLocalPath = (name) => path.join(videosCacheDir(), name);
+
+function ensureVideosDir() {
+  fsSync.mkdirSync(videosCacheDir(), { recursive: true });
+}
+
+function cachedVideoMap() {
+  ensureVideosDir();
+  const map = {};
+  for (const name of VIDEO_FILES) {
+    const p = videoLocalPath(name);
+    if (fsSync.existsSync(p) && fsSync.statSync(p).size > 0) {
+      map[name] = `kera-video://local/${encodeURIComponent(name)}`;
+    }
+  }
+  return map;
+}
+
+function downloadOne(name) {
+  return new Promise((resolve, reject) => {
+    const url = `${VIDEO_REMOTE_BASE}/${name}`;
+    const dest = videoLocalPath(name);
+    const tmp = `${dest}.part`;
+    ensureVideosDir();
+    const req = net.request(url);
+    req.on("response", (res) => {
+      if (res.statusCode !== 200) {
+        reject(new Error(`HTTP ${res.statusCode} para ${name}`));
+        return;
+      }
+      const total = Number(res.headers["content-length"] || 0);
+      const file = fsSync.createWriteStream(tmp);
+      let received = 0;
+      res.on("data", (chunk) => {
+        received += chunk.length;
+        file.write(chunk);
+        if (mainWindow && !mainWindow.isDestroyed()) {
+          mainWindow.webContents.send("kera:videos:progress", { name, received, total });
+        }
+      });
+      res.on("end", () => {
+        file.end(() => {
+          try { fsSync.renameSync(tmp, dest); resolve({ name, bytes: received }); }
+          catch (e) { reject(e); }
+        });
+      });
+      res.on("error", reject);
+    });
+    req.on("error", reject);
+    req.end();
+  });
+}
 
 // ============= ALLOW-LIST DE PASTAS =============
 const ALLOWLIST_FILE = () => path.join(app.getPath("userData"), "kera-allowlist.json");
