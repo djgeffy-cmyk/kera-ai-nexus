@@ -242,6 +242,7 @@ app.whenReady().then(() => {
 
   createWindow();
   setupAutoUpdater();
+  createTray();
   app.on("activate", () => {
     if (BrowserWindow.getAllWindows().length === 0) createWindow();
   });
