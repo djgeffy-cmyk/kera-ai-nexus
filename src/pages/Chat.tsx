@@ -545,23 +545,25 @@ Por favor, analise: há perda de pacote? jitter alto sugere instabilidade de rot
 
   const Sidebar = () => (
     <aside className="h-full w-full md:w-72 panel border-r border-border flex flex-col">
-      <div className="p-4 border-b border-border flex items-center gap-2">
-        <img src={keraLogo} alt="Kera AI" className="h-8" />
+      <div className="p-5 border-b border-border flex items-center justify-center">
+        <img src={keraLogo} alt="Kera AI" className="h-12 drop-shadow-[0_0_12px_hsl(var(--primary)/0.5)]" />
       </div>
 
-      {/* Top circles */}
-      <div className="p-4 grid grid-cols-2 gap-3 border-b border-border">
-        <button className="flex flex-col items-center gap-1 group" onClick={() => toast.info("Galeria em breve")}>
-          <div className="size-14 rounded-full bg-secondary flex items-center justify-center group-hover:bg-secondary/80 transition">
-            <ImageIcon className="size-5 text-muted-foreground" />
-          </div>
-          <span className="text-xs">Galeria</span>
+      {/* Quick actions */}
+      <div className="p-3 grid grid-cols-2 gap-2 border-b border-border">
+        <button
+          className="flex items-center justify-center gap-2 px-3 py-2.5 rounded-xl bg-secondary/60 hover:bg-secondary border border-border/60 hover:border-primary/40 transition group"
+          onClick={() => toast.info("Galeria em breve")}
+        >
+          <ImageIcon className="size-4 text-muted-foreground group-hover:text-primary transition" />
+          <span className="text-sm font-medium">Galeria</span>
         </button>
-        <button className="flex flex-col items-center gap-1 group" onClick={() => navigate("/agents")}>
-          <div className="size-14 rounded-full bg-secondary flex items-center justify-center group-hover:bg-secondary/80 transition">
-            <LayoutGrid className="size-5 text-muted-foreground" />
-          </div>
-          <span className="text-xs">Agentes</span>
+        <button
+          className="flex items-center justify-center gap-2 px-3 py-2.5 rounded-xl bg-secondary/60 hover:bg-secondary border border-border/60 hover:border-primary/40 transition group"
+          onClick={() => navigate("/agents")}
+        >
+          <LayoutGrid className="size-4 text-muted-foreground group-hover:text-primary transition" />
+          <span className="text-sm font-medium">Agentes</span>
         </button>
       </div>
 
