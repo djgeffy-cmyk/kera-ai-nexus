@@ -95,11 +95,15 @@ export const MessageBubble = ({
     !isUser && !streaming && !!showSwitchToKera && !!onSwitchToKera && suggestsKeraSwitch(plainText);
   return (
     <div className={`flex gap-3 ${isUser ? "flex-row-reverse" : ""} animate-in fade-in slide-in-from-bottom-2 duration-300`}>
-      <div className={`shrink-0 size-9 rounded-full overflow-hidden border ${isUser ? "border-border bg-secondary flex items-center justify-center" : "border-primary/40 shadow-glow"}`}>
+      <div className={`shrink-0 size-10 rounded-full overflow-hidden border ${isUser ? "border-border bg-secondary flex items-center justify-center" : "border-primary/50 shadow-glow bg-background ring-2 ring-primary/20"}`}>
         {isUser ? (
           <User className="size-5 text-muted-foreground" />
         ) : (
-          <img src={keraAvatar} alt="Kera" className="size-full object-cover object-top" />
+          <img
+            src={keraAvatar}
+            alt="Kera"
+            className="size-full object-cover object-center scale-[1.35] origin-center"
+          />
         )}
       </div>
       <div className={`max-w-[85%] md:max-w-[75%] min-w-0 rounded-2xl px-4 py-3 text-[15px] leading-relaxed break-words [overflow-wrap:anywhere] ${
