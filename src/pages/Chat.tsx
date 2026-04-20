@@ -8,7 +8,7 @@ import { toast } from "sonner";
 import {
   Plus, LogOut, Send, MessageSquare, Trash2, Menu, Settings,
   Image as ImageIcon, LayoutGrid, FolderPlus, Mic, MicOff, Volume2, VolumeX, Bot, ChevronRight,
-  Paperclip, X, FileText, ShieldCheck, Activity, Download, Ear,
+  Paperclip, X, FileText, ShieldCheck, Activity, Download, Ear, Sun, Moon,
 } from "lucide-react";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -42,6 +42,7 @@ import { fileToAttachment, buildUserContent, type Attachment } from "@/lib/attac
 import { isImageRequest, extractImagePrompt } from "@/lib/imageDetect";
 import { exportConversationToPdf } from "@/lib/exportPdf";
 import { VoiceStatusIndicator } from "@/components/VoiceStatusIndicator";
+import { useTheme } from "@/hooks/useTheme";
 
 type Conversation = { id: string; title: string; updated_at: string; agent_key: string };
 type CustomAgent = { id: string; name: string; system_prompt: string; description: string | null };
