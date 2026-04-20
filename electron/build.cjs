@@ -27,7 +27,15 @@ const outDir = path.join(ROOT, "release-builds");
 if (fs.existsSync(outDir)) {
   const target = process.env.BUILD_PLATFORM === "win32" ? "KeraDesktop-win32-x64.zip" : "KeraDesktop-linux-x64.zip";
   try {
-    execSync(`cd "${outDir}" && zip -r "${target}" . -x "*.zip"`, { stdio: "inherit" });
+    // Remove qualquer ZIP antigo antes de empacotar pra evitar zip-dentro-de-zip
+    for (const f of fs.readdirSync(outDir)) {
+      if (f.toLowerCase().endsWith(".zip")) fs.unlinkSync(path.join(outDir, f));
+    }
+    // Empacota só os artefatos finais (AppImage / exe / nsis), nunca .zip
+    execSync(
+      `cd "${outDir}" && zip -r "${target}" . -x "*.zip" "*.blockmap" "builder-*.yml" "latest*.yml"`,
+      { stdio: "inherit" }
+    );
   } catch (e) {
     console.warn("[zip] aviso:", e.message);
   }
