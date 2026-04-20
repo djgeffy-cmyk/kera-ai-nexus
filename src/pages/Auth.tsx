@@ -193,7 +193,7 @@ const Auth = () => {
   };
 
   return (
-    <main ref={mainRef} className="relative min-h-screen flex items-center justify-center p-4 overflow-hidden">
+    <main ref={mainRef} className="relative min-h-screen flex items-center justify-center md:justify-end p-4 md:px-10 lg:px-16 overflow-hidden">
       {/* Vídeo Kera de fundo — em alta qualidade, com overlay leve pra ela aparecer */}
       <video
         ref={bgVideoRef}
