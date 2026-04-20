@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -61,6 +61,7 @@ const IMAGE_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/generate-im
 
 const Chat = () => {
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
   const { theme, setTheme } = useTheme();
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [customAgents, setCustomAgents] = useState<CustomAgent[]>([]);
@@ -247,6 +248,27 @@ const Chat = () => {
   };
 
   const logout = async () => { await supabase.auth.signOut(); navigate("/auth"); };
+
+  // Auto-prefill via URL: /chat?ask=<frase> → preenche input e envia automaticamente.
+  // Usado pelos atalhos da página /desktop ("Status do PC", "Tirar print", etc.).
+  // Aguarda userId pra garantir que a sessão está pronta antes de enviar.
+  const askFiredRef = useRef(false);
+  useEffect(() => {
+    if (askFiredRef.current || !userId) return;
+    const ask = searchParams.get("ask");
+    if (!ask) return;
+    askFiredRef.current = true;
+    const frase = ask.slice(0, 500);
+    setInput(frase);
+    // Limpa o ?ask= da URL pra não reenviar em F5
+    const next = new URLSearchParams(searchParams);
+    next.delete("ask");
+    setSearchParams(next, { replace: true });
+    // Pequeno delay pra estado/render estabilizar antes de disparar
+    setTimeout(() => sendText(frase), 250);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [userId]);
+
 
   const resolveSystemPrompt = (ak: string): string | undefined => {
     const builtin = getBuiltinAgent(ak);
