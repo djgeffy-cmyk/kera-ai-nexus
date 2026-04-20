@@ -1,45 +1,80 @@
-// Script de build: faz vite build com base relativa, depois empacota com
-// @electron/packager pro Windows e gera um .zip pronto pro download.
-const { execSync } = require("child_process");
-const path = require("path");
-const fs = require("fs");
+const packager = require('@electron/packager');
+const path = require('path');
+const fs = require('fs');
+const zip = require('bestzip');
+const { execSync } = require('child_process');
 
-const ROOT = path.resolve(__dirname, "..");
-const OUT = path.join(ROOT, "electron-release");
+const ROOT = path.resolve(__dirname, '..');
 
-function run(cmd, env = {}) {
-  console.log("\n$", cmd);
-  execSync(cmd, { stdio: "inherit", cwd: ROOT, env: { ...process.env, ...env } });
+async function bundle() {
+    console.log('--- Geverson, iniciando o empacotamento... segura a onda ---');
+    
+    // 1. Build Vite
+    console.log('[1/3] Gerando build do Vite...');
+    try {
+        execSync('npm run build', { stdio: 'inherit', cwd: ROOT, env: { ...process.env, ELECTRON_BUILD: 'true' } });
+    } catch (err) {
+        console.error('Erro no build do Vite:', err);
+        process.exit(1);
+    }
+
+    // 2. Empacotar com Electron Packager
+    console.log('[2/3] Empacotando com Electron Packager...');
+    const outDir = path.join(ROOT, 'dist-electron');
+    
+    if (fs.existsSync(outDir)) {
+        fs.rmSync(outDir, { recursive: true, force: true });
+    }
+
+    const appPaths = await packager({
+        dir: '.',
+        name: 'KeraDesktop',
+        platform: 'win32',
+        arch: 'x64',
+        out: 'dist-electron',
+        overwrite: true,
+        asar: true,
+        prune: true,
+        electronVersion: '33.0.0', // Atualizado para uma versão estável recente compatível com o projeto
+        ignore: [
+            /^\/src/,
+            /^\/public/,
+            /^\/supabase/,
+            /^\/.git/,
+            /^\/node_modules/, // O packager lida com isso se prune for true, mas as vezes é bom reforçar
+            /^\/dist-electron/
+        ]
+    });
+
+    const buildPath = appPaths[0];
+    console.log(`Build finalizado em: ${buildPath}`);
+
+    // 3. Compactar para ZIP
+    const releaseDir = path.join(ROOT, 'release-builds');
+    const outputZip = path.join(releaseDir, 'KeraDesktop-win32-x64.zip');
+    
+    if (!fs.existsSync(releaseDir)) {
+        fs.mkdirSync(releaseDir, { recursive: true });
+    }
+
+    if (fs.existsSync(outputZip)) {
+        fs.unlinkSync(outputZip);
+    }
+
+    console.log('[3/3] Compactando para ZIP...');
+    
+    try {
+        const relativeBuildPath = path.relative(ROOT, buildPath);
+        await zip({
+            source: '*',
+            destination: outputZip,
+            cwd: buildPath
+        });
+        console.log(`\n✅ Build ZIP pronto, Geverson! Arquivo disponível em: ${outputZip}`);
+    } catch (err) {
+        console.error('Erro na compressão:', err);
+        process.exit(1);
+    }
 }
 
-console.log("[1/3] Build Vite com base relativa...");
-run("npx vite build", { ELECTRON_BUILD: "true" });
-
-console.log("[2/3] Empacotar Electron pra Windows...");
-if (fs.existsSync(OUT)) fs.rmSync(OUT, { recursive: true });
-run(
-  [
-    "npx @electron/packager .",
-    '"KeraDesktop"',
-    "--platform=win32",
-    "--arch=x64",
-    "--out=electron-release",
-    "--overwrite",
-    `--app-version=1.0.0`,
-    `--ignore="^/src"`,
-    `--ignore="^/public"`,
-    `--ignore="^/electron-release"`,
-    `--ignore="^/supabase"`,
-    `--ignore="^/mem"`,
-    `--ignore="^/.git"`,
-  ].join(" ")
-);
-
-console.log("[3/3] Gerando .zip em /mnt/documents/KeraDesktop-win32-x64.zip...");
-const target = "/mnt/documents/KeraDesktop-win32-x64.zip";
-if (fs.existsSync(target)) fs.unlinkSync(target);
-run(`nix run nixpkgs#zip -- -r ${target} KeraDesktop-win32-x64`, { CWD: OUT });
-// `cd` precisa estar no comando porque execSync respeita o `cwd:` do options:
-run(`cd ${OUT} && nix run nixpkgs#zip -- -r ${target} KeraDesktop-win32-x64`);
-
-console.log("\n✅ Pronto! Arquivo: " + target);
+bundle();
