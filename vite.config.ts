@@ -8,7 +8,7 @@ import { componentTagger } from "lovable-tagger";
 // `base: './'` porque os arquivos serão carregados via `file://`, não HTTP.
 // A variável de ambiente ELECTRON_BUILD é setada pelo script `electron/build.cjs`.
 export default defineConfig(({ mode }) => ({
-  base: process.env.ELECTRON_BUILD === "true" ? "./" : "/",
+  base: "./",
   server: {
     host: "::",
     port: 8080,

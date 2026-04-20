@@ -14,9 +14,15 @@ async function bundle() {
     console.log('--- Geverson, iniciando o empacotamento... segura a onda ---');
     console.log(`Alvo: ${PLATFORM}-${ARCH}`);
 
+    // Alerta de Espaços no Caminho (Linux/Bug 1)
+    if (ROOT.includes(' ')) {
+        console.warn('\n⚠️  ATENÇÃO: O diretório atual contém espaços. No Linux, isso pode quebrar o Electron.');
+        console.warn('Sugestão: Mova o projeto para uma pasta sem espaços (ex: ~/KeraApp).\n');
+    }
+
     // @electron/packager v19+ é ESM puro — precisamos de import() dinâmico aqui no CJS.
     const packagerMod = await import('@electron/packager');
-    const packager = packagerMod.packager || packagerMod.default || packagerMod;
+    const { packager } = packagerMod;
 
     if (typeof packager !== 'function') {
         console.error('Falha ao carregar @electron/packager. Exports disponíveis:', Object.keys(packagerMod));
@@ -86,6 +92,10 @@ async function bundle() {
             destination: outputZip
         });
         console.log(`\n✅ Build ZIP pronto, Geverson! Arquivo disponível em: ${outputZip}`);
+        console.log('\n🐧 NOTA PARA LINUX (Bug 3):');
+        console.log('Se o chrome-sandbox falhar, rode:');
+        console.log('sudo chown root:root chrome-sandbox && sudo chmod 4755 chrome-sandbox');
+        console.log('Ou inicie com --no-sandbox');
     } catch (err) {
         console.error('Erro na compressão:', err);
         process.exit(1);
