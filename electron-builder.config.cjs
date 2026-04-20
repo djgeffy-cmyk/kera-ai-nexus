@@ -21,8 +21,8 @@ module.exports = {
   publish: [
     {
       provider: "github",
-      owner: process.env.GH_OWNER || "GEVERSON_OWNER",
-      repo: process.env.GH_REPO || "GEVERSON_REPO",
+      owner: process.env.GH_OWNER || "djgeffy-cmyk",
+      repo: process.env.GH_REPO || "kera-ai-nexus",
       releaseType: "release",
     },
   ],
