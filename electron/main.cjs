@@ -701,3 +701,25 @@ ipcMain.handle("kera:power", async (_e, action) => {
     });
   });
 });
+
+// ============= MASCOTE =============
+ipcMain.handle("kera:mascot:show", () => { createMascotWindow(); return { ok: true }; });
+ipcMain.handle("kera:mascot:hide", () => { destroyMascotWindow(); return { ok: true }; });
+ipcMain.handle("kera:mascot:status", () => ({ visible: !!(mascotWindow && !mascotWindow.isDestroyed()) }));
+
+// Mascote pediu pra abrir o chat (foi acionada por hotword "kera")
+ipcMain.handle("kera:mascot:wake", () => {
+  if (!mainWindow || mainWindow.isDestroyed()) createWindow();
+  else { mainWindow.show(); mainWindow.focus(); }
+  // Avisa o renderer principal que veio da hotword
+  if (mainWindow && !mainWindow.isDestroyed()) {
+    mainWindow.webContents.send("kera:hotword", { source: "mascot" });
+  }
+  return { ok: true };
+});
+
+// Mascote precisa do caminho local do vídeo (kera-video:// URL)
+ipcMain.handle("kera:mascot:videoUrl", () => {
+  const map = cachedVideoMap();
+  return map["kera-avatar.mp4"] || null;
+});
