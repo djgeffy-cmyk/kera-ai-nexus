@@ -1,3 +1,9 @@
+   "kera-sec": [
+     { q: "Abrir o Kera Security NASA (Análise Senior).", icon: ShieldAlert },
+     { q: "Explica OWASP Top 10 com exemplos práticos.", icon: Shield },
+     { q: "Como fazer hardening de servidor Linux?", icon: Lock },
+     { q: "Analisa esse log e identifica ameaças.", icon: FileSearch },
+   ],
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
