@@ -69,6 +69,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel,
 import keraLogo from "@/assets/kera-logo.png";
 import keraAvatar from "@/assets/kera-avatar.png";
 import keraAvatarVideo from "@/assets/kera-avatar.mp4.asset.json";
+import keraAvatarNasaVideo from "@/assets/kera-avatar-nasa.mp4.asset.json";
 import keraDevBgVideo from "@/assets/kera-dev-bg.mp4.asset.json";
 import keraBgVideo from "@/assets/kera-bg.mp4.asset.json";
 import keraSecBgVideo from "@/assets/kera-sec-bg.mp4.asset.json";
