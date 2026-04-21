@@ -568,6 +568,9 @@ export type Database = {
           paywall_trial_count: number
           plan_tier: string
           selected_agents: string[]
+          spaceincloud_active: boolean
+          spaceincloud_external_id: string | null
+          spaceincloud_synced_at: string | null
           updated_at: string
           user_id: string
         }
@@ -580,6 +583,9 @@ export type Database = {
           paywall_trial_count?: number
           plan_tier?: string
           selected_agents?: string[]
+          spaceincloud_active?: boolean
+          spaceincloud_external_id?: string | null
+          spaceincloud_synced_at?: string | null
           updated_at?: string
           user_id: string
         }
@@ -592,6 +598,9 @@ export type Database = {
           paywall_trial_count?: number
           plan_tier?: string
           selected_agents?: string[]
+          spaceincloud_active?: boolean
+          spaceincloud_external_id?: string | null
+          spaceincloud_synced_at?: string | null
           updated_at?: string
           user_id?: string
         }
@@ -776,6 +785,10 @@ export type Database = {
           selected_agents: string[]
           user_id: string
         }[]
+      }
+      admin_set_spaceincloud_active: {
+        Args: { _active: boolean; _target_user: string }
+        Returns: undefined
       }
       admin_set_user_plan: {
         Args: { _plan: string; _target_user: string }
