@@ -7,9 +7,9 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { toast } from "sonner";
 import {
   Plus, LogOut, Send, MessageSquare, Trash2, Menu, Settings, Calculator,
-  Image as ImageIcon, LayoutGrid, FolderPlus, Mic, MicOff, Volume2, VolumeX, Bot, ChevronRight,
+  Image as ImageIcon, LayoutGrid, FolderPlus, Mic, MicOff, Volume2, VolumeX, ChevronRight,
   Paperclip, X, FileText, ShieldCheck, Activity, Download, Ear, Sun, Moon, Sparkles, Gem,
-   PanelLeftClose, PanelLeftOpen, Camera, Pencil, Eraser, Monitor, Maximize2,
+   PanelLeftClose, PanelLeftOpen, Camera, Pencil, Eraser, Monitor,
   Scale, Heart, ScrollText, UserCheck, Accessibility,
 } from "lucide-react";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
@@ -40,8 +40,6 @@ import { exportConversationToPdf } from "@/lib/exportPdf";
 import { VoiceStatusIndicator } from "@/components/VoiceStatusIndicator";
 import { useTheme } from "@/hooks/useTheme";
 import { GalleryDialog } from "@/components/GalleryDialog";
-import KeraAvatar3D from "@/components/KeraAvatar3D";
-import { saveVRM, getVRMObjectURL, clearVRM } from "@/lib/vrmStorage";
 import ItcmdSCCalculator, { type ItcmdResult } from "@/components/ItcmdSCCalculator";
 import DanoMoralCalculator, { type DanoMoralResult } from "@/components/DanoMoralCalculator";
 import AtaNotarialGenerator, { type AtaNotarialResult } from "@/components/AtaNotarialGenerator";
