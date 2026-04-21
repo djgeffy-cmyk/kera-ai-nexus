@@ -1,7 +1,12 @@
+import { useEffect, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Check, Sparkles, Crown, Rocket, ArrowLeft, Image as ImageIcon, Dumbbell, ExternalLink } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Check, Sparkles, Crown, Rocket, ArrowLeft, Image as ImageIcon, Dumbbell, ExternalLink, Eye, EyeOff, Loader2, Link2 } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 
 type Plan = {
   key: "essencial" | "pro" | "master";
@@ -76,6 +81,58 @@ export default function Planos() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const reason = searchParams.get("reason");
+
+  // Estado de vinculação SpaceInCloud
+  const [sicEmail, setSicEmail] = useState("");
+  const [sicPassword, setSicPassword] = useState("");
+  const [showPwd, setShowPwd] = useState(false);
+  const [linking, setLinking] = useState(false);
+  const [sicActive, setSicActive] = useState<boolean | null>(null);
+  const [sicSyncedAt, setSicSyncedAt] = useState<string | null>(null);
+
+  // Carrega status atual da vinculação ao abrir a página
+  useEffect(() => {
+    (async () => {
+      try {
+        const { data, error } = await supabase.functions.invoke("spaceincloud-sync", {
+          body: {},
+        });
+        if (!error && data) {
+          setSicActive(!!data.active);
+          setSicSyncedAt(data.syncedAt ?? null);
+        }
+      } catch { /* ignore */ }
+    })();
+  }, []);
+
+  async function handleLinkSpaceInCloud(e: React.FormEvent) {
+    e.preventDefault();
+    if (!sicEmail || !sicPassword) {
+      toast.error("Preencha email e senha do SpaceInCloud");
+      return;
+    }
+    setLinking(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("spaceincloud-sync", {
+        body: { email: sicEmail.trim(), password: sicPassword },
+      });
+      if (error) throw error;
+      if (data?.active) {
+        setSicActive(true);
+        setSicSyncedAt(new Date().toISOString());
+        setSicPassword("");
+        toast.success(data.message || "Plano Growth liberado! Agentes FIT desbloqueados.");
+      } else {
+        setSicActive(false);
+        toast.error(data?.error || data?.message || "Plano Growth não encontrado nessa conta.");
+      }
+    } catch (err) {
+      console.error(err);
+      toast.error("Erro ao validar com SpaceInCloud. Tente novamente.");
+    } finally {
+      setLinking(false);
+    }
+  }
 
   return (
     <main className="min-h-screen bg-background px-4 py-10 md:py-16">
@@ -254,6 +311,99 @@ export default function Planos() {
                   liberamos o pacote FIT automaticamente.
                 </p>
               </div>
+            </Card>
+
+            {/* Bloco de vinculação por login */}
+            <Card className="mt-6 p-6 md:p-8 border-fuchsia-400/30">
+              <div className="flex items-center gap-2 mb-2">
+                <Link2 className="h-5 w-5 text-fuchsia-300" />
+                <h3 className="font-display text-xl">Já tem conta no SpaceInCloud?</h3>
+              </div>
+
+              {sicActive === true ? (
+                <div className="rounded-lg border border-emerald-400/40 bg-emerald-500/10 p-4">
+                  <div className="flex items-center gap-2 text-emerald-300 font-semibold">
+                    <Check className="h-5 w-5" /> Conta vinculada — Growth FIT ativo
+                  </div>
+                  <p className="text-sm text-emerald-100/80 mt-1">
+                    Os agentes Nutricionista, Treinador e Iron estão liberados na sua conta Kera.
+                  </p>
+                  {sicSyncedAt && (
+                    <p className="text-xs text-muted-foreground mt-2">
+                      Última sincronização: {new Date(sicSyncedAt).toLocaleString("pt-BR")}
+                    </p>
+                  )}
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="mt-3"
+                    onClick={() => setSicActive(null)}
+                  >
+                    Vincular outra conta
+                  </Button>
+                </div>
+              ) : (
+                <>
+                  <p className="text-sm text-muted-foreground mb-4">
+                    Entre com seu email e senha do SpaceInCloud. Validamos com segurança e liberamos
+                    os agentes FIT automaticamente — não guardamos sua senha.
+                  </p>
+                  <form onSubmit={handleLinkSpaceInCloud} className="space-y-3">
+                    <div>
+                      <Label htmlFor="sic-email">Email SpaceInCloud</Label>
+                      <Input
+                        id="sic-email"
+                        type="email"
+                        autoComplete="off"
+                        value={sicEmail}
+                        onChange={(e) => setSicEmail(e.target.value)}
+                        placeholder="seu@email.com"
+                        disabled={linking}
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="sic-pwd">Senha SpaceInCloud</Label>
+                      <div className="relative">
+                        <Input
+                          id="sic-pwd"
+                          type={showPwd ? "text" : "password"}
+                          autoComplete="off"
+                          value={sicPassword}
+                          onChange={(e) => setSicPassword(e.target.value)}
+                          placeholder="••••••••"
+                          disabled={linking}
+                          className="pr-10"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => setShowPwd((v) => !v)}
+                          className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                          tabIndex={-1}
+                        >
+                          {showPwd ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                        </button>
+                      </div>
+                    </div>
+                    <Button
+                      type="submit"
+                      disabled={linking}
+                      className="w-full bg-gradient-to-r from-fuchsia-500 to-orange-500 text-white border-0"
+                    >
+                      {linking ? (
+                        <><Loader2 className="h-4 w-4 mr-2 animate-spin" /> Validando...</>
+                      ) : (
+                        <>Vincular e liberar Growth FIT</>
+                      )}
+                    </Button>
+                  </form>
+                  {sicActive === false && (
+                    <p className="text-xs text-amber-300 mt-3 text-center">
+                      Conta encontrada, mas sem plano Growth ativo. Assine no SpaceInCloud
+                      e tente novamente.
+                    </p>
+                  )}
+                </>
+              )}
             </Card>
           </div>
         </section>
