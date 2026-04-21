@@ -177,7 +177,7 @@ const Chat = () => {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const { theme, setTheme } = useTheme();
-  const { canAccess } = useUserAccess();
+  const { canAccess, consumeTrial } = useUserAccess();
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [customAgents, setCustomAgents] = useState<CustomAgent[]>([]);
   const [currentId, setCurrentId] = useState<string | null>(null);
@@ -527,6 +527,28 @@ const Chat = () => {
         return;
       }
       rawText = parsed.data.message;
+    }
+
+    // 🔒 Paywall: se o agente está bloqueado pra esse usuário, libera no máx 3 perguntas
+    // como "palhinha". Depois disso, manda pra /planos.
+    const trial = await consumeTrial(agentKey);
+    if (!trial.allowed) {
+      toast.message("Hora de evoluir 🚀", {
+        description: "Você já usou suas perguntas grátis nas áreas premium. Escolha um plano pra continuar.",
+      });
+      navigate("/planos");
+      return;
+    }
+    if (trial.wasTrial) {
+      const left = trial.remaining;
+      toast.message(
+        left > 0
+          ? `Palhinha liberada — ${left} pergunta${left === 1 ? "" : "s"} grátis restante${left === 1 ? "" : "s"}.`
+          : "Última palhinha! Próxima pergunta nesta área pede upgrade.",
+        {
+          description: "Esse agente não está no seu plano. Curta a amostra grátis ✨",
+        }
+      );
     }
 
     // 🎨 Detecção de pedido de geração de imagem (sem anexos)
