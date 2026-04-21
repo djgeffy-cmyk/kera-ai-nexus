@@ -1447,6 +1447,17 @@ Por favor, analise: há perda de pacote? jitter alto sugere instabilidade de rot
         />
       )}
       <GalleryDialog open={galleryOpen} onOpenChange={setGalleryOpen} userId={userId} />
+      <ItcmdSCCalculator
+        open={itcmdOpen}
+        onOpenChange={setItcmdOpen}
+        onSendToChat={(r: ItcmdResult) => {
+          // Garante que o agente Kera Sucessões receba o cálculo
+          if (agentKey !== "kera-sucessoes") setAgentKey("kera-sucessoes");
+          setInput(r.markdown);
+          setTimeout(() => sendText(r.markdown), 80);
+          toast.success(`Cálculo enviado — ITCMD total estimado: ${r.total.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}`);
+        }}
+      />
     </div>
   );
 };
