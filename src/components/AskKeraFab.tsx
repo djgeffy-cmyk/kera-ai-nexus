@@ -44,7 +44,9 @@ export const AskKeraFab = () => {
     if (!q) return;
     setOpen(false);
     setText("");
-    navigate(`/chat?ask=${encodeURIComponent(q)}`);
+    const isDesktopPrompt = QUICK_PROMPTS.find(p => p.label === q)?.desktop;
+    const agentParam = isDesktopPrompt ? "&agent=kera" : "";
+    navigate(`/chat?ask=${encodeURIComponent(q)}${agentParam}`);
   };
 
   return (
