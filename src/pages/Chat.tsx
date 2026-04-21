@@ -1048,33 +1048,37 @@ Por favor, analise: há perda de pacote? jitter alto sugere instabilidade de rot
             </div>
           </div>
         )}
-        <header className="relative z-10 h-14 border-b border-border panel flex items-center px-2 md:px-6 gap-1.5 md:gap-3 overflow-hidden">
-          {/* Botão para ocultar/mostrar a sidebar (desktop) */}
-          <Button
-            variant="ghost"
-            size="icon"
-            className="hidden md:inline-flex shrink-0 h-9 w-9"
-            onClick={() => setSidebarOpen((v) => !v)}
-            aria-label={sidebarOpen ? "Ocultar menu lateral" : "Mostrar menu lateral"}
-            title={sidebarOpen ? "Ocultar menu lateral" : "Mostrar menu lateral"}
-          >
-            {sidebarOpen ? <PanelLeftClose className="size-5" /> : <PanelLeftOpen className="size-5" />}
-          </Button>
-          <Sheet>
-            <SheetTrigger asChild>
-              <Button variant="ghost" size="icon" className="md:hidden shrink-0 h-9 w-9"><Menu className="size-5" /></Button>
-            </SheetTrigger>
-            <SheetContent side="left" className="p-0 w-80 bg-transparent border-r-0"><Sidebar /></SheetContent>
-          </Sheet>
-
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <button className="flex items-center gap-1.5 md:gap-2 hover:bg-secondary/60 px-1.5 md:px-2 py-1 rounded-lg transition min-w-0 max-w-[42vw] md:max-w-none">
-                <span className="size-2 rounded-full bg-primary shadow-glow animate-pulse-glow shrink-0" />
-                <h1 className="font-display text-sm md:text-lg text-glow truncate">{currentAgentName.toUpperCase()}</h1>
-                <ChevronRight className="size-4 rotate-90 text-muted-foreground shrink-0" />
-              </button>
-            </DropdownMenuTrigger>
+         <header className="relative z-40 h-16 md:h-20 border-b border-white/5 bg-background/40 backdrop-blur-xl flex items-center px-4 md:px-8 gap-3 md:gap-4 overflow-hidden transition-all duration-300 shadow-sm">
+           {/* Botão para ocultar/mostrar a sidebar (desktop) */}
+           <Button
+             variant="ghost"
+             size="icon"
+             className="hidden md:inline-flex shrink-0 h-10 w-10 hover:bg-white/5 rounded-xl transition-all active:scale-95"
+             onClick={() => setSidebarOpen((v) => !v)}
+             aria-label={sidebarOpen ? "Ocultar menu lateral" : "Mostrar menu lateral"}
+           >
+             {sidebarOpen ? <PanelLeftClose className="size-5.5" /> : <PanelLeftOpen className="size-5.5" />}
+           </Button>
+           <Sheet>
+             <SheetTrigger asChild>
+               <Button variant="ghost" size="icon" className="md:hidden shrink-0 h-10 w-10 hover:bg-white/5 rounded-xl"><Menu className="size-5.5" /></Button>
+             </SheetTrigger>
+             <SheetContent side="left" className="p-0 w-80 bg-background/95 backdrop-blur-2xl border-r border-white/5 shadow-2xl"><Sidebar /></SheetContent>
+           </Sheet>
+ 
+           <div className="h-8 w-px bg-white/10 hidden md:block mx-1" />
+ 
+           <DropdownMenu>
+             <DropdownMenuTrigger asChild>
+               <button className="flex items-center gap-2.5 hover:bg-white/5 px-3 py-1.5 rounded-xl transition-all min-w-0 group">
+                 <div className="relative">
+                   <span className="size-2.5 rounded-full bg-primary shadow-glow animate-pulse-glow block" />
+                   <span className="absolute inset-0 size-2.5 rounded-full bg-primary animate-ping opacity-20" />
+                 </div>
+                 <h1 className="font-display text-sm md:text-base font-bold tracking-wider text-glow truncate group-hover:text-primary transition-colors">{currentAgentName.toUpperCase()}</h1>
+                 <ChevronRight className="size-4 rotate-90 text-muted-foreground opacity-50 group-hover:opacity-100 transition-all shrink-0" />
+               </button>
+             </DropdownMenuTrigger>
             <DropdownMenuContent className="w-64 bg-card border-border">
               <DropdownMenuLabel className="text-xs text-muted-foreground">Agentes prontos</DropdownMenuLabel>
               {BUILTIN_AGENTS.map(a => {
