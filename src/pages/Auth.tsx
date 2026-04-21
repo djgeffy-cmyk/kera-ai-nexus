@@ -409,7 +409,7 @@ const Auth = () => {
                     className="w-full h-full object-cover"
                   />
                   <div className="absolute bottom-1 right-1 bg-background/80 p-1 rounded-full border border-primary/30">
-                    <Umbrella className="size-3 text-primary" />
+                    <Sparkles className="size-3 text-primary" />
                   </div>
                   <div aria-hidden className="absolute inset-0 rounded-full ring-1 ring-primary/40 pointer-events-none" />
                 </div>
