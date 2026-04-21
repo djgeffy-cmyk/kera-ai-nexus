@@ -12,6 +12,7 @@ import keraAvatar from "@/assets/kera-avatar.png";
 import keraAvatarVideo from "@/assets/kera-avatar-rain.mp4.asset.json";
 import ParticlesOverlay from "@/components/ParticlesOverlay";
 import { assetUrl } from "@/lib/assetUrl";
+import { MissionCriticalSchema } from "@/lib/missionCriticalSchemas";
 
 type Mode = "signin" | "signup" | "totp";
 
@@ -126,18 +127,27 @@ const Auth = () => {
       toast.error("Cadastro permitido apenas para emails @guaramirim.sc.gov.br.");
       return;
     }
+    // Validação NASA-grade
+    const schema = mode === "signup" ? MissionCriticalSchema.authSignup : MissionCriticalSchema.authSignin;
+    const parsed = schema.safeParse({ email, password });
+    if (!parsed.success) {
+      const first = parsed.error.issues[0];
+      toast.error(first?.message || "Dados inválidos");
+      return;
+    }
+    const { email: cleanEmail, password: cleanPassword } = parsed.data;
     setLoading(true);
     try {
       if (mode === "signup") {
         const { error } = await supabase.auth.signUp({
-          email, password,
+          email: cleanEmail, password: cleanPassword,
           options: { emailRedirectTo: `${window.location.origin}/` },
         });
         if (error) throw error;
         toast.success("Conta criada! Você já pode entrar.");
         setMode("signin");
       } else {
-        const { error } = await supabase.auth.signInWithPassword({ email, password });
+        const { error } = await supabase.auth.signInWithPassword({ email: cleanEmail, password: cleanPassword });
         if (error) throw error;
         // Após login, checa se tem 2FA
         const needs2fa = await checkAndChallengeMfa();

@@ -10,6 +10,7 @@ import { ArrowLeft, Plus, Sparkles, Trash2, Pencil } from "lucide-react";
 import { toast } from "sonner";
 import { BUILTIN_AGENTS } from "@/lib/agents";
 import keraLogo from "@/assets/kera-logo.png";
+import { MissionCriticalSchema } from "@/lib/missionCriticalSchemas";
 
 type Agent = {
   id: string;
@@ -53,19 +54,22 @@ const AgentsPage = () => {
   const save = async () => {
     const { data: u } = await supabase.auth.getUser();
     if (!u.user) return;
-    if (!form.name.trim() || !form.system_prompt.trim()) {
-      toast.error("Nome e prompt são obrigatórios.");
+    const parsed = MissionCriticalSchema.agent.safeParse(form);
+    if (!parsed.success) {
+      const first = parsed.error.issues[0];
+      toast.error(first?.message || "Dados do agente inválidos");
       return;
     }
+    const clean = parsed.data;
     if (editing) {
       const { error } = await supabase.from("agents")
-        .update({ name: form.name, description: form.description, system_prompt: form.system_prompt })
+        .update({ name: clean.name, description: clean.description, system_prompt: clean.system_prompt })
         .eq("id", editing.id);
       if (error) return toast.error(error.message);
       toast.success("Agente atualizado.");
     } else {
       const { error } = await supabase.from("agents").insert({
-        user_id: u.user.id, name: form.name, description: form.description, system_prompt: form.system_prompt,
+        user_id: u.user.id, name: clean.name, description: clean.description, system_prompt: clean.system_prompt,
         icon: "sparkles", color: "cyan",
       });
       if (error) return toast.error(error.message);
