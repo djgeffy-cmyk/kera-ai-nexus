@@ -127,7 +127,11 @@ const AgentsPage = () => {
             {BUILTIN_AGENTS.map(a => {
               const Icon = a.icon;
               return (
-                <Card key={a.key} className="p-4 panel border-border">
+                <Card 
+                  key={a.key} 
+                  className="p-4 panel border-border cursor-pointer hover:border-primary/50 transition-colors"
+                  onClick={() => a.link ? navigate(a.link) : navigate(`/?agent=${a.key}`)}
+                >
                   <div className="flex items-start gap-3">
                     <div className={`size-10 rounded-xl bg-secondary flex items-center justify-center ${a.iconColor}`}>
                       <Icon className="size-5" />
