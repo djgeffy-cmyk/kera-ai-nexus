@@ -791,43 +791,48 @@ Por favor, analise: há perda de pacote? jitter alto sugere instabilidade de rot
     return groups.filter(g => g.items.length > 0);
   })();
 
-  const Sidebar = () => (
-    <aside className="h-full w-full md:w-80 panel border-r border-border flex flex-col">
-      {/* Topo: avatar minimalista */}
-      <div className="px-3 pt-4 pb-2 flex items-center gap-2">
-        <div
-          className="w-8 h-8 rounded-full overflow-hidden ring-1 ring-border"
-          style={{ boxShadow: "0 0 12px hsl(var(--primary) / 0.25)" }}
-        >
-          <img src={keraLogo} alt="Kera AI" className="w-full h-full object-cover" style={{ transform: "scale(1.1)" }} />
-        </div>
-        <span className="font-display text-sm tracking-wide">Kera</span>
-      </div>
-
-      {/* Ações principais — estilo Grok (linhas limpas) */}
-      <nav className="px-2 pt-1 pb-2">
-        <button
-          onClick={() => newConversation()}
-          className="w-full flex items-center gap-3 px-2.5 py-2 rounded-md hover:bg-secondary/60 transition text-sm"
-        >
-          <MessageSquare className="size-4 text-muted-foreground" />
-          <span>Novo bate-papo</span>
-        </button>
-        <button
-          onClick={() => navigate("/agents")}
-          className="w-full flex items-center gap-3 px-2.5 py-2 rounded-md hover:bg-secondary/60 transition text-sm"
-        >
-          <LayoutGrid className="size-4 text-muted-foreground" />
-          <span>Agentes</span>
-        </button>
-        <button
-          onClick={() => setGalleryOpen(true)}
-          className="w-full flex items-center gap-3 px-2.5 py-2 rounded-md hover:bg-secondary/60 transition text-sm"
-        >
-          <ImageIcon className="size-4 text-muted-foreground" />
-          <span>Galeria</span>
-        </button>
-      </nav>
+   const Sidebar = () => (
+     <aside className="h-full w-full md:w-80 bg-background/95 backdrop-blur-2xl border-r border-white/5 flex flex-col shadow-2xl">
+       {/* Topo: avatar minimalista */}
+       <div className="px-6 pt-8 pb-6 flex items-center gap-3">
+         <div className="relative group">
+           <div className="absolute inset-0 bg-primary/20 rounded-xl blur-lg opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+           <div className="relative w-10 h-10 rounded-xl overflow-hidden ring-1 ring-white/10 bg-black/20 flex items-center justify-center">
+             <img src={keraLogo} alt="Kera AI" className="w-8 h-8 object-contain transition-transform duration-500 group-hover:scale-110" />
+           </div>
+         </div>
+         <div>
+           <span className="font-display text-base font-black tracking-widest text-white/90">KERA</span>
+           <p className="text-[10px] text-muted-foreground uppercase tracking-[0.2em] -mt-1 font-semibold opacity-60">Intelligence</p>
+         </div>
+       </div>
+ 
+       {/* Ações principais — estilo moderno */}
+       <nav className="px-4 space-y-1">
+         <button
+           onClick={() => newConversation()}
+           className="w-full flex items-center gap-3 px-4 py-3 rounded-xl bg-primary/10 text-primary border border-primary/20 hover:bg-primary/20 transition-all duration-300 text-sm font-semibold group"
+         >
+           <Plus className="size-4 transition-transform group-hover:rotate-90" />
+           <span>Novo Chat</span>
+         </button>
+         <div className="grid grid-cols-2 gap-1 pt-1">
+           <button
+             onClick={() => navigate("/agents")}
+             className="flex items-center justify-center gap-2 py-2.5 rounded-xl hover:bg-white/5 transition-all text-xs font-medium text-muted-foreground hover:text-white"
+           >
+             <LayoutGrid className="size-3.5" />
+             <span>Agentes</span>
+           </button>
+           <button
+             onClick={() => setGalleryOpen(true)}
+             className="flex items-center justify-center gap-2 py-2.5 rounded-xl hover:bg-white/5 transition-all text-xs font-medium text-muted-foreground hover:text-white"
+           >
+             <ImageIcon className="size-3.5" />
+             <span>Galeria</span>
+           </button>
+         </div>
+       </nav>
 
       <ScrollArea className="flex-1">
 
