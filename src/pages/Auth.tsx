@@ -13,6 +13,7 @@ import keraAvatarVideo from "@/assets/kera-avatar-rain.mp4.asset.json";
 import ParticlesOverlay from "@/components/ParticlesOverlay";
 import { assetUrl } from "@/lib/assetUrl";
 import { MissionCriticalSchema } from "@/lib/missionCriticalSchemas";
+import { PasswordStrengthMeter } from "@/components/PasswordStrengthMeter";
 
 type Mode = "signin" | "signup" | "totp";
 
@@ -317,6 +318,7 @@ const Auth = () => {
                 <Input id="password" type="password" required minLength={6} value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   className="mt-1 bg-input/50 border-border focus-visible:ring-primary" />
+                {mode === "signup" && <PasswordStrengthMeter password={password} />}
               </div>
               <Button type="submit" disabled={loading}
                 className="w-full bg-gradient-cyber text-primary-foreground font-display tracking-wider hover:opacity-90 shadow-glow">
