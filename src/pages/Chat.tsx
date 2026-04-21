@@ -6,7 +6,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { toast } from "sonner";
 import {
-  Plus, LogOut, Send, MessageSquare, Trash2, Menu, Settings,
+  Plus, LogOut, Send, MessageSquare, Trash2, Menu, Settings, Calculator,
   Image as ImageIcon, LayoutGrid, FolderPlus, Mic, MicOff, Volume2, VolumeX, Bot, ChevronRight,
   Paperclip, X, FileText, ShieldCheck, Activity, Download, Ear, Sun, Moon, Sparkles, Gem,
   PanelLeftClose, PanelLeftOpen, Camera, Pencil, Eraser, Monitor,
@@ -41,6 +41,7 @@ import { useTheme } from "@/hooks/useTheme";
 import { GalleryDialog } from "@/components/GalleryDialog";
 import KeraAvatar3D from "@/components/KeraAvatar3D";
 import { saveVRM, getVRMObjectURL, clearVRM } from "@/lib/vrmStorage";
+import ItcmdSCCalculator, { type ItcmdResult } from "@/components/ItcmdSCCalculator";
 
 type Conversation = { id: string; title: string; updated_at: string; agent_key: string };
 type CustomAgent = { id: string; name: string; system_prompt: string; description: string | null };
@@ -73,6 +74,7 @@ const Chat = () => {
     "kera-gamer": assetUrl(keraGamerBgVideo),
   }), []);
   const [galleryOpen, setGalleryOpen] = useState(false);
+  const [itcmdOpen, setItcmdOpen] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
   const [provider, setProvider] = useState<ProviderId>(getPreferredProvider());
   // Modo voz NÃO persiste — sempre começa desligado a cada sessão para evitar
@@ -1133,6 +1135,17 @@ Por favor, analise: há perda de pacote? jitter alto sugere instabilidade de rot
                 {PROVIDERS.map(p => (<SelectItem key={p.id} value={p.id} className="text-xs">{p.label}</SelectItem>))}
               </SelectContent>
             </Select>
+            {agentKey === "kera-sucessoes" && (
+              <Button
+                variant="ghost" size="icon"
+                onClick={() => setItcmdOpen(true)}
+                aria-label="Calculadora ITCMD/SC"
+                title="Calculadora ITCMD/SC (Lei 13.136/2004)"
+                className="text-yellow-500 hover:text-yellow-400 shrink-0 h-9 w-9"
+              >
+                <Calculator className="size-5" />
+              </Button>
+            )}
             <Button
               variant="ghost" size="icon"
               onClick={() => {
@@ -1434,6 +1447,17 @@ Por favor, analise: há perda de pacote? jitter alto sugere instabilidade de rot
         />
       )}
       <GalleryDialog open={galleryOpen} onOpenChange={setGalleryOpen} userId={userId} />
+      <ItcmdSCCalculator
+        open={itcmdOpen}
+        onOpenChange={setItcmdOpen}
+        onSendToChat={(r: ItcmdResult) => {
+          // Garante que o agente Kera Sucessões receba o cálculo
+          if (agentKey !== "kera-sucessoes") setAgentKey("kera-sucessoes");
+          setInput(r.markdown);
+          setTimeout(() => sendText(r.markdown), 80);
+          toast.success(`Cálculo enviado — ITCMD total estimado: ${r.total.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}`);
+        }}
+      />
     </div>
   );
 };
