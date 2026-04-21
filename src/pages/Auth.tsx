@@ -7,7 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Card } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { toast } from "sonner";
-import { ShieldCheck, KeyRound, Mail, ScanFace } from "lucide-react";
+import { ShieldCheck, KeyRound, Mail, ScanFace, Eye, EyeOff } from "lucide-react";
 import keraAvatar from "@/assets/kera-avatar.png";
 import keraAvatarVideo from "@/assets/kera-avatar-rain.mp4.asset.json";
 import ParticlesOverlay from "@/components/ParticlesOverlay";
@@ -33,6 +33,7 @@ const Auth = () => {
   const [challengeId, setChallengeId] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [passkeyLoading, setPasskeyLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
   const [supportsPasskey] = useState(() => webauthnSupported());
   const [inIframe] = useState(() => isInIframe());
   const passkeyAvailable = supportsPasskey && !inIframe;
