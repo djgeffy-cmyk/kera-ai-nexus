@@ -349,19 +349,27 @@ const Auth = () => {
               className="w-full bg-gradient-cyber text-primary-foreground font-display tracking-wider hover:opacity-90 shadow-glow">
               {loading ? "Verificando..." : "Verificar"}
             </Button>
-            {passkeyAvailable && (
-              <Button
-                type="button"
-                onClick={handlePasskeyRegister}
-                disabled={passkeyLoading}
-                variant="outline"
-                className="w-full border-primary/40 hover:bg-primary/10 hover:border-primary"
-              >
-                <ScanFace className="size-4 mr-2 text-primary" />
-                {passkeyLoading
-                  ? "Cadastrando..."
-                  : "Cadastrar Face ID neste dispositivo"}
-              </Button>
+            {supportsPasskey && (
+              <>
+                <Button
+                  type="button"
+                  onClick={handlePasskeyRegister}
+                  disabled={passkeyLoading || inIframe}
+                  variant="outline"
+                  className="w-full border-primary/40 hover:bg-primary/10 hover:border-primary disabled:opacity-60"
+                  title={inIframe ? "Abra direto em chat.kera.ia.br" : undefined}
+                >
+                  <ScanFace className="size-4 mr-2 text-primary" />
+                  {passkeyLoading
+                    ? "Cadastrando..."
+                    : "Cadastrar Face ID neste dispositivo"}
+                </Button>
+                {inIframe && (
+                  <p className="text-[11px] text-muted-foreground text-center">
+                    Para cadastrar, abra <strong>chat.kera.ia.br</strong> direto no navegador.
+                  </p>
+                )}
+              </>
             )}
             {supportsPasskey && inIframe && (
               <p className="text-xs text-muted-foreground text-center px-2">
