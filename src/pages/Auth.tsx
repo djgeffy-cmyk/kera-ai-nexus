@@ -263,6 +263,63 @@ const Auth = () => {
       />
       <div aria-hidden className="absolute inset-0 bg-background/30" />
       <ParticlesOverlay />
+
+      {/* Heavy rain overlay during umbrella opening transition */}
+      <AnimatePresence>
+        {isOpening && (
+          <motion.div
+            key="rain-burst"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.4 }}
+            className="fixed inset-0 z-30 pointer-events-none overflow-hidden"
+          >
+            {[...Array(80)].map((_, i) => {
+              const left = Math.random() * 100;
+              const delay = Math.random() * 0.6;
+              const duration = 0.6 + Math.random() * 0.6;
+              const height = 12 + Math.random() * 28;
+              return (
+                <motion.div
+                  key={i}
+                  initial={{ y: -50, opacity: 0 }}
+                  animate={{ y: "110vh", opacity: [0, 1, 1, 0.8] }}
+                  transition={{
+                    duration,
+                    delay,
+                    repeat: Infinity,
+                    ease: "easeIn",
+                  }}
+                  className="absolute w-px bg-gradient-to-b from-transparent via-primary/60 to-primary/90 rounded-full"
+                  style={{
+                    left: `${left}%`,
+                    height: `${height}px`,
+                    filter: "blur(0.3px)",
+                  }}
+                />
+              );
+            })}
+            {/* Splash particles at bottom */}
+            {[...Array(20)].map((_, i) => (
+              <motion.div
+                key={`splash-${i}`}
+                initial={{ scale: 0, opacity: 0 }}
+                animate={{ scale: [0, 1.5, 0], opacity: [0, 0.7, 0] }}
+                transition={{
+                  duration: 0.8,
+                  delay: 0.3 + Math.random() * 0.6,
+                  repeat: Infinity,
+                  repeatDelay: Math.random() * 0.5,
+                }}
+                className="absolute bottom-0 size-2 rounded-full bg-primary/50"
+                style={{ left: `${Math.random() * 100}%` }}
+              />
+            ))}
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       <div
         aria-hidden
         className="absolute inset-0 pointer-events-none"
