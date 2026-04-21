@@ -402,7 +402,7 @@ const Auth = () => {
               </Button>
             </form>
 
-            {mode === "signin" && passkeyAvailable && (
+            {mode === "signin" && supportsPasskey && (
               <>
                 <div className="flex items-center gap-3 my-4">
                   <div className="flex-1 h-px bg-border/50" />
@@ -412,14 +412,25 @@ const Auth = () => {
                 <Button
                   type="button"
                   onClick={handlePasskeyLogin}
-                  disabled={passkeyLoading || !email.trim()}
+                  disabled={passkeyLoading || !email.trim() || inIframe}
                   variant="outline"
-                  className="w-full border-primary/40 hover:bg-primary/10 hover:border-primary"
+                  className="w-full border-primary/40 hover:bg-primary/10 hover:border-primary disabled:opacity-60"
+                  title={inIframe ? "Abra direto em chat.kera.ia.br" : undefined}
                 >
                   <ScanFace className="size-4 mr-2 text-primary" />
                   {passkeyLoading ? "Aguarde..." : "Entrar com Face ID / Touch ID"}
                 </Button>
+                {inIframe && (
+                  <p className="text-[11px] text-muted-foreground mt-2 text-center">
+                    Face ID não funciona dentro do preview. Abra <strong>chat.kera.ia.br</strong> direto no navegador.
+                  </p>
+                )}
               </>
+            )}
+            {mode === "signin" && !supportsPasskey && (
+              <p className="text-[11px] text-muted-foreground mt-3 text-center">
+                Este navegador não suporta Face ID/Touch ID via web (WebAuthn).
+              </p>
             )}
 
             {mode === "signin" && (
