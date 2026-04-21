@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { Sparkles, Send } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -10,13 +10,16 @@ import {
   DialogDescription,
 } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
+import { isKeraDesktop } from "@/lib/keraDesktop";
 
 const QUICK_PROMPTS = [
-  "Status do PC",
-  "Tirar print da tela",
-  "Abrir Firefox",
-  "Listar arquivos do Desktop",
-  "Qual o uso de CPU e RAM?",
+  { label: "Status do PC", desktop: true },
+  { label: "Tirar print da tela", desktop: true },
+  { label: "Abrir Firefox", desktop: true },
+  { label: "Listar arquivos do Desktop", desktop: true },
+  { label: "Qual o uso de CPU e RAM?", desktop: true },
+  { label: "Gerar uma imagem", desktop: false },
+  { label: "Consultar licitação", desktop: false },
 ];
 
 export const AskKeraFab = () => {
@@ -24,6 +27,11 @@ export const AskKeraFab = () => {
   const location = useLocation();
   const [open, setOpen] = useState(false);
   const [text, setText] = useState("");
+  const desktop = isKeraDesktop();
+
+  const filteredPrompts = useMemo(() => {
+    return QUICK_PROMPTS.filter(p => !p.desktop || desktop);
+  }, [desktop]);
 
   // Esconde em /auth e na home (que já é o próprio chat)
   const path = location.pathname;
@@ -36,7 +44,9 @@ export const AskKeraFab = () => {
     if (!q) return;
     setOpen(false);
     setText("");
-    navigate(`/chat?ask=${encodeURIComponent(q)}`);
+    const isDesktopPrompt = QUICK_PROMPTS.find(p => p.label === q)?.desktop;
+    const agentParam = isDesktopPrompt ? "&agent=kera" : "";
+    navigate(`/chat?ask=${encodeURIComponent(q)}${agentParam}`);
   };
 
   return (
@@ -79,14 +89,14 @@ export const AskKeraFab = () => {
           />
 
           <div className="flex flex-wrap gap-2">
-            {QUICK_PROMPTS.map((p) => (
+            {filteredPrompts.map((p) => (
               <Button
-                key={p}
+                key={p.label}
                 variant="outline"
                 size="sm"
-                onClick={() => send(p)}
+                onClick={() => send(p.label)}
               >
-                {p}
+                {p.label}
               </Button>
             ))}
           </div>
