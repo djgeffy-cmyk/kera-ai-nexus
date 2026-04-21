@@ -367,7 +367,7 @@ const KeraDesktopPage = () => {
                   variant="outline"
                   size="sm"
                   className="gap-2 justify-start text-left h-auto py-2 hover:bg-primary/10 hover:border-primary/50"
-                  onClick={() => navigate(`/chat?ask=${encodeURIComponent(ex.ask)}`)}
+                  onClick={() => navigate(`/chat?agent=kera&ask=${encodeURIComponent(ex.ask)}`)}
                 >
                   <Icon className="size-3.5 shrink-0 text-primary" />
                   <span className="text-xs truncate">{ex.label}</span>
