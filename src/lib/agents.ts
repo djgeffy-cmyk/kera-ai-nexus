@@ -1,4 +1,4 @@
-import { Sparkles, Code2, Shield, Scale, Radar, Apple, Gamepad2, BookOpen, Heart, type LucideIcon } from "lucide-react";
+import { Sparkles, Code2, Shield, Scale, Radar, Apple, Gamepad2, BookOpen, Heart, ScrollText, UserCheck, Accessibility, type LucideIcon } from "lucide-react";
 
 export type BuiltinAgent = {
   key: string;
