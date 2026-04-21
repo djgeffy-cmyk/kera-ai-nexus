@@ -1085,18 +1085,6 @@ Por favor, analise: há perda de pacote? jitter alto sugere instabilidade de rot
             <Button
               variant="ghost" size="icon"
               onClick={() => {
-                setAvatar3D(v => !v);
-                if (!avatar3D) toast.success("Kera 3D ativada — boneca aparece no canto e fala com você");
-              }}
-              aria-label="Avatar 3D"
-              title={avatar3D ? "Ocultar Kera 3D" : "Mostrar Kera 3D"}
-              className={`shrink-0 h-9 w-9 ${avatar3D ? "text-primary" : ""}`}
-            >
-              <Bot className="size-5" />
-            </Button>
-            <Button
-              variant="ghost" size="icon"
-              onClick={() => {
                 const next = !voiceMode;
                 setVoiceMode(next);
                 try { localStorage.setItem("kera:voiceMode", next ? "1" : "0"); } catch {}
