@@ -30,8 +30,28 @@ async function call(action: string, init: RequestInit = {}) {
 export const webauthnSupported = () =>
   typeof window !== "undefined" && browserSupportsWebAuthn();
 
+export const isInIframe = () => {
+  if (typeof window === "undefined") return false;
+  try {
+    return window.self !== window.top;
+  } catch {
+    return true; // cross-origin → com certeza está em iframe
+  }
+};
+
+function ensureUsable() {
+  if (!webauthnSupported()) {
+    throw new Error("Seu dispositivo não suporta Face ID/Touch ID via web.");
+  }
+  if (isInIframe()) {
+    throw new Error(
+      "Face ID não funciona dentro do preview. Abra direto em chat.kera.ia.br no Safari.",
+    );
+  }
+}
+
 export async function registerPasskey(deviceLabel?: string) {
-  if (!webauthnSupported()) throw new Error("Seu dispositivo não suporta Face ID/Touch ID via web.");
+  ensureUsable();
   const { options } = await call("register-options", { method: "POST" });
   const attestation = await startRegistration(options);
   await call("register-verify", {
@@ -42,7 +62,7 @@ export async function registerPasskey(deviceLabel?: string) {
 }
 
 export async function loginWithPasskey(email: string) {
-  if (!webauthnSupported()) throw new Error("Seu dispositivo não suporta Face ID/Touch ID via web.");
+  ensureUsable();
   const { options } = await call("auth-options", {
     method: "POST",
     body: JSON.stringify({ email }),

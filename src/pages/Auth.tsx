@@ -18,6 +18,7 @@ import {
   loginWithPasskey,
   registerPasskey,
   webauthnSupported,
+  isInIframe,
 } from "@/lib/webauthn";
 
 type Mode = "signin" | "signup" | "totp";
@@ -33,6 +34,8 @@ const Auth = () => {
   const [loading, setLoading] = useState(false);
   const [passkeyLoading, setPasskeyLoading] = useState(false);
   const [supportsPasskey] = useState(() => webauthnSupported());
+  const [inIframe] = useState(() => isInIframe());
+  const passkeyAvailable = supportsPasskey && !inIframe;
 
   // Refs pro parallax (movimento sutil via CSS vars — não re-renderiza React)
   const mainRef = useRef<HTMLElement | null>(null);
@@ -329,7 +332,7 @@ const Auth = () => {
               className="w-full bg-gradient-cyber text-primary-foreground font-display tracking-wider hover:opacity-90 shadow-glow">
               {loading ? "Verificando..." : "Verificar"}
             </Button>
-            {supportsPasskey && (
+            {passkeyAvailable && (
               <Button
                 type="button"
                 onClick={handlePasskeyRegister}
@@ -342,6 +345,11 @@ const Auth = () => {
                   ? "Cadastrando..."
                   : "Cadastrar Face ID neste dispositivo"}
               </Button>
+            )}
+            {supportsPasskey && inIframe && (
+              <p className="text-xs text-muted-foreground text-center px-2">
+                Para cadastrar Face ID, abra direto em <strong>chat.kera.ia.br</strong> no Safari (não funciona dentro deste preview).
+              </p>
             )}
             <button
               type="button"
@@ -377,7 +385,7 @@ const Auth = () => {
               </Button>
             </form>
 
-            {mode === "signin" && supportsPasskey && (
+            {mode === "signin" && passkeyAvailable && (
               <>
                 <div className="flex items-center gap-3 my-4">
                   <div className="flex-1 h-px bg-border/50" />
