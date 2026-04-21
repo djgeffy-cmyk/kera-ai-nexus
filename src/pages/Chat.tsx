@@ -1180,6 +1180,49 @@ Por favor, analise: há perda de pacote? jitter alto sugere instabilidade de rot
           </div>
         </header>
 
+        {/* Sub-seletor de ÁREA JURÍDICA — só quando o agente atual é uma das Keras jurídicas */}
+        {(() => {
+          const JURIDICOS = [
+            { key: "kera-juridica",     label: "Geral",         Icon: Scale,         color: "text-purple-400", ring: "ring-purple-400/60" },
+            { key: "kera-familia",      label: "Família",       Icon: Heart,         color: "text-pink-400",   ring: "ring-pink-400/60" },
+            { key: "kera-sucessoes",    label: "Sucessões",     Icon: ScrollText,    color: "text-yellow-500", ring: "ring-yellow-500/60" },
+            { key: "kera-personalidade",label: "Personalidade", Icon: UserCheck,     color: "text-rose-400",   ring: "ring-rose-400/60" },
+            { key: "kera-curatela",     label: "Curatela",      Icon: Accessibility, color: "text-cyan-400",   ring: "ring-cyan-400/60" },
+          ];
+          const isJuridico = JURIDICOS.some(j => j.key === agentKey);
+          if (!isJuridico) return null;
+          return (
+            <div className="relative z-10 border-b border-border bg-background/40 backdrop-blur-sm">
+              <div className="max-w-6xl mx-auto px-4 md:px-10 py-2 flex items-center gap-2 overflow-x-auto scrollbar-thin">
+                <span className="text-[11px] uppercase tracking-wider text-muted-foreground shrink-0 mr-1">Área:</span>
+                {JURIDICOS.map(({ key, label, Icon, color, ring }) => {
+                  const active = agentKey === key;
+                  return (
+                    <button
+                      key={key}
+                      type="button"
+                      onClick={() => {
+                        if (key === agentKey) return;
+                        setAgentKey(key);
+                        newConversation(key);
+                      }}
+                      title={`Trocar para ${label}`}
+                      className={`flex items-center gap-1.5 shrink-0 rounded-full border px-3 py-1 text-xs transition ${
+                        active
+                          ? `bg-secondary border-border ring-2 ${ring} text-foreground`
+                          : "bg-transparent border-border/60 text-muted-foreground hover:bg-secondary/60 hover:text-foreground"
+                      }`}
+                    >
+                      <Icon className={`size-3.5 ${color}`} />
+                      <span className="font-medium">{label}</span>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          );
+        })()}
+
         <div ref={scrollerRef} className="relative z-10 flex-1 overflow-y-auto overflow-x-hidden scrollbar-thin">
           <div className="max-w-6xl mx-auto px-6 md:px-10 py-6 space-y-5 [.light_&]:[text-shadow:0_1px_2px_hsl(var(--background)/0.8)]">
             {messages.length === 0 && !streaming && (
