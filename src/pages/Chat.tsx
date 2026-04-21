@@ -1087,6 +1087,11 @@ Por favor, analise: há perda de pacote? jitter alto sugere instabilidade de rot
                    <span className="absolute inset-0 size-2.5 rounded-full bg-primary animate-ping opacity-20" />
                  </div>
                  <h1 className="font-display text-sm md:text-base font-bold tracking-wider text-glow truncate group-hover:text-primary transition-colors">{currentAgentName.toUpperCase()}</h1>
+                {agentKey === "kera-security-nasa" && (
+                  <span className="hidden sm:inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-bold tracking-widest uppercase bg-blue-500/15 text-blue-300 border border-blue-400/30 shadow-[0_0_8px_rgba(59,130,246,0.35)]">
+                    NASA-Grade
+                  </span>
+                )}
                  <ChevronRight className="size-4 rotate-90 text-muted-foreground opacity-50 group-hover:opacity-100 transition-all shrink-0" />
                </button>
              </DropdownMenuTrigger>
@@ -1096,7 +1101,13 @@ Por favor, analise: há perda de pacote? jitter alto sugere instabilidade de rot
                 const Icon = a.icon;
                 return (
                   <DropdownMenuItem key={a.key} onClick={() => { setAgentKey(a.key); newConversation(a.key); }}>
-                    <Icon className={`size-4 mr-2 ${a.iconColor}`} /> {a.name}
+                    <Icon className={`size-4 mr-2 ${a.iconColor}`} />
+                    <span className="flex-1">{a.name}</span>
+                    {a.key === "kera-security-nasa" && (
+                      <span className="ml-2 px-1.5 py-0.5 rounded text-[9px] font-bold tracking-widest uppercase bg-blue-500/15 text-blue-300 border border-blue-400/30">
+                        NASA
+                      </span>
+                    )}
                   </DropdownMenuItem>
                 );
               })}
@@ -1286,6 +1297,14 @@ Por favor, analise: há perda de pacote? jitter alto sugere instabilidade de rot
                  <h2 className="font-display text-3xl md:text-5xl mt-10 font-black tracking-tighter uppercase leading-tight">
                    Olá, eu sou a <span className="kera-gradient-text">{currentAgentName}</span>
                  </h2>
+                 {agentKey === "kera-security-nasa" && (
+                   <div className="mt-4 flex justify-center">
+                     <span className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-[11px] font-bold tracking-[0.25em] uppercase bg-blue-500/10 text-blue-300 border border-blue-400/40 shadow-[0_0_14px_rgba(59,130,246,0.35)]">
+                       <span className="size-1.5 rounded-full bg-blue-400 animate-pulse" />
+                       NASA-Grade · Mission Critical
+                     </span>
+                   </div>
+                 )}
                  <p className="text-sm md:text-lg text-muted-foreground mt-4 max-w-lg mx-auto font-medium opacity-80 leading-relaxed">
                    {currentAgent && "description" in currentAgent ? currentAgent.description : "Sua assistente de inteligência avançada. Em que posso ser útil hoje?"}
                  </p>
