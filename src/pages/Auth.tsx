@@ -329,6 +329,20 @@ const Auth = () => {
               className="w-full bg-gradient-cyber text-primary-foreground font-display tracking-wider hover:opacity-90 shadow-glow">
               {loading ? "Verificando..." : "Verificar"}
             </Button>
+            {supportsPasskey && (
+              <Button
+                type="button"
+                onClick={handlePasskeyRegister}
+                disabled={passkeyLoading}
+                variant="outline"
+                className="w-full border-primary/40 hover:bg-primary/10 hover:border-primary"
+              >
+                <ScanFace className="size-4 mr-2 text-primary" />
+                {passkeyLoading
+                  ? "Cadastrando..."
+                  : "Cadastrar Face ID neste dispositivo"}
+              </Button>
+            )}
             <button
               type="button"
               onClick={async () => {
