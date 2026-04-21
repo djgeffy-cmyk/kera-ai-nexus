@@ -83,7 +83,7 @@
      if (error) {
        console.error("Error fetching history:", error);
      } else {
-       setHistory((data || []) as Analysis[]);
+       setHistory((data || []) as unknown as Analysis[]);
      }
    };
  
@@ -123,8 +123,8 @@
  
        if (saveError) throw saveError;
  
-       setCurrentAnalysis(savedData as Analysis);
-       setHistory([savedData as Analysis, ...history]);
+       setCurrentAnalysis(savedData as unknown as Analysis);
+       setHistory([savedData as unknown as Analysis, ...history]);
        toast.success("ANALYSIS COMPLETE: Security report generated.");
      } catch (err: any) {
        toast.error(`ANALYSIS FAILED: ${err.message}`);
