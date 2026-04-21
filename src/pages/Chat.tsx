@@ -177,7 +177,7 @@ const Chat = () => {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const { theme, setTheme } = useTheme();
-  const { canAccess, canSee, consumeTrial } = useUserAccess();
+  const { canAccess, canSee, consumeTrial, spaceincloudActive } = useUserAccess();
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [customAgents, setCustomAgents] = useState<CustomAgent[]>([]);
   const [currentId, setCurrentId] = useState<string | null>(null);
