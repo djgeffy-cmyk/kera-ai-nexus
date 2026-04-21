@@ -239,7 +239,7 @@ export default function KeraDesktop3D() {
             .vrm (com expressões) ou .glb/.gltf (estático) · salvo localmente
           </p>
           {modelKind === "glb" && (
-            <p className="text-xs text-amber-500 mt-1">⚠️ GLB carregado: sem lipsync/emoções</p>
+            <p className="text-xs text-destructive mt-1">⚠️ GLB carregado: sem lipsync/emoções</p>
           )}
         </div>
 
