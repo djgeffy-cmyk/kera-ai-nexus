@@ -37,6 +37,23 @@ const Auth = () => {
   const [inIframe] = useState(() => isInIframe());
   const passkeyAvailable = supportsPasskey && !inIframe;
 
+  // Diagnóstico — ajuda a entender quando o botão some no chat.kera.ia.br
+  useEffect(() => {
+    // eslint-disable-next-line no-console
+    console.log("[passkey] diagnóstico", {
+      supportsPasskey,
+      inIframe,
+      passkeyAvailable,
+      hasPublicKeyCredential:
+        typeof window !== "undefined" && !!(window as any).PublicKeyCredential,
+      origin: typeof window !== "undefined" ? window.location.origin : null,
+      isSecureContext:
+        typeof window !== "undefined" ? window.isSecureContext : null,
+      protocol:
+        typeof window !== "undefined" ? window.location.protocol : null,
+    });
+  }, [supportsPasskey, inIframe, passkeyAvailable]);
+
   // Refs pro parallax (movimento sutil via CSS vars — não re-renderiza React)
   const mainRef = useRef<HTMLElement | null>(null);
   const bgVideoRef = useRef<HTMLVideoElement | null>(null);
