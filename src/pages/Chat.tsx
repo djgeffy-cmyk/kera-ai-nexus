@@ -9,7 +9,7 @@ import {
   Plus, LogOut, Send, MessageSquare, Trash2, Menu, Settings, Calculator,
   Image as ImageIcon, LayoutGrid, FolderPlus, Mic, MicOff, Volume2, VolumeX, Bot, ChevronRight,
   Paperclip, X, FileText, ShieldCheck, Activity, Download, Ear, Sun, Moon, Sparkles, Gem,
-  PanelLeftClose, PanelLeftOpen, Camera, Pencil, Eraser, Monitor,
+   PanelLeftClose, PanelLeftOpen, Camera, Pencil, Eraser, Monitor, Maximize2,
   Scale, Heart, ScrollText, UserCheck, Accessibility,
 } from "lucide-react";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
@@ -996,7 +996,16 @@ Por favor, analise: há perda de pacote? jitter alto sugere instabilidade de rot
                 Kera 3D
               </div>
               {/* Controles de upload do VRM personalizado */}
-              <div className="pointer-events-auto absolute top-2 right-2 flex gap-1">
+               <div className="pointer-events-auto absolute top-2 right-2 flex gap-2">
+                 <Button
+                   size="icon"
+                   variant="ghost"
+                   onClick={() => navigate("/kera-3d")}
+                   title="Abrir no Kera 3D Studio (Controles avançados)"
+                   className="h-7 w-7 bg-background/70 backdrop-blur-sm border border-primary/30 hover:bg-primary/20"
+                 >
+                   <Maximize2 className="size-3.5" />
+                 </Button>
                 <input
                   ref={vrmFileInputRef}
                   type="file"
