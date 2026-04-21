@@ -1,7 +1,7 @@
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Check, Sparkles, Crown, Rocket, ArrowLeft } from "lucide-react";
+import { Check, Sparkles, Crown, Rocket, ArrowLeft, Image as ImageIcon } from "lucide-react";
 
 type Plan = {
   key: "essencial" | "pro" | "master";
@@ -27,7 +27,7 @@ const PLANS: Plan[] = [
       "Kera generalista liberada",
       "3 agentes especialistas à escolha",
       "Histórico de conversas",
-      "Geração de imagem básica",
+      "1 imagem gerada por dia",
       "Suporte por e-mail",
     ],
     cta: "Quero o Essencial",
@@ -43,7 +43,7 @@ const PLANS: Plan[] = [
     features: [
       "Tudo do Essencial",
       "Todos os agentes especialistas",
-      "Geração de imagem avançada",
+      "10 imagens geradas por dia",
       "Modo voz com TTS premium",
       "Análise de código (até 50/mês)",
       "Suporte prioritário",
@@ -61,6 +61,7 @@ const PLANS: Plan[] = [
       "Tudo do Pro",
       "Kera Security NASA ilimitada",
       "Sentinela (monitor 24/7)",
+      "50 imagens geradas por dia",
       "Análise de código ilimitada",
       "Acesso antecipado a novos agentes",
       "Suporte dedicado WhatsApp",
@@ -71,6 +72,8 @@ const PLANS: Plan[] = [
 
 export default function Planos() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const reason = searchParams.get("reason");
 
   return (
     <main className="min-h-screen bg-background px-4 py-10 md:py-16">
@@ -81,6 +84,18 @@ export default function Planos() {
         >
           <ArrowLeft className="h-4 w-4" /> Voltar
         </button>
+
+        {reason === "image_quota" && (
+          <div className="mb-8 rounded-xl border border-amber-500/30 bg-amber-500/10 p-4 md:p-5 flex items-start gap-3">
+            <ImageIcon className="h-5 w-5 text-amber-400 mt-0.5 shrink-0" />
+            <div>
+              <h2 className="font-semibold text-amber-200">Cota diária de imagens atingida</h2>
+              <p className="text-sm text-amber-100/80">
+                Você usou todas as imagens do seu plano hoje. Escolha um plano abaixo pra liberar mais — a cota renova todo dia à meia-noite.
+              </p>
+            </div>
+          </div>
+        )}
 
         <header className="text-center mb-12">
           <h1 className="font-display text-4xl md:text-5xl text-glow mb-3">
