@@ -981,15 +981,16 @@ Por favor, analise: há perda de pacote? jitter alto sugere instabilidade de rot
         )}
 
         {/* Kera 3D — boneca volumétrica que reage à voz e às emoções da resposta */}
-        {avatar3D && (
-          <div className="hidden md:block absolute right-4 bottom-24 z-10 w-[320px] h-[480px] pointer-events-none animate-[fade-in_500ms_ease-out]">
-            <div className="relative w-full h-full rounded-3xl overflow-hidden border border-primary/30 bg-gradient-to-b from-primary/10 via-transparent to-primary/5 shadow-[0_0_60px_-10px_hsl(var(--primary)/0.4)] backdrop-blur-sm">
+         {avatar3D && (
+           <div className="hidden md:block absolute right-4 bottom-24 z-10 w-[320px] h-[480px] animate-[fade-in_500ms_ease-out]">
+             <div className="relative w-full h-full rounded-3xl overflow-hidden border border-primary/30 bg-gradient-to-b from-primary/10 via-transparent to-primary/5 shadow-[0_0_60px_-10px_hsl(var(--primary)/0.4)] backdrop-blur-sm pointer-events-auto">
               <KeraAvatar3D
                 speaking={voice.speaking}
                 audioElement={voice.audioRef.current}
                 lastReplyText={lastAssistantText}
-                vrmUrl={customVrmUrl ? customVrmUrl : undefined}
-              />
+                 vrmUrl={customVrmUrl ? customVrmUrl : undefined}
+                 interactive={true}
+               />
               {/* Indicador "ao vivo" */}
               <div className="absolute top-2 left-2 flex items-center gap-1.5 text-[10px] font-medium text-primary bg-background/70 backdrop-blur-sm px-2 py-0.5 rounded-full border border-primary/30">
                 <span className={`size-1.5 rounded-full ${voice.speaking ? "bg-primary animate-pulse" : "bg-muted-foreground"}`} />
