@@ -327,8 +327,6 @@ Deno.serve(async (req) => {
       );
     }
     const { messages, provider, systemPrompt, agentKey, desktopTools } = parsed.data;
-      });
-    }
 
     // Se o cliente é Kera Desktop, ele envia `desktopTools` com as definições das tools locais.
     // Essas tools executam no Electron (não no servidor). Quando o LLM pede uma delas,
