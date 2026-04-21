@@ -6,6 +6,7 @@ import Index from "./pages/Index.tsx";
 import Auth from "./pages/Auth.tsx";
 import Admin from "./pages/Admin.tsx";
 import Agents from "./pages/Agents.tsx";
+import Onboarding from "./pages/Onboarding.tsx";
 import Security from "./pages/Security.tsx";
 import Transparencia from "./pages/Transparencia.tsx";
 import TransparenciaHistorico from "./pages/TransparenciaHistorico.tsx";
@@ -27,6 +28,7 @@ const App = () => (
         <LicitacoesAlertsListener />
         <Routes>
           <Route path="/auth" element={<Auth />} />
+          <Route path="/onboarding" element={<ProtectedRoute><Onboarding /></ProtectedRoute>} />
           <Route path="/" element={<ProtectedRoute><Index /></ProtectedRoute>} />
           <Route path="/admin" element={<ProtectedRoute requireAdmin><Admin /></ProtectedRoute>} />
           <Route path="/agents" element={<ProtectedRoute><Agents /></ProtectedRoute>} />

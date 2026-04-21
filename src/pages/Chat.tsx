@@ -84,6 +84,7 @@ import { assetUrl } from "@/lib/assetUrl";
 import { MessageBubble, type ChatMessage } from "@/components/chat/MessageBubble";
 import { PROVIDERS, getPreferredProvider, setPreferredProvider, type ProviderId } from "@/lib/providers";
 import { BUILTIN_AGENTS, getBuiltinAgent, DEFAULT_AGENT_KEY } from "@/lib/agents";
+import { useUserAccess } from "@/hooks/useUserAccess";
 import { useVoice } from "@/hooks/useVoice";
 import { useAlwaysListening } from "@/hooks/useAlwaysListening";
 import { fileToAttachment, buildUserContent, type Attachment } from "@/lib/attachments";
@@ -176,6 +177,7 @@ const Chat = () => {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const { theme, setTheme } = useTheme();
+  const { canAccess } = useUserAccess();
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [customAgents, setCustomAgents] = useState<CustomAgent[]>([]);
   const [currentId, setCurrentId] = useState<string | null>(null);
@@ -1148,7 +1150,7 @@ Por favor, analise: há perda de pacote? jitter alto sugere instabilidade de rot
              </DropdownMenuTrigger>
             <DropdownMenuContent className="w-64 bg-card border-border">
               <DropdownMenuLabel className="text-xs text-muted-foreground">Agentes prontos</DropdownMenuLabel>
-              {BUILTIN_AGENTS.map(a => {
+              {BUILTIN_AGENTS.filter(a => canAccess(a.key)).map(a => {
                 const Icon = a.icon;
                 return (
                   <DropdownMenuItem key={a.key} onClick={() => { setAgentKey(a.key); newConversation(a.key); }}>

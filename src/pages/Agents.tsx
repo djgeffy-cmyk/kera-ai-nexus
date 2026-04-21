@@ -9,6 +9,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, Dialog
 import { ArrowLeft, Plus, Sparkles, Trash2, Pencil } from "lucide-react";
 import { toast } from "sonner";
 import { BUILTIN_AGENTS } from "@/lib/agents";
+import { useUserAccess } from "@/hooks/useUserAccess";
 import keraLogo from "@/assets/kera-logo.png";
 import { MissionCriticalSchema } from "@/lib/missionCriticalSchemas";
 
@@ -23,6 +24,7 @@ type Agent = {
 
 const AgentsPage = () => {
   const navigate = useNavigate();
+  const { canAccess, isAdmin, loading: accessLoading } = useUserAccess();
   const [agents, setAgents] = useState<Agent[]>([]);
   const [editing, setEditing] = useState<Agent | null>(null);
   const [open, setOpen] = useState(false);
@@ -127,21 +129,50 @@ const AgentsPage = () => {
       <main className="max-w-4xl mx-auto px-4 py-8 space-y-8">
         <section>
           <h2 className="font-display text-sm uppercase tracking-wider text-muted-foreground mb-3">Agentes prontos</h2>
+          {!isAdmin && (
+            <p className="text-xs text-muted-foreground/70 mb-3">
+              Áreas trancadas não foram liberadas no seu cadastro.{" "}
+              <button
+                onClick={() => navigate("/onboarding")}
+                className="text-primary hover:underline"
+              >
+                Liberar mais áreas
+              </button>
+            </p>
+          )}
           <div className="grid sm:grid-cols-2 gap-3">
             {BUILTIN_AGENTS.map(a => {
               const Icon = a.icon;
+              const allowed = canAccess(a.key);
               return (
                 <Card 
                   key={a.key} 
-                  className="p-4 panel border-border cursor-pointer hover:border-primary/50 transition-colors"
-                  onClick={() => a.link ? navigate(a.link) : navigate(`/?agent=${a.key}`)}
+                  className={`p-4 panel border-border transition-colors ${
+                    allowed
+                      ? "cursor-pointer hover:border-primary/50"
+                      : "opacity-50 grayscale cursor-not-allowed"
+                  }`}
+                  onClick={() => {
+                    if (!allowed) {
+                      toast.info("Essa área não está liberada. Toque em 'Liberar mais áreas' acima.");
+                      return;
+                    }
+                    a.link ? navigate(a.link) : navigate(`/?agent=${a.key}`);
+                  }}
                 >
                   <div className="flex items-start gap-3">
                     <div className={`size-10 rounded-xl bg-secondary flex items-center justify-center ${a.iconColor}`}>
                       <Icon className="size-5" />
                     </div>
-                    <div>
-                      <h3 className="font-medium">{a.name}</h3>
+                    <div className="flex-1 min-w-0">
+                      <h3 className="font-medium flex items-center gap-2">
+                        {a.name}
+                        {!allowed && (
+                          <span className="text-[9px] px-1.5 py-0.5 rounded bg-muted text-muted-foreground border border-border font-bold tracking-wider">
+                            🔒 BLOQUEADO
+                          </span>
+                        )}
+                      </h3>
                       <p className="text-xs text-muted-foreground">{a.description}</p>
                     </div>
                   </div>
