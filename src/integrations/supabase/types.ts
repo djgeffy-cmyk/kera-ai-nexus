@@ -600,6 +600,33 @@ export type Database = {
         }
         Relationships: []
       }
+      scans: {
+        Row: {
+          analysis_result: Json
+          code: string
+          created_at: string
+          id: string
+          language: string
+          user_id: string
+        }
+        Insert: {
+          analysis_result: Json
+          code: string
+          created_at?: string
+          id?: string
+          language: string
+          user_id: string
+        }
+        Update: {
+          analysis_result?: Json
+          code?: string
+          created_at?: string
+          id?: string
+          language?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       user_roles: {
         Row: {
           created_at: string

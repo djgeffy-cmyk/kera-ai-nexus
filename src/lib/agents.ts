@@ -1,4 +1,4 @@
-import { Sparkles, Code2, Shield, Scale, Radar, Apple, Gamepad2, BookOpen, Heart, ScrollText, UserCheck, Accessibility, type LucideIcon } from "lucide-react";
+import { Sparkles, Code2, Shield, Scale, Radar, Apple, Gamepad2, BookOpen, Heart, ScrollText, UserCheck, Accessibility, ShieldAlert, type LucideIcon } from "lucide-react";
 
 export type BuiltinAgent = {
   key: string;
@@ -7,6 +7,7 @@ export type BuiltinAgent = {
   icon: LucideIcon;
   iconColor: string; // tailwind text color class
   systemPrompt: string;
+  link?: string;
 };
 
 const BASE_PERSONALITY = `Personalidade Kera:
@@ -24,6 +25,15 @@ Você é um agente ESPECIALISTA. Mantenha as respostas dentro do seu tema config
 - Dúvidas que tangenciam seu tema (ex.: contexto técnico que ajuda a resposta especializada) você PODE responder normalmente.`;
 
 export const BUILTIN_AGENTS: BuiltinAgent[] = [
+  {
+    key: "kera-security-nasa",
+    name: "Kera Security NASA",
+    description: "Análise de segurança nível NASA — Mission Critical",
+    icon: ShieldAlert,
+    iconColor: "text-blue-500",
+    systemPrompt: "Você é Kera Security NASA, Analista de Sistemas Sênior com padrão NASA.",
+    link: "/kera-security-nasa"
+  },
   {
     key: "kera",
     name: "Kera",
