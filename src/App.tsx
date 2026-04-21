@@ -8,6 +8,7 @@ import Admin from "./pages/Admin.tsx";
 import Agents from "./pages/Agents.tsx";
 import Onboarding from "./pages/Onboarding.tsx";
 import Planos from "./pages/Planos.tsx";
+import AdminUso from "./pages/AdminUso.tsx";
 import Security from "./pages/Security.tsx";
 import Transparencia from "./pages/Transparencia.tsx";
 import TransparenciaHistorico from "./pages/TransparenciaHistorico.tsx";
@@ -33,6 +34,7 @@ const App = () => (
           <Route path="/planos" element={<ProtectedRoute><Planos /></ProtectedRoute>} />
           <Route path="/" element={<ProtectedRoute><Index /></ProtectedRoute>} />
           <Route path="/admin" element={<ProtectedRoute requireAdmin><Admin /></ProtectedRoute>} />
+          <Route path="/admin/uso" element={<ProtectedRoute requireAdmin><AdminUso /></ProtectedRoute>} />
           <Route path="/agents" element={<ProtectedRoute><Agents /></ProtectedRoute>} />
           <Route path="/security" element={<ProtectedRoute><Security /></ProtectedRoute>} />
           <Route path="/transparencia" element={<ProtectedRoute><Transparencia /></ProtectedRoute>} />
