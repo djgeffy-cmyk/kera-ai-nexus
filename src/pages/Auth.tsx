@@ -385,7 +385,7 @@ const Auth = () => {
               </Button>
             </form>
 
-            {mode === "signin" && supportsPasskey && (
+            {mode === "signin" && passkeyAvailable && (
               <>
                 <div className="flex items-center gap-3 my-4">
                   <div className="flex-1 h-px bg-border/50" />
