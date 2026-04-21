@@ -125,6 +125,14 @@ const AGENT_SUGGESTIONS: Record<string, Array<{ q: string; icon: typeof Sparkles
      { q: "Analisa esse log e identifica ameaças.", icon: FileSearch },
      { q: "Roteiro de pentest para uma aplicação web.", icon: Bug },
    ],
+  "kera-security-nasa": [
+    { q: "Quais linguagens você analisa? (Python, JS, TS, Java, C/C++, Go, Rust, PHP, SQL...)", icon: Code2 },
+    { q: "Vou colar um código Python — analisa nível NASA.", icon: FileSearch },
+    { q: "Revisa esse trecho em C/C++ usando MISRA + Power of 10.", icon: ShieldAlert },
+    { q: "Faz auditoria OWASP + CWE neste código JavaScript.", icon: Shield },
+    { q: "Análise de SQL injection neste query.", icon: Bug },
+    { q: "Verifica buffer overflow e memory safety neste C.", icon: Lock },
+  ],
   "kera-juridica": [
     { q: "Explica a Lei 14.133/21 em pontos-chave.", icon: Scale },
     { q: "Cláusulas obrigatórias num contrato de TI.", icon: ScrollText },
@@ -962,9 +970,6 @@ Por favor, analise: há perda de pacote? jitter alto sugere instabilidade de rot
             <Monitor className="size-4 mr-2" /> Kera Desktop (PC)
           </Button>
         )}
-         <Button variant="ghost" onClick={() => navigate("/kera-security-nasa")} className="w-full justify-start text-primary hover:text-primary animate-pulse">
-           <Shield className="size-4 mr-2" /> Kera Security NASA
-         </Button>
         <Button variant="ghost" onClick={() => navigate("/security")} className="w-full justify-start text-muted-foreground hover:text-foreground">
           <ShieldCheck className="size-4 mr-2" /> Segurança (2FA)
         </Button>
@@ -1287,14 +1292,7 @@ Por favor, analise: há perda de pacote? jitter alto sugere instabilidade de rot
                     {(AGENT_SUGGESTIONS[agentKey] ?? AGENT_SUGGESTIONS.kera).map(({ q, icon: Icon }) => (
                       <button
                         key={q}
-                        onClick={() => { 
-                          if (q.includes("Kera Security NASA")) {
-                            navigate("/kera-security-nasa");
-                          } else {
-                            setInput(q); 
-                            setTimeout(() => sendText(q), 50); 
-                          }
-                        }}
+                        onClick={() => { setInput(q); setTimeout(() => sendText(q), 50); }}
                         className="flex items-center gap-4 text-left px-6 py-4.5 rounded-2xl bg-white/5 border border-white/5 hover:border-primary/30 hover:bg-primary/5 transition-all duration-300 group shadow-sm active:scale-95"
                       >
                        <div className="size-10 rounded-xl bg-white/5 flex items-center justify-center group-hover:bg-primary/20 transition-colors shadow-inner">
