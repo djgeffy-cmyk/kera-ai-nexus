@@ -1267,27 +1267,52 @@ Por favor, analise: há perda de pacote? jitter alto sugere instabilidade de rot
           );
         })()}
 
-        <div ref={scrollerRef} className="relative z-10 flex-1 overflow-y-auto overflow-x-hidden scrollbar-thin">
-          <div className="max-w-6xl mx-auto px-6 md:px-10 py-6 space-y-5 [.light_&]:[text-shadow:0_1px_2px_hsl(var(--background)/0.8)]">
-            {messages.length === 0 && !streaming && (
-              <div className="text-center pt-10 md:pt-20">
-                <video
-                  src={assetUrl(keraAvatarVideo)}
-                  poster={keraAvatar}
-                  autoPlay
-                  loop
-                  muted
-                  playsInline
-                  aria-label="Avatar animado da Kera"
-                  className="size-28 md:size-36 mx-auto rounded-full object-cover object-top border border-primary/40 shadow-glow bg-background"
-                />
-                <h2 className="font-display text-2xl md:text-3xl mt-6 text-glow">Olá, eu sou a {currentAgentName}</h2>
-                <p className="text-muted-foreground mt-2 max-w-md mx-auto">
-                  {currentAgent && "description" in currentAgent ? currentAgent.description : "Sua IA truth-seeking. Direta. Honesta. Útil."}
-                </p>
-              </div>
-            )}
-            {messages.map((m, i) => {
+         <div ref={scrollerRef} className="relative z-10 flex-1 overflow-y-auto overflow-x-hidden scrollbar-thin pb-32">
+           <div className="max-w-5xl mx-auto px-6 md:px-10 py-10 md:py-16 space-y-8 [.light_&]:[text-shadow:0_1px_2px_hsl(var(--background)/0.8)]">
+             {messages.length === 0 && !streaming && (
+               <div className="text-center animate-in fade-in zoom-in-95 duration-1000">
+                 <div className="relative group inline-block">
+                   <div className="absolute inset-0 bg-primary/20 blur-[60px] animate-pulse rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-1000" />
+                   <video
+                     src={assetUrl(keraAvatarVideo)}
+                     poster={keraAvatar}
+                     autoPlay
+                     loop
+                     muted
+                     playsInline
+                     aria-label="Avatar animado da Kera"
+                     className="size-32 md:size-48 mx-auto rounded-[2.5rem] object-cover object-top border border-white/10 shadow-glow bg-black/40 backdrop-blur-md transform transition-transform duration-500 group-hover:scale-105"
+                   />
+                 </div>
+                 <h2 className="font-display text-3xl md:text-5xl mt-10 font-black tracking-tighter uppercase leading-tight">
+                   Olá, eu sou a <span className="kera-gradient-text">{currentAgentName}</span>
+                 </h2>
+                 <p className="text-sm md:text-lg text-muted-foreground mt-4 max-w-lg mx-auto font-medium opacity-80 leading-relaxed">
+                   {currentAgent && "description" in currentAgent ? currentAgent.description : "Sua assistente de inteligência avançada. Em que posso ser útil hoje?"}
+                 </p>
+ 
+                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 w-full max-w-2xl mx-auto mt-12 px-4">
+                   {[
+                     { q: "Quais são suas capacidades?", icon: Sparkles },
+                     { q: "Otimize meu fluxo de trabalho.", icon: Activity },
+                     { q: "Análise jurídica inteligente.", icon: Scale },
+                     { q: "Gerar relatório de rede.", icon: Monitor },
+                   ].map(({ q, icon: Icon }) => (
+                     <button
+                       key={q}
+                       onClick={() => { setInput(q); setTimeout(() => sendText(q), 50); }}
+                       className="flex items-center gap-4 text-left px-6 py-4.5 rounded-2xl bg-white/5 border border-white/5 hover:border-primary/30 hover:bg-primary/5 transition-all duration-300 group shadow-sm active:scale-95"
+                     >
+                       <div className="size-10 rounded-xl bg-white/5 flex items-center justify-center group-hover:bg-primary/20 transition-colors shadow-inner">
+                         <Icon className="size-5 text-muted-foreground group-hover:text-primary transition-colors" />
+                       </div>
+                       <span className="text-muted-foreground group-hover:text-foreground transition-colors font-semibold text-sm">{q}</span>
+                     </button>
+                   ))}
+                 </div>
+               </div>
+             )}
+             {messages.map((m, i) => {
               const isLast = i === messages.length - 1;
               return (
                 <MessageBubble
