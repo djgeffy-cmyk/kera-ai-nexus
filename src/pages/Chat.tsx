@@ -1412,6 +1412,19 @@ Por favor, analise: há perda de pacote? jitter alto sugere instabilidade de rot
                  <p className="text-sm md:text-lg text-muted-foreground mt-4 max-w-lg mx-auto font-medium opacity-80 leading-relaxed">
                    {currentAgent && "description" in currentAgent ? currentAgent.description : "Sua assistente de inteligência avançada. Em que posso ser útil hoje?"}
                  </p>
+
+                  {spaceincloudActive && (
+                    <button
+                      onClick={() => window.open("https://app.spaceincloud.com.br/kera", "_blank", "noopener,noreferrer")}
+                      className="mt-6 inline-flex items-center gap-3 px-5 py-3 rounded-2xl bg-gradient-to-r from-fuchsia-500/15 to-orange-500/15 border border-fuchsia-400/30 hover:border-fuchsia-300/60 transition-all group"
+                    >
+                      <Dumbbell className="size-5 text-fuchsia-300 group-hover:scale-110 transition-transform" />
+                      <span className="text-sm font-semibold text-fuchsia-100">
+                        Growth FIT ativo · abrir app de treino
+                      </span>
+                      <ChevronRight className="size-4 text-fuchsia-300/70 group-hover:translate-x-0.5 transition-transform" />
+                    </button>
+                  )}
  
                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 w-full max-w-2xl mx-auto mt-12 px-4">
                     {(AGENT_SUGGESTIONS[agentKey] ?? AGENT_SUGGESTIONS.kera).map(({ q, icon: Icon }) => (
