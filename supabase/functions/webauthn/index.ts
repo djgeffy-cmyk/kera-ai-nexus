@@ -175,15 +175,15 @@ async function handleRegisterVerify(req: Request) {
     return json({ error: "Verificação falhou" }, 400);
   }
 
-  const { credential } = verification.registrationInfo;
-  const credIdB64 = credential.id; // já base64url string
-  const pubKeyB64 = isoBase64URL.fromBuffer(credential.publicKey);
+  const { credentialID, credentialPublicKey, counter } = verification.registrationInfo;
+  const credIdB64 = credentialID; // já base64url string
+  const pubKeyB64 = isoBase64URL.fromBuffer(credentialPublicKey);
 
   const { error } = await admin.from("webauthn_credentials").insert({
     user_id: user.id,
     credential_id: credIdB64,
     public_key: pubKeyB64,
-    counter: credential.counter ?? 0,
+    counter: counter ?? 0,
     transports: response?.response?.transports ?? null,
     device_label: deviceLabel,
   });
@@ -267,9 +267,9 @@ async function handleAuthVerify(req: Request) {
       expectedChallenge,
       expectedOrigin: origin,
       expectedRPID: rpID,
-      credential: {
-        id: credentialId,
-        publicKey: isoBase64URL.toBuffer(cred.public_key),
+      authenticator: {
+        credentialID: credentialId,
+        credentialPublicKey: isoBase64URL.toBuffer(cred.public_key),
         counter: Number(cred.counter ?? 0),
         transports: (cred.transports as AuthenticatorTransport[] | null) ?? undefined,
       },
