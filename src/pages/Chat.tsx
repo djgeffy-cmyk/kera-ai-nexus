@@ -177,7 +177,7 @@ const Chat = () => {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const { theme, setTheme } = useTheme();
-  const { canAccess } = useUserAccess();
+  const { canAccess, consumeTrial } = useUserAccess();
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [customAgents, setCustomAgents] = useState<CustomAgent[]>([]);
   const [currentId, setCurrentId] = useState<string | null>(null);
@@ -527,6 +527,28 @@ const Chat = () => {
         return;
       }
       rawText = parsed.data.message;
+    }
+
+    // 🔒 Paywall: se o agente está bloqueado pra esse usuário, libera no máx 3 perguntas
+    // como "palhinha". Depois disso, manda pra /planos.
+    const trial = await consumeTrial(agentKey);
+    if (!trial.allowed) {
+      toast.message("Hora de evoluir 🚀", {
+        description: "Você já usou suas perguntas grátis nas áreas premium. Escolha um plano pra continuar.",
+      });
+      navigate("/planos");
+      return;
+    }
+    if (trial.wasTrial) {
+      const left = trial.remaining;
+      toast.message(
+        left > 0
+          ? `Palhinha liberada — ${left} pergunta${left === 1 ? "" : "s"} grátis restante${left === 1 ? "" : "s"}.`
+          : "Última palhinha! Próxima pergunta nesta área pede upgrade.",
+        {
+          description: "Esse agente não está no seu plano. Curta a amostra grátis ✨",
+        }
+      );
     }
 
     // 🎨 Detecção de pedido de geração de imagem (sem anexos)
@@ -1153,12 +1175,18 @@ Por favor, analise: há perda de pacote? jitter alto sugere instabilidade de rot
              </DropdownMenuTrigger>
             <DropdownMenuContent className="w-64 bg-card border-border">
               <DropdownMenuLabel className="text-xs text-muted-foreground">Agentes prontos</DropdownMenuLabel>
-              {BUILTIN_AGENTS.filter(a => canAccess(a.key)).map(a => {
+              {BUILTIN_AGENTS.map(a => {
                 const Icon = a.icon;
+                const locked = !canAccess(a.key);
                 return (
                   <DropdownMenuItem key={a.key} onClick={() => { setAgentKey(a.key); newConversation(a.key); }}>
-                    <Icon className={`size-4 mr-2 ${a.iconColor}`} />
-                    <span className="flex-1">{a.name}</span>
+                    <Icon className={`size-4 mr-2 ${a.iconColor} ${locked ? "opacity-50" : ""}`} />
+                    <span className={`flex-1 ${locked ? "opacity-60" : ""}`}>{a.name}</span>
+                    {locked && (
+                      <span className="ml-2 px-1.5 py-0.5 rounded text-[9px] font-bold tracking-widest uppercase bg-amber-500/15 text-amber-300 border border-amber-400/30 inline-flex items-center gap-1">
+                        <Lock className="size-2.5" /> Trial
+                      </span>
+                    )}
                     {a.key === "kera-security-nasa" && (
                       <span className="ml-2 px-1.5 py-0.5 rounded text-[9px] font-bold tracking-widest uppercase bg-blue-500/15 text-blue-300 border border-blue-400/30">
                         NASA

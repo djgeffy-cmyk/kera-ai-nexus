@@ -541,6 +541,7 @@ export type Database = {
           display_name: string | null
           id: string
           onboarding_completed: boolean
+          paywall_trial_count: number
           selected_agents: string[]
           updated_at: string
           user_id: string
@@ -551,6 +552,7 @@ export type Database = {
           display_name?: string | null
           id?: string
           onboarding_completed?: boolean
+          paywall_trial_count?: number
           selected_agents?: string[]
           updated_at?: string
           user_id: string
@@ -561,6 +563,7 @@ export type Database = {
           display_name?: string | null
           id?: string
           onboarding_completed?: boolean
+          paywall_trial_count?: number
           selected_agents?: string[]
           updated_at?: string
           user_id?: string
