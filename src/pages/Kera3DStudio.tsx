@@ -186,7 +186,11 @@ export default function KeraDesktop3D() {
         <directionalLight position={[2, 4, 3]} intensity={1.1} color="#e9d5ff" />
         <directionalLight position={[-3, 2, -2]} intensity={0.5} color="#a855f7" />
         <Suspense fallback={<LoadingOrb />}>
-          <VRMModel url={vrmUrl} emotion={emotion} intensity={intensity} autoRotate={autoRotate} />
+          {modelKind === "vrm" ? (
+            <VRMModel url={vrmUrl} emotion={emotion} intensity={intensity} autoRotate={autoRotate} />
+          ) : (
+            <GLBModel url={vrmUrl} autoRotate={autoRotate} />
+          )}
           <Environment preset="city" />
         </Suspense>
         {showGrid && (
@@ -219,19 +223,24 @@ export default function KeraDesktop3D() {
           <input
             ref={fileInputRef}
             type="file"
-            accept=".vrm"
+            accept=".vrm,.glb,.gltf"
             className="hidden"
             onChange={handleUpload}
           />
           <div className="flex gap-2">
             <Button onClick={() => fileInputRef.current?.click()} size="sm" className="flex-1">
-              <Upload className="h-4 w-4 mr-2" />Carregar .vrm
+              <Upload className="h-4 w-4 mr-2" />Carregar modelo
             </Button>
             <Button onClick={handleClearVRM} size="sm" variant="outline" title="Remover modelo personalizado">
               <Trash2 className="h-4 w-4" />
             </Button>
           </div>
-          <p className="text-xs text-muted-foreground mt-1">Salvo localmente no navegador</p>
+          <p className="text-xs text-muted-foreground mt-1">
+            .vrm (com expressões) ou .glb/.gltf (estático) · salvo localmente
+          </p>
+          {modelKind === "glb" && (
+            <p className="text-xs text-amber-500 mt-1">⚠️ GLB carregado: sem lipsync/emoções</p>
+          )}
         </div>
 
         <div>
@@ -243,6 +252,7 @@ export default function KeraDesktop3D() {
                 size="sm"
                 variant={emotion === e ? "default" : "outline"}
                 onClick={() => setEmotion(e)}
+                disabled={modelKind === "glb"}
                 className="text-xs h-8"
               >
                 {e}
