@@ -9,6 +9,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, Dialog
 import { ArrowLeft, Plus, Sparkles, Trash2, Pencil } from "lucide-react";
 import { toast } from "sonner";
 import { BUILTIN_AGENTS } from "@/lib/agents";
+import { useUserAccess } from "@/hooks/useUserAccess";
 import keraLogo from "@/assets/kera-logo.png";
 import { MissionCriticalSchema } from "@/lib/missionCriticalSchemas";
 
@@ -23,6 +24,7 @@ type Agent = {
 
 const AgentsPage = () => {
   const navigate = useNavigate();
+  const { canAccess, isAdmin, loading: accessLoading } = useUserAccess();
   const [agents, setAgents] = useState<Agent[]>([]);
   const [editing, setEditing] = useState<Agent | null>(null);
   const [open, setOpen] = useState(false);

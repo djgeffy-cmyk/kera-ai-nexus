@@ -177,6 +177,7 @@ const Chat = () => {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const { theme, setTheme } = useTheme();
+  const { canAccess, isAdmin } = useUserAccess();
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [customAgents, setCustomAgents] = useState<CustomAgent[]>([]);
   const [currentId, setCurrentId] = useState<string | null>(null);
@@ -1149,7 +1150,7 @@ Por favor, analise: há perda de pacote? jitter alto sugere instabilidade de rot
              </DropdownMenuTrigger>
             <DropdownMenuContent className="w-64 bg-card border-border">
               <DropdownMenuLabel className="text-xs text-muted-foreground">Agentes prontos</DropdownMenuLabel>
-              {BUILTIN_AGENTS.map(a => {
+              {BUILTIN_AGENTS.filter(a => canAccess(a.key)).map(a => {
                 const Icon = a.icon;
                 return (
                   <DropdownMenuItem key={a.key} onClick={() => { setAgentKey(a.key); newConversation(a.key); }}>
