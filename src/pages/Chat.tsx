@@ -1205,12 +1205,7 @@ Por favor, analise: há perda de pacote? jitter alto sugere instabilidade de rot
                  </p>
  
                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 w-full max-w-2xl mx-auto mt-12 px-4">
-                   {[
-                     { q: "Quais são suas capacidades?", icon: Sparkles },
-                     { q: "Otimize meu fluxo de trabalho.", icon: Activity },
-                     { q: "Análise jurídica inteligente.", icon: Scale },
-                     { q: "Gerar relatório de rede.", icon: Monitor },
-                   ].map(({ q, icon: Icon }) => (
+                    {(AGENT_SUGGESTIONS[agentKey] ?? AGENT_SUGGESTIONS.kera).map(({ q, icon: Icon }) => (
                      <button
                        key={q}
                        onClick={() => { setInput(q); setTimeout(() => sendText(q), 50); }}
