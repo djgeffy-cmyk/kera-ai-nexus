@@ -299,11 +299,34 @@ Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   try {
-    const { messages, provider, systemPrompt, agentKey, desktopTools } = await req.json();
-    if (!Array.isArray(messages)) {
-      return new Response(JSON.stringify({ error: "messages must be an array" }), {
+    let rawBody: unknown;
+    try {
+      rawBody = await req.json();
+    } catch {
+      return new Response(JSON.stringify({ error: "JSON inválido no corpo da requisição" }), {
         status: 400,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    // Validação NASA-grade
+    const parsed = ChatPayloadSchema.safeParse(rawBody);
+    if (!parsed.success) {
+      const fieldErrors = parsed.error.flatten().fieldErrors;
+      const firstIssue = parsed.error.issues[0];
+      return new Response(
+        JSON.stringify({
+          error: firstIssue?.message || "Payload inválido",
+          path: firstIssue?.path,
+          fieldErrors,
+        }),
+        {
+          status: 400,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        },
+      );
+    }
+    const { messages, provider, systemPrompt, agentKey, desktopTools } = parsed.data;
       });
     }
 
