@@ -188,21 +188,21 @@ const Security = () => {
         )}
         <section className="pt-8 border-t border-border">
           <h2 className="font-display text-xl text-glow mb-4 flex items-center gap-2">
-            <ShieldAlert className="size-5 text-blue-500" /> Segurança de Código Mission-Critical
+            <ShieldAlert className="size-5 text-primary" /> Segurança de Código Mission-Critical
           </h2>
           <Card 
-            className="p-5 border-blue-500/30 bg-blue-500/5 cursor-pointer hover:border-blue-500/60 transition-all group"
+            className="p-5 border-primary/30 bg-primary/5 cursor-pointer hover:border-primary/60 transition-all group"
             onClick={() => navigate("/kera-security-nasa")}
           >
             <div className="flex items-start justify-between">
               <div className="space-y-1">
-                <h3 className="font-bold text-blue-400 uppercase tracking-tighter">Kera Security NASA</h3>
+                <h3 className="font-bold text-primary uppercase tracking-tighter">Kera Security NASA</h3>
                 <p className="text-sm text-muted-foreground max-w-md">
                   Agente de IA especializado em análise de segurança de código nível sênior da NASA. 
                   Detecte vulnerabilidades críticas em sistemas mission-critical.
                 </p>
               </div>
-              <ChevronRight className="size-5 text-blue-500 group-hover:translate-x-1 transition-transform" />
+              <ChevronRight className="size-5 text-primary group-hover:translate-x-1 transition-transform" />
             </div>
           </Card>
         </section>
