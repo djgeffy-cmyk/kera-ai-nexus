@@ -75,3 +75,53 @@ jobs:
           path: release-builds/KeraDesktop-linux-x64.zip
           if-no-files-found: error
           retention-days: 30
+
+  build-mac-x64:
+    runs-on: macos-13
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: 'npm'
+      - name: Install Dependencies
+        run: npm install --no-audit --no-fund
+      - name: Run Build Script
+        run: npm run electron:build
+        env:
+          ELECTRON_BUILD: 'true'
+          BUILD_PLATFORM: 'darwin'
+          BUILD_ARCH: 'x64'
+          CSC_IDENTITY_AUTO_DISCOVERY: 'false'
+      - name: Upload ZIP Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: KeraDesktop-darwin-x64
+          path: release-builds/KeraDesktop-darwin-x64.zip
+          if-no-files-found: error
+          retention-days: 30
+
+  build-mac-arm64:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: 'npm'
+      - name: Install Dependencies
+        run: npm install --no-audit --no-fund
+      - name: Run Build Script
+        run: npm run electron:build
+        env:
+          ELECTRON_BUILD: 'true'
+          BUILD_PLATFORM: 'darwin'
+          BUILD_ARCH: 'arm64'
+          CSC_IDENTITY_AUTO_DISCOVERY: 'false'
+      - name: Upload ZIP Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: KeraDesktop-darwin-arm64
+          path: release-builds/KeraDesktop-darwin-arm64.zip
+          if-no-files-found: error
+          retention-days: 30

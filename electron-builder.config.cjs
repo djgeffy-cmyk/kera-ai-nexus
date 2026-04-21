@@ -35,4 +35,18 @@ module.exports = {
     target: ["nsis"],
     artifactName: "KeraDesktop-Setup-${version}.${ext}",
   },
+  mac: {
+    target: [
+      { target: "zip", arch: ["x64", "arm64"] },
+      { target: "dmg", arch: ["x64", "arm64"] },
+    ],
+    category: "public.app-category.productivity",
+    artifactName: "KeraDesktop-${version}-${arch}.${ext}",
+    // Sem certificado de assinatura (entrega "unsigned" — usuário autoriza no
+    // primeiro abrir via Configurações > Privacidade & Segurança).
+    identity: null,
+  },
+  dmg: {
+    artifactName: "KeraDesktop-${version}-${arch}.dmg",
+  },
 };

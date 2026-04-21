@@ -1061,10 +1061,10 @@ Por favor, analise: há perda de pacote? jitter alto sugere instabilidade de rot
         {spaceincloudActive && (
           <Button
             variant="ghost"
-            onClick={() => window.open("https://app.spaceincloud.com.br/kera", "_blank", "noopener,noreferrer")}
+            onClick={() => window.open("https://app.kera.ia.br/auth", "_blank", "noopener,noreferrer")}
             className="w-full justify-start text-fuchsia-300 hover:text-fuchsia-200"
           >
-            <Dumbbell className="size-4 mr-2" /> App de treino (SpaceInCloud)
+            <Dumbbell className="size-4 mr-2" /> App de treino (Kera FIT)
           </Button>
         )}
         <Button variant="ghost" onClick={() => navigate("/security")} className="w-full justify-start text-muted-foreground hover:text-foreground">
@@ -1415,7 +1415,7 @@ Por favor, analise: há perda de pacote? jitter alto sugere instabilidade de rot
 
                   {spaceincloudActive && (
                     <button
-                      onClick={() => window.open("https://app.spaceincloud.com.br/kera", "_blank", "noopener,noreferrer")}
+                      onClick={() => window.open("https://app.kera.ia.br/auth", "_blank", "noopener,noreferrer")}
                       className="mt-6 inline-flex items-center gap-3 px-5 py-3 rounded-2xl bg-gradient-to-r from-fuchsia-500/15 to-orange-500/15 border border-fuchsia-400/30 hover:border-fuchsia-300/60 transition-all group"
                     >
                       <Dumbbell className="size-5 text-fuchsia-300 group-hover:scale-110 transition-transform" />

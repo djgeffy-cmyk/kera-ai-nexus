@@ -75,14 +75,15 @@ const PLANS: Plan[] = [
   },
 ];
 
-const SPACEINCLOUD_URL = "https://app.spaceincloud.com.br/kera";
+const FIT_APP_URL = "https://app.kera.ia.br/auth";
+const FIT_APP_LABEL = "Kera FIT";
 
 export default function Planos() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const reason = searchParams.get("reason");
 
-  // Estado de vinculação SpaceInCloud
+  // Estado de vinculação Kera FIT
   const [sicEmail, setSicEmail] = useState("");
   const [sicPassword, setSicPassword] = useState("");
   const [showPwd, setShowPwd] = useState(false);
@@ -108,7 +109,7 @@ export default function Planos() {
   async function handleLinkSpaceInCloud(e: React.FormEvent) {
     e.preventDefault();
     if (!sicEmail || !sicPassword) {
-      toast.error("Preencha email e senha do SpaceInCloud");
+      toast.error("Preencha email e senha do Kera FIT");
       return;
     }
     setLinking(true);
@@ -128,7 +129,7 @@ export default function Planos() {
       }
     } catch (err) {
       console.error(err);
-      toast.error("Erro ao validar com SpaceInCloud. Tente novamente.");
+      toast.error("Erro ao validar com Kera FIT. Tente novamente.");
     } finally {
       setLinking(false);
     }
@@ -228,7 +229,7 @@ export default function Planos() {
         </p>
 
         {/* ============================================================
-            Plano Growth FIT — área Fitness (Kera + SpaceInCloud)
+            Plano Growth FIT — área Fitness (Kera + Kera FIT)
             ============================================================ */}
         <section className="mt-20">
           <header className="text-center mb-10">
@@ -240,7 +241,7 @@ export default function Planos() {
             </h2>
             <p className="text-muted-foreground max-w-2xl mx-auto">
               Combo exclusivo pra quem leva treino e dieta a sério. Os 3 agentes FIT da Kera
-              liberados <strong>+ acesso completo ao app SpaceInCloud</strong> (treinos, nutrição,
+              liberados <strong>+ acesso completo ao app Kera FIT</strong> (treinos, nutrição,
               avaliações, Body Scan por IA e gestão financeira).
             </p>
           </header>
@@ -255,7 +256,7 @@ export default function Planos() {
                   </div>
                   <div>
                     <h3 className="font-display text-2xl">Growth FIT</h3>
-                    <p className="text-sm text-muted-foreground">Kera + SpaceInCloud — pacote único</p>
+                    <p className="text-sm text-muted-foreground">Kera + Kera FIT — pacote único</p>
                   </div>
                 </div>
 
@@ -270,7 +271,7 @@ export default function Planos() {
                     "Kera Nutricionista — dieta, macros e zoeira inteligente",
                     "Kera Treinador — fichas, periodização e progressão",
                     "Kera Iron — bodybuilding feminino (prep e palco)",
-                    "App SpaceInCloud completo",
+                    "App Kera FIT completo",
                     "Body Scan por IA (composição corporal)",
                     "Avaliações e anamnese digital",
                     "Gestão financeira (alunos, recibos, agenda)",
@@ -300,14 +301,14 @@ export default function Planos() {
                     size="lg"
                     variant="outline"
                     className="flex-1"
-                    onClick={() => window.open(SPACEINCLOUD_URL, "_blank", "noopener,noreferrer")}
+                    onClick={() => window.open(FIT_APP_URL, "_blank", "noopener,noreferrer")}
                   >
-                    Conhecer o SpaceInCloud <ExternalLink className="h-4 w-4 ml-2" />
+                    Conhecer o Kera FIT <ExternalLink className="h-4 w-4 ml-2" />
                   </Button>
                 </div>
 
                 <p className="text-xs text-muted-foreground mt-4 text-center">
-                  Já é assinante do SpaceInCloud? Use o mesmo email no cadastro da Kera —
+                  Já é assinante do Kera FIT? Use o mesmo email no cadastro da Kera —
                   liberamos o pacote FIT automaticamente.
                 </p>
               </div>
@@ -317,7 +318,7 @@ export default function Planos() {
             <Card className="mt-6 p-6 md:p-8 border-fuchsia-400/30">
               <div className="flex items-center gap-2 mb-2">
                 <Link2 className="h-5 w-5 text-fuchsia-300" />
-                <h3 className="font-display text-xl">Já tem conta no SpaceInCloud?</h3>
+                <h3 className="font-display text-xl">Já tem conta no Kera FIT?</h3>
               </div>
 
               {sicActive === true ? (
@@ -345,12 +346,12 @@ export default function Planos() {
               ) : (
                 <>
                   <p className="text-sm text-muted-foreground mb-4">
-                    Entre com seu email e senha do SpaceInCloud. Validamos com segurança e liberamos
+                    Entre com seu email e senha do Kera FIT. Validamos com segurança e liberamos
                     os agentes FIT automaticamente — não guardamos sua senha.
                   </p>
                   <form onSubmit={handleLinkSpaceInCloud} className="space-y-3">
                     <div>
-                      <Label htmlFor="sic-email">Email SpaceInCloud</Label>
+                      <Label htmlFor="sic-email">Email Kera FIT</Label>
                       <Input
                         id="sic-email"
                         type="email"
@@ -362,7 +363,7 @@ export default function Planos() {
                       />
                     </div>
                     <div>
-                      <Label htmlFor="sic-pwd">Senha SpaceInCloud</Label>
+                      <Label htmlFor="sic-pwd">Senha Kera FIT</Label>
                       <div className="relative">
                         <Input
                           id="sic-pwd"
@@ -398,7 +399,7 @@ export default function Planos() {
                   </form>
                   {sicActive === false && (
                     <p className="text-xs text-amber-300 mt-3 text-center">
-                      Conta encontrada, mas sem plano Growth ativo. Assine no SpaceInCloud
+                      Conta encontrada, mas sem plano Growth ativo. Assine no Kera FIT
                       e tente novamente.
                     </p>
                   )}
