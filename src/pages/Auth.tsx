@@ -130,6 +130,38 @@ const Auth = () => {
     });
   }, [navigate]);
 
+  // Áudio ambiente de chuva: começa a tocar na primeira interação do usuário
+  // (autoplay policy do navegador exige gesture).
+  useEffect(() => {
+    if (audioStarted) return;
+    const tryStart = async () => {
+      const a = audioRef.current;
+      if (!a || audioStarted) return;
+      try {
+        a.volume = 0.35;
+        await a.play();
+        setAudioStarted(true);
+        cleanup();
+      } catch {
+        /* ignora — espera próxima interação */
+      }
+    };
+    const cleanup = () => {
+      window.removeEventListener("pointerdown", tryStart);
+      window.removeEventListener("keydown", tryStart);
+      window.removeEventListener("touchstart", tryStart);
+    };
+    window.addEventListener("pointerdown", tryStart);
+    window.addEventListener("keydown", tryStart);
+    window.addEventListener("touchstart", tryStart);
+    return cleanup;
+  }, [audioStarted]);
+
+  // Sincroniza mute com estado
+  useEffect(() => {
+    if (audioRef.current) audioRef.current.muted = audioMuted;
+  }, [audioMuted]);
+
   const checkAndChallengeMfa = async (): Promise<boolean> => {
     const { data: factors, error } = await supabase.auth.mfa.listFactors();
     if (error) return false;
