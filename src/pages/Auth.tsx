@@ -278,104 +278,100 @@ const Auth = () => {
       <AnimatePresence mode="wait">
         {!isUnlocked ? (
           <motion.div
-            key="umbrella-trigger"
+            key="kera-trigger"
             initial={{ opacity: 0, scale: 0.9, y: 20 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{
               opacity: 0,
-              scale: 1.5,
-              y: -60,
-              filter: "blur(24px)",
-              transition: { duration: 0.7, ease: [0.4, 0, 0.2, 1] },
+              scale: 1.1,
+              filter: "blur(12px)",
+              transition: { duration: 0.5, ease: [0.4, 0, 0.2, 1] },
             }}
             transition={{ duration: 0.6, ease: "easeOut" }}
             className="relative z-20 flex flex-col items-center"
           >
-            <button
-              onClick={() => {
-                setIsOpening(true);
-                setTimeout(() => setIsUnlocked(true), 700);
-              }}
-              aria-label="Abrir o guarda-chuva e revelar o login"
-              className="group relative p-8 rounded-full bg-background/10 backdrop-blur-md border border-white/10 shadow-2xl hover:bg-background/20 hover:shadow-glow hover:scale-105 active:scale-95 transition-all duration-500"
+            {/* Trigger: avatar grande da Kera. Hover = pulse + chamada. Click = abre demo. */}
+            <motion.button
+              type="button"
+              onClick={() => setDemoOpen(true)}
+              aria-label="Conversar com a Kera"
+              whileHover={{ scale: 1.04 }}
+              whileTap={{ scale: 0.97 }}
+              className="group relative cursor-pointer outline-none focus-visible:ring-4 focus-visible:ring-primary/40 rounded-full"
+              style={{ WebkitTapHighlightColor: "transparent" }}
             >
-              {/* Ripples expanding from umbrella on click */}
-              {isOpening && (
-                <>
-                  {[0, 0.15, 0.3].map((delay, i) => (
-                    <motion.span
-                      key={`ripple-${i}`}
-                      initial={{ scale: 0.8, opacity: 0.6 }}
-                      animate={{ scale: 4, opacity: 0 }}
-                      transition={{ duration: 1.2, delay, ease: "easeOut" }}
-                      className="absolute inset-0 rounded-full border-2 border-primary/60 pointer-events-none"
-                    />
-                  ))}
-                </>
-              )}
+              {/* Halos pulsantes ao redor */}
+              <motion.span
+                aria-hidden
+                className="absolute inset-0 rounded-full border-2 border-primary/40"
+                animate={{ scale: [1, 1.35, 1.6], opacity: [0.6, 0.2, 0] }}
+                transition={{ duration: 2.4, repeat: Infinity, ease: "easeOut" }}
+              />
+              <motion.span
+                aria-hidden
+                className="absolute inset-0 rounded-full border-2 border-primary/30"
+                animate={{ scale: [1, 1.35, 1.6], opacity: [0.4, 0.15, 0] }}
+                transition={{ duration: 2.4, repeat: Infinity, ease: "easeOut", delay: 0.8 }}
+              />
 
+              {/* Avatar de vídeo da Kera */}
               <motion.div
-                animate={{ 
-                  y: [0, -10, 0],
-                }}
-                transition={{ 
-                  duration: 4, 
-                  repeat: Infinity, 
-                  ease: "easeInOut" 
-                }}
-                className="relative group-hover:scale-110 transition-transform duration-500"
+                animate={{ y: [0, -8, 0] }}
+                transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
+                className="relative size-48 sm:size-56 rounded-full overflow-hidden border-2 border-primary/70 shadow-glow ring-4 ring-primary/20 group-hover:ring-primary/50 group-hover:shadow-[0_0_60px_hsl(var(--primary)/0.6)] transition-all duration-500 bg-background"
               >
-                <motion.div
-                  animate={{ scale: [1, 1.03, 1] }}
-                  transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
-                >
-                  <UmbrellaCorpLogo size={120} variant="realistic-eye" className="group-hover:drop-shadow-[0_0_24px_hsl(var(--primary))] transition-all duration-500" />
-                </motion.div>
-                <motion.div
-                  className="absolute inset-0 flex items-center justify-center pointer-events-none"
-                  animate={{ opacity: [0.3, 0.7, 0.3] }}
-                  transition={{ duration: 2.5, repeat: Infinity }}
-                >
-                  <UmbrellaCorpLogo size={120} variant="realistic-eye" className="blur-md opacity-60" />
-                </motion.div>
+                <video
+                  aria-hidden
+                  autoPlay
+                  loop
+                  muted
+                  playsInline
+                  src={rainVideoUrl}
+                  poster={keraAvatar}
+                  className="w-full h-full object-cover"
+                />
+                {/* Overlay sutil que reage ao hover */}
+                <div className="absolute inset-0 bg-primary/0 group-hover:bg-primary/10 transition-colors duration-500" />
               </motion.div>
-              
-              {/* Local droplets falling around umbrella button */}
-              <div className="absolute -inset-8 pointer-events-none overflow-visible">
-                {[...Array(isOpening ? 24 : 10)].map((_, i) => (
-                  <motion.div
-                    key={i}
-                    initial={{ y: -10, opacity: 0 }}
-                    animate={{ y: 140, opacity: [0, 1, 1, 0] }}
-                    transition={{
-                      duration: isOpening ? 0.8 + Math.random() * 0.4 : 1.5 + Math.random(),
-                      repeat: Infinity,
-                      delay: Math.random() * (isOpening ? 0.6 : 2),
-                      ease: "easeIn",
-                    }}
-                    className="absolute w-0.5 h-4 bg-gradient-to-b from-transparent via-primary/70 to-primary rounded-full"
-                    style={{ left: `${Math.random() * 100}%`, top: 0 }}
-                  />
-                ))}
-              </div>
-            </button>
-            
-            <motion.p 
+
+              {/* Badge de "click" no canto */}
+              <motion.div
+                aria-hidden
+                animate={{ y: [0, -4, 0] }}
+                transition={{ duration: 1.6, repeat: Infinity, ease: "easeInOut" }}
+                className="absolute bottom-2 right-2 bg-primary text-primary-foreground rounded-full p-2.5 shadow-glow border-2 border-background"
+              >
+                <MousePointerClick className="size-5" />
+              </motion.div>
+            </motion.button>
+
+            <motion.h2
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.5 }}
-              className="mt-6 text-primary/80 font-display tracking-widest text-lg uppercase text-center"
+              transition={{ delay: 0.4 }}
+              className="mt-8 text-primary font-display tracking-widest text-2xl uppercase text-center text-glow"
             >
-              Sob o guarda-chuva está tudo
-            </motion.p>
+              Kera
+            </motion.h2>
             <motion.p
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.8 }}
-              className="mt-2 text-xs text-muted-foreground tracking-wider text-center max-w-xs"
+              transition={{ delay: 0.6 }}
+              className="mt-2 text-sm text-muted-foreground tracking-wider text-center max-w-xs"
             >
-              Clique para entrar — ou testar a Kera sem cadastro
+              Clique sobre mim para conversar — depois você decide se cria conta
             </motion.p>
+
+            <motion.button
+              type="button"
+              onClick={() => setIsUnlocked(true)}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 1 }}
+              className="mt-6 text-xs text-muted-foreground/70 hover:text-primary tracking-wider underline-offset-4 hover:underline transition"
+            >
+              já tenho conta — entrar direto
+            </motion.button>
           </motion.div>
         ) : (
           <motion.div
