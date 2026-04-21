@@ -16,6 +16,33 @@ import { saveVRM, getVRMObjectURL, clearVRM } from "@/lib/vrmStorage";
 type Emotion = "neutral" | "happy" | "sad" | "angry" | "surprised" | "relaxed";
 const EMOTIONS: Emotion[] = ["neutral", "happy", "sad", "angry", "surprised", "relaxed"];
 
+function GLBModel({ url, autoRotate }: { url: string; autoRotate: boolean }) {
+  const gltf = useLoader(GLTFLoader, url);
+  const groupRef = useRef<THREE.Group>(null);
+
+  useEffect(() => {
+    if (!gltf?.scene) return;
+    // Auto-fit: normalize size to ~1.6m height and center on origin
+    const box = new THREE.Box3().setFromObject(gltf.scene);
+    const size = new THREE.Vector3();
+    const center = new THREE.Vector3();
+    box.getSize(size);
+    box.getCenter(center);
+    const targetHeight = 1.6;
+    const scale = size.y > 0 ? targetHeight / size.y : 1;
+    gltf.scene.scale.setScalar(scale);
+    gltf.scene.position.set(-center.x * scale, -box.min.y * scale, -center.z * scale);
+    gltf.scene.traverse((o: any) => { if (o.isMesh) o.frustumCulled = false; });
+  }, [gltf]);
+
+  useFrame((_, delta) => {
+    if (autoRotate && groupRef.current) groupRef.current.rotation.y += delta * 0.3;
+  });
+
+  if (!gltf?.scene) return null;
+  return <group ref={groupRef}><primitive object={gltf.scene} /></group>;
+}
+
 function VRMModel({ url, emotion, intensity, autoRotate }: { url: string; emotion: Emotion; intensity: number; autoRotate: boolean }) {
   const gltf = useLoader(GLTFLoader, url, (loader) => {
     loader.register((parser) => new VRMLoaderPlugin(parser));
@@ -80,6 +107,7 @@ function LoadingOrb() {
 
 export default function KeraDesktop3D() {
   const [vrmUrl, setVrmUrl] = useState<string>(bundledDefaultVrm);
+  const [modelKind, setModelKind] = useState<"vrm" | "glb">("vrm");
   const [emotion, setEmotion] = useState<Emotion>("neutral");
   const [intensity, setIntensity] = useState(0.7);
   const [autoRotate, setAutoRotate] = useState(false);
@@ -97,15 +125,23 @@ export default function KeraDesktop3D() {
   async function handleUpload(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
     if (!file) return;
-    if (!file.name.toLowerCase().endsWith(".vrm")) {
-      toast.error("Arquivo precisa ter extensão .vrm");
+    const name = file.name.toLowerCase();
+    const isVrm = name.endsWith(".vrm");
+    const isGlb = name.endsWith(".glb") || name.endsWith(".gltf");
+    if (!isVrm && !isGlb) {
+      toast.error("Arquivo precisa ter extensão .vrm, .glb ou .gltf");
       return;
     }
     try {
-      await saveVRM(file);
+      if (isVrm) await saveVRM(file);
       const url = URL.createObjectURL(file);
       setVrmUrl(url);
-      toast.success(`Modelo carregado: ${file.name}`);
+      setModelKind(isVrm ? "vrm" : "glb");
+      toast.success(
+        isVrm
+          ? `Modelo VRM carregado: ${file.name}`
+          : `Modelo GLB carregado: ${file.name} (sem lipsync/expressões)`
+      );
     } catch (err) {
       toast.error("Erro ao salvar modelo: " + (err as Error).message);
     }
@@ -114,6 +150,7 @@ export default function KeraDesktop3D() {
   async function handleClearVRM() {
     await clearVRM();
     setVrmUrl(bundledDefaultVrm);
+    setModelKind("vrm");
     toast.success("Modelo personalizado removido. Usando Kera padrão.");
   }
 
@@ -149,7 +186,11 @@ export default function KeraDesktop3D() {
         <directionalLight position={[2, 4, 3]} intensity={1.1} color="#e9d5ff" />
         <directionalLight position={[-3, 2, -2]} intensity={0.5} color="#a855f7" />
         <Suspense fallback={<LoadingOrb />}>
-          <VRMModel url={vrmUrl} emotion={emotion} intensity={intensity} autoRotate={autoRotate} />
+          {modelKind === "vrm" ? (
+            <VRMModel url={vrmUrl} emotion={emotion} intensity={intensity} autoRotate={autoRotate} />
+          ) : (
+            <GLBModel url={vrmUrl} autoRotate={autoRotate} />
+          )}
           <Environment preset="city" />
         </Suspense>
         {showGrid && (
@@ -182,19 +223,24 @@ export default function KeraDesktop3D() {
           <input
             ref={fileInputRef}
             type="file"
-            accept=".vrm"
+            accept=".vrm,.glb,.gltf"
             className="hidden"
             onChange={handleUpload}
           />
           <div className="flex gap-2">
             <Button onClick={() => fileInputRef.current?.click()} size="sm" className="flex-1">
-              <Upload className="h-4 w-4 mr-2" />Carregar .vrm
+              <Upload className="h-4 w-4 mr-2" />Carregar modelo
             </Button>
             <Button onClick={handleClearVRM} size="sm" variant="outline" title="Remover modelo personalizado">
               <Trash2 className="h-4 w-4" />
             </Button>
           </div>
-          <p className="text-xs text-muted-foreground mt-1">Salvo localmente no navegador</p>
+          <p className="text-xs text-muted-foreground mt-1">
+            .vrm (com expressões) ou .glb/.gltf (estático) · salvo localmente
+          </p>
+          {modelKind === "glb" && (
+            <p className="text-xs text-destructive mt-1">⚠️ GLB carregado: sem lipsync/emoções</p>
+          )}
         </div>
 
         <div>
@@ -206,6 +252,7 @@ export default function KeraDesktop3D() {
                 size="sm"
                 variant={emotion === e ? "default" : "outline"}
                 onClick={() => setEmotion(e)}
+                disabled={modelKind === "glb"}
                 className="text-xs h-8"
               >
                 {e}
