@@ -1,4 +1,4 @@
-import { Sparkles, Code2, Shield, Scale, Radar, Apple, Gamepad2, BookOpen, Heart, ScrollText, UserCheck, Accessibility, type LucideIcon } from "lucide-react";
+import { Sparkles, Code2, Shield, Scale, Radar, Apple, Gamepad2, BookOpen, Heart, ScrollText, UserCheck, Accessibility, ShieldAlert, type LucideIcon } from "lucide-react";
 
 export type BuiltinAgent = {
   key: string;
@@ -7,6 +7,7 @@ export type BuiltinAgent = {
   icon: LucideIcon;
   iconColor: string; // tailwind text color class
   systemPrompt: string;
+  link?: string;
 };
 
 const BASE_PERSONALITY = `Personalidade Kera:
