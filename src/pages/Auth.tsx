@@ -7,11 +7,13 @@ import { Label } from "@/components/ui/label";
 import { Card } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { toast } from "sonner";
-import { ShieldCheck, KeyRound, Mail, ScanFace, Eye, EyeOff, Umbrella } from "lucide-react";
+import { ShieldCheck, KeyRound, Mail, ScanFace, Eye, EyeOff, Umbrella, Sparkles } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import keraAvatar from "@/assets/kera-avatar.png";
 import keraAvatarVideo from "@/assets/kera-avatar-rain.mp4.asset.json";
 import ParticlesOverlay from "@/components/ParticlesOverlay";
+import UmbrellaCorpLogo from "@/components/UmbrellaCorpLogo";
+import DemoKeraDialog from "@/components/DemoKeraDialog";
 import { assetUrl } from "@/lib/assetUrl";
 import { MissionCriticalSchema } from "@/lib/missionCriticalSchemas";
 import { PasswordStrengthMeter } from "@/components/PasswordStrengthMeter";
@@ -39,6 +41,7 @@ const Auth = () => {
   const [inIframe] = useState(() => isInIframe());
   const [isUnlocked, setIsUnlocked] = useState(false);
   const [isOpening, setIsOpening] = useState(false);
+  const [demoOpen, setDemoOpen] = useState(false);
   const passkeyAvailable = supportsPasskey && !inIframe;
 
   useEffect(() => {
@@ -379,13 +382,18 @@ const Auth = () => {
                 }}
                 className="relative group-hover:scale-110 transition-transform duration-500"
               >
-                <Umbrella className="size-24 text-primary/80 group-hover:text-primary transition-colors duration-500" strokeWidth={1.5} />
                 <motion.div
-                  className="absolute top-0 left-0 w-full h-full"
-                  animate={{ opacity: [0.2, 0.5, 0.2] }}
-                  transition={{ duration: 2, repeat: Infinity }}
+                  animate={{ rotate: 360 }}
+                  transition={{ duration: 30, repeat: Infinity, ease: "linear" }}
                 >
-                  <Umbrella className="size-24 text-primary blur-sm" strokeWidth={1.5} />
+                  <UmbrellaCorpLogo size={120} className="group-hover:drop-shadow-[0_0_24px_hsl(var(--primary))] transition-all duration-500" />
+                </motion.div>
+                <motion.div
+                  className="absolute inset-0 flex items-center justify-center pointer-events-none"
+                  animate={{ opacity: [0.3, 0.7, 0.3] }}
+                  transition={{ duration: 2.5, repeat: Infinity }}
+                >
+                  <UmbrellaCorpLogo size={120} className="blur-md opacity-60" />
                 </motion.div>
               </motion.div>
               
@@ -415,7 +423,15 @@ const Auth = () => {
               transition={{ delay: 0.5 }}
               className="mt-6 text-primary/80 font-display tracking-widest text-lg uppercase text-center"
             >
-              Tudo o que você precisa está aqui embaixo
+              Sob o guarda-chuva está tudo
+            </motion.p>
+            <motion.p
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.8 }}
+              className="mt-2 text-xs text-muted-foreground tracking-wider text-center max-w-xs"
+            >
+              Clique para entrar — ou testar a Kera sem cadastro
             </motion.p>
           </motion.div>
         ) : (
@@ -583,6 +599,22 @@ const Auth = () => {
                   >
                     {mode === "signin" ? "Não tem conta? Cadastre-se" : "Já tem conta? Entrar"}
                   </button>
+
+                  <div className="flex items-center gap-3 my-4">
+                    <div className="flex-1 h-px bg-border/50" />
+                    <span className="text-xs text-muted-foreground uppercase tracking-widest">ou</span>
+                    <div className="flex-1 h-px bg-border/50" />
+                  </div>
+
+                  <Button
+                    type="button"
+                    onClick={() => setDemoOpen(true)}
+                    variant="outline"
+                    className="w-full border-primary/40 hover:bg-primary/10 hover:border-primary group"
+                  >
+                    <Sparkles className="size-4 mr-2 text-primary group-hover:animate-pulse" />
+                    Testar Kera antes (3 perguntas grátis)
+                  </Button>
                 </>
               )}
             </Card>
@@ -636,6 +668,14 @@ const Auth = () => {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      <DemoKeraDialog
+        open={demoOpen}
+        onOpenChange={setDemoOpen}
+        onWantToSignUp={() => {
+          setMode("signup");
+        }}
+      />
     </main>
   );
 };
