@@ -383,17 +383,17 @@ const Auth = () => {
                 className="relative group-hover:scale-110 transition-transform duration-500"
               >
                 <motion.div
-                  animate={{ rotate: 360 }}
-                  transition={{ duration: 30, repeat: Infinity, ease: "linear" }}
+                  animate={{ scale: [1, 1.03, 1] }}
+                  transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
                 >
-                  <UmbrellaCorpLogo size={120} className="group-hover:drop-shadow-[0_0_24px_hsl(var(--primary))] transition-all duration-500" />
+                  <UmbrellaCorpLogo size={120} variant="realistic-eye" className="group-hover:drop-shadow-[0_0_24px_hsl(var(--primary))] transition-all duration-500" />
                 </motion.div>
                 <motion.div
                   className="absolute inset-0 flex items-center justify-center pointer-events-none"
                   animate={{ opacity: [0.3, 0.7, 0.3] }}
                   transition={{ duration: 2.5, repeat: Infinity }}
                 >
-                  <UmbrellaCorpLogo size={120} className="blur-md opacity-60" />
+                  <UmbrellaCorpLogo size={120} variant="realistic-eye" className="blur-md opacity-60" />
                 </motion.div>
               </motion.div>
               
