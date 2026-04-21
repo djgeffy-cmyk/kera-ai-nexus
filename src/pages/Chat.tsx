@@ -289,9 +289,13 @@ const Chat = () => {
 
   useEffect(() => { if (userId) { loadConversations(); loadCustomAgents(); } }, [userId]);
 
+  // Auto-scroll: usa "auto" durante streaming (evita custo de smooth a cada token)
+  // e "smooth" só quando uma nova mensagem fechada chega.
   useEffect(() => {
-    scrollerRef.current?.scrollTo({ top: scrollerRef.current.scrollHeight, behavior: "smooth" });
-  }, [messages]);
+    const el = scrollerRef.current;
+    if (!el) return;
+    el.scrollTo({ top: el.scrollHeight, behavior: streaming ? "auto" : "smooth" });
+  }, [messages, streaming]);
 
   const loadConversations = async () => {
     const { data, error } = await supabase
@@ -494,6 +498,8 @@ const Chat = () => {
     const conv = conversations.find(c => c.id === currentId);
     toast.info("Gerando PDF...");
     try {
+      // Lazy-load: jsPDF + html2canvas só baixam quando o usuário clica "Exportar".
+      const { exportConversationToPdf } = await import("@/lib/exportPdf");
       await exportConversationToPdf({
         title: conv?.title || "Conversa",
         agentName: currentAgentName,
@@ -734,8 +740,41 @@ const Chat = () => {
     setAttachments(prev => prev.filter((_, i) => i !== idx));
   };
 
-  const currentAgent = getBuiltinAgent(agentKey) || customAgents.find(a => a.id === agentKey);
+  // Resolução do agente atual — memoizada (custom agents pode crescer).
+  const currentAgent = useMemo(
+    () => getBuiltinAgent(agentKey) || customAgents.find(a => a.id === agentKey),
+    [agentKey, customAgents]
+  );
   const currentAgentName = currentAgent?.name || "Kera";
+
+  // Handlers estáveis pro MessageBubble — preservam React.memo
+  // (caso contrário, novas referências quebram a memoização e re-renderizam todas as bolhas).
+  const handleBubbleSpeak = useCallback((t: string) => {
+    voice.warmUpTTS();
+    if (voice.pendingPlay) {
+      void voice.resumePendingPlay();
+      return;
+    }
+    void voice.speak(t);
+  }, [voice]);
+
+  const handleSwitchToKera = useCallback(async () => {
+    setAgentKey(DEFAULT_AGENT_KEY);
+    if (currentId) {
+      const { error } = await supabase
+        .from("conversations")
+        .update({ agent_key: DEFAULT_AGENT_KEY })
+        .eq("id", currentId);
+      if (error) {
+        toast.error("Não rolou trocar de agente: " + error.message);
+        return;
+      }
+      setConversations(prev =>
+        prev.map(c => (c.id === currentId ? { ...c, agent_key: DEFAULT_AGENT_KEY } : c))
+      );
+    }
+    toast.success("Kera assumiu — continua mandando que ela pega o fio da meada");
+  }, [currentId]);
   const isSentinela = agentKey === "kera-sentinela";
   const isTradutora = agentKey === "kera-tradutora";
 
@@ -853,8 +892,9 @@ Por favor, analise: há perda de pacote? jitter alto sugere instabilidade de rot
     }
   };
 
-  // Agrupa conversas por período (Hoje / Ontem / Anteriores)
-  const groupedConversations = (() => {
+  // Agrupa conversas por período (Hoje / Ontem / Anteriores) — memoizado pra
+  // não recalcular a cada keystroke / token de stream.
+  const groupedConversations = useMemo(() => {
     const now = new Date();
     const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
     const startOfYesterday = startOfToday - 24 * 60 * 60 * 1000;
@@ -870,7 +910,7 @@ Por favor, analise: há perda de pacote? jitter alto sugere instabilidade de rot
       else groups[2].items.push(c);
     }
     return groups.filter(g => g.items.length > 0);
-  })();
+  }, [conversations]);
 
    const Sidebar = () => (
      <aside className="h-full w-full md:w-80 bg-background/95 backdrop-blur-2xl border-r border-white/5 flex flex-col shadow-2xl">
@@ -1338,40 +1378,17 @@ Por favor, analise: há perda de pacote? jitter alto sugere instabilidade de rot
              )}
              {messages.map((m, i) => {
               const isLast = i === messages.length - 1;
+              const isAssistant = m.role === "assistant";
               return (
                 <MessageBubble
                   key={m.id ?? i}
                   msg={m}
-                  streaming={streaming && isLast && m.role === "assistant"}
-                  onSpeak={(t) => {
-                    voice.warmUpTTS();
-                    if (voice.pendingPlay) {
-                      void voice.resumePendingPlay();
-                      return;
-                    }
-                    void voice.speak(t);
-                  }}
+                  streaming={streaming && isLast && isAssistant}
+                  onSpeak={handleBubbleSpeak}
                   onStopSpeak={voice.stopSpeaking}
-                  isSpeaking={voice.speaking && isLast && m.role === "assistant"}
+                  isSpeaking={voice.speaking && isLast && isAssistant}
                   showSwitchToKera={agentKey !== DEFAULT_AGENT_KEY}
-                  onSwitchToKera={async () => {
-                    // Mantém a conversa atual — só troca o agente, pra Kera continuar de onde parou
-                    setAgentKey(DEFAULT_AGENT_KEY);
-                    if (currentId) {
-                      const { error } = await supabase
-                        .from("conversations")
-                        .update({ agent_key: DEFAULT_AGENT_KEY })
-                        .eq("id", currentId);
-                      if (error) {
-                        toast.error("Não rolou trocar de agente: " + error.message);
-                        return;
-                      }
-                      setConversations(prev =>
-                        prev.map(c => (c.id === currentId ? { ...c, agent_key: DEFAULT_AGENT_KEY } : c))
-                      );
-                    }
-                    toast.success("Kera assumiu — continua mandando que ela pega o fio da meada");
-                  }}
+                  onSwitchToKera={handleSwitchToKera}
                 />
               );
             })}
