@@ -33,7 +33,7 @@ export const webauthnSupported = () =>
 export async function registerPasskey(deviceLabel?: string) {
   if (!webauthnSupported()) throw new Error("Seu dispositivo não suporta Face ID/Touch ID via web.");
   const { options } = await call("register-options", { method: "POST" });
-  const attestation = await startRegistration({ optionsJSON: options });
+  const attestation = await startRegistration(options);
   await call("register-verify", {
     method: "POST",
     body: JSON.stringify({ response: attestation, device_label: deviceLabel || navigator.userAgent.slice(0, 60) }),
@@ -47,7 +47,7 @@ export async function loginWithPasskey(email: string) {
     method: "POST",
     body: JSON.stringify({ email }),
   });
-  const assertion = await startAuthentication({ optionsJSON: options });
+  const assertion = await startAuthentication(options);
   const result = await call("auth-verify", {
     method: "POST",
     body: JSON.stringify({ email, response: assertion }),
