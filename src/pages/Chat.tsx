@@ -127,12 +127,12 @@ const AGENT_SUGGESTIONS: Record<string, Array<{ q: string; icon: typeof Sparkles
      { q: "Roteiro de pentest para uma aplicação web.", icon: Bug },
    ],
   "kera-security-nasa": [
-    { q: "Quais linguagens você analisa? (Python, JS, TS, Java, C/C++, Go, Rust, PHP, SQL...)", icon: Code2 },
-    { q: "Vou colar um código Python — analisa nível NASA.", icon: FileSearch },
-    { q: "Revisa esse trecho em C/C++ usando MISRA + Power of 10.", icon: ShieldAlert },
-    { q: "Faz auditoria OWASP + CWE neste código JavaScript.", icon: Shield },
-    { q: "Análise de SQL injection neste query.", icon: Bug },
-    { q: "Verifica buffer overflow e memory safety neste C.", icon: Lock },
+    { q: "Quais linguagens de código você analisa?", icon: Code2 },
+    { q: "Análise de segurança nível NASA neste código Python.", icon: FileSearch },
+    { q: "Revisa este C/C++ com MISRA-C + Power of 10 (NASA/JPL).", icon: ShieldAlert },
+    { q: "Auditoria OWASP Top 10 + CWE neste código JavaScript.", icon: Shield },
+    { q: "Detecta SQL Injection nesta query SQL.", icon: Bug },
+    { q: "Verifica buffer overflow e memory safety neste código C.", icon: Lock },
   ],
   "kera-juridica": [
     { q: "Explica a Lei 14.133/21 em pontos-chave.", icon: Scale },
