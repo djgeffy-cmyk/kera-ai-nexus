@@ -151,7 +151,13 @@
    };
  
    return (
-     <div className="min-h-screen bg-black text-zinc-200 font-sans selection:bg-primary/30">
+     <div className="min-h-screen bg-black text-zinc-200 font-sans selection:bg-primary/30 relative overflow-hidden">
+       {/* Background Decorative Grid */}
+       <div className="absolute inset-0 z-0 opacity-10 pointer-events-none" 
+            style={{ backgroundImage: 'linear-gradient(#333 1px, transparent 1px), linear-gradient(90deg, #333 1px, transparent 1px)', backgroundSize: '40px 40px' }} />
+       <div className="absolute inset-0 z-0 bg-gradient-to-tr from-primary/5 via-transparent to-red-500/5 pointer-events-none" />
+ 
+       <div className="relative z-10 flex flex-col min-h-screen">
        {/* NASA Style Header */}
        <header className="sticky top-0 z-50 h-16 border-b border-zinc-800 bg-black/80 backdrop-blur-xl flex items-center justify-between px-6">
          <div className="flex items-center gap-4">
