@@ -388,7 +388,8 @@
            <span>NASA_CSD_LEVEL_4_COMPLIANT</span>
            <span>© 2024 KERA_CORE</span>
          </div>
-       </footer>
+         </footer>
+       </div>
      </div>
    );
  };
