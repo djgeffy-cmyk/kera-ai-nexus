@@ -344,9 +344,15 @@ const Auth = () => {
         ) : (
           <motion.div
             key="auth-card"
-            initial={{ opacity: 0, y: 20, scale: 0.95 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            transition={{ type: "spring", damping: 20, stiffness: 100 }}
+            initial={{ opacity: 0, y: 40, scale: 0.85, filter: "blur(12px)" }}
+            animate={{ opacity: 1, y: 0, scale: 1, filter: "blur(0px)" }}
+            transition={{
+              type: "spring",
+              damping: 22,
+              stiffness: 110,
+              delay: 0.15,
+              filter: { duration: 0.5, delay: 0.15 },
+            }}
           >
             <Card
               className="relative w-full max-w-sm p-5 sm:p-6 shadow-glow z-10 max-h-[calc(100vh-2rem)] overflow-y-auto scrollbar-thin rounded-2xl"
