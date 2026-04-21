@@ -71,9 +71,13 @@ const Chat = () => {
     "kera-sec": assetUrl(keraSecBgVideo),
     "kera-juridica": assetUrl(keraJuridicaBgVideo),
     "kera-sentinela": assetUrl(keraSentinelaBgVideo),
-    "kera-nutri": assetUrl(keraNutriBgVideo),
-    "kera-gamer": assetUrl(keraGamerBgVideo),
-  }), []);
+     "kera-nutri": assetUrl(keraNutriBgVideo),
+      "kera-gamer": assetUrl(keraGamerBgVideo),
+      "kera-curatela": assetUrl(keraJuridicaBgVideo),
+      "kera-familia": assetUrl(keraJuridicaBgVideo),
+      "kera-sucessoes": assetUrl(keraJuridicaBgVideo),
+      "kera-personalidade": assetUrl(keraJuridicaBgVideo),
+    }), []);
   const [galleryOpen, setGalleryOpen] = useState(false);
   const [itcmdOpen, setItcmdOpen] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
