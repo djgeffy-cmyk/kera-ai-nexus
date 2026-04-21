@@ -1186,7 +1186,7 @@ Por favor, analise: há perda de pacote? jitter alto sugere instabilidade de rot
              </DropdownMenuTrigger>
             <DropdownMenuContent className="w-64 bg-card border-border">
               <DropdownMenuLabel className="text-xs text-muted-foreground">Agentes prontos</DropdownMenuLabel>
-              {BUILTIN_AGENTS.map(a => {
+              {BUILTIN_AGENTS.filter(a => canSee(a.key)).map(a => {
                 const Icon = a.icon;
                 const locked = !canAccess(a.key);
                 return (
