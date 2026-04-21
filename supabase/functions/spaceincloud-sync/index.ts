@@ -1,15 +1,16 @@
-// SpaceInCloud sync — verifica se o usuário logado tem assinatura Growth ativa
-// no app SpaceInCloud (parceiro Kera FIT) e libera o pacote no profile.
+// SpaceInCloud sync — valida se o usuário tem assinatura Growth ativa no
+// app SpaceInCloud (parceiro Kera FIT) e libera o pacote FIT no profile.
 //
-// Como conectar quando o endpoint estiver pronto:
-//   1. Adicione o secret SPACEINCLOUD_API_URL com a URL base (ex.:
-//      https://app.spaceincloud.com.br/api).
-//   2. Adicione o secret SPACEINCLOUD_API_TOKEN com o token de serviço.
-//   3. Ajuste o caminho em `endpoint` e o parsing em `parseUpstream`
-//      conforme o contrato real do SpaceInCloud.
+// Fluxo:
+//   1. O usuário envia email + senha da conta SpaceInCloud dele.
+//   2. Fazemos signIn no Supabase do SpaceInCloud pra pegar um access_token.
+//   3. Chamamos a edge function `validate-kera-access` deles com esse token.
+//   4. Se retornar plano Growth ativo, marcamos `spaceincloud_active=true`.
 //
-// Enquanto a API não estiver configurada, esta função retorna o status
-// atual gravado no profile (para o frontend não quebrar).
+// Endpoints públicos do SpaceInCloud (anon key, ok no código):
+const SIC_URL = "https://eaaxuixnugocazqzhthz.supabase.co";
+const SIC_ANON =
+  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVhYXh1aXhudWdvY2F6cXpodGh6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzIyODI2MTQsImV4cCI6MjA4Nzg1ODYxNH0.ns1DBunwAmc9RW8N_S5yWmbGMyAvQPBuqdkS3l5i7u0";
 
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 
@@ -19,30 +20,19 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type",
 };
 
-type SyncResult = {
-  active: boolean;
-  source: "upstream" | "cached" | "not-configured";
-  externalId?: string | null;
+type ValidateResponse = {
+  active?: boolean;
+  plan?: string;
+  user_id?: string;
+  email?: string;
+  [k: string]: unknown;
 };
 
-async function parseUpstream(resp: Response): Promise<{ active: boolean; externalId?: string | null }> {
-  // TODO: ajustar conforme contrato real. Exemplos comuns:
-  //   { "active": true, "plan": "growth", "user_id": "abc" }
-  //   { "subscription": { "status": "active", "id": "..." } }
-  if (!resp.ok) return { active: false };
-  try {
-    const data = await resp.json();
-    const active = Boolean(
-      data?.active ??
-        data?.is_active ??
-        data?.subscription?.active ??
-        data?.subscription?.status === "active",
-    );
-    const externalId = data?.id ?? data?.user_id ?? data?.subscription?.id ?? null;
-    return { active, externalId };
-  } catch {
-    return { active: false };
-  }
+function isGrowthActive(data: ValidateResponse): boolean {
+  if (data?.active === true) return true;
+  const plan = String(data?.plan ?? "").toLowerCase();
+  if (plan.includes("growth")) return true;
+  return false;
 }
 
 Deno.serve(async (req) => {
@@ -51,6 +41,7 @@ Deno.serve(async (req) => {
   }
 
   try {
+    // 1. Autentica o usuário Kera
     const authHeader = req.headers.get("Authorization");
     if (!authHeader?.startsWith("Bearer ")) {
       return new Response(JSON.stringify({ error: "Unauthorized" }), {
@@ -75,57 +66,106 @@ Deno.serve(async (req) => {
       });
     }
     const userId = claimsData.claims.sub as string;
-    const email = (claimsData.claims.email as string | undefined) ?? null;
+
+    // 2. Body: email + senha do SpaceInCloud (opcional — se não vier, só lê cache)
+    let email: string | null = null;
+    let password: string | null = null;
+    if (req.method === "POST") {
+      try {
+        const body = await req.json();
+        email = typeof body?.email === "string" ? body.email.trim() : null;
+        password = typeof body?.password === "string" ? body.password : null;
+      } catch {
+        // sem body — modo "check status"
+      }
+    }
 
     const admin = createClient(supabaseUrl, serviceKey);
 
-    const apiUrl = Deno.env.get("SPACEINCLOUD_API_URL");
-    const apiToken = Deno.env.get("SPACEINCLOUD_API_TOKEN");
-
-    let result: SyncResult;
-
-    if (!apiUrl || !apiToken || !email) {
-      // API ainda não configurada — devolve status atual (cache local).
+    // Modo "só consultar status atual"
+    if (!email || !password) {
       const { data: profile } = await admin
         .from("profiles")
-        .select("spaceincloud_active, spaceincloud_external_id")
+        .select("spaceincloud_active, spaceincloud_external_id, spaceincloud_synced_at")
         .eq("user_id", userId)
         .maybeSingle();
-      result = {
-        active: !!profile?.spaceincloud_active,
-        source: "not-configured",
-        externalId: profile?.spaceincloud_external_id ?? null,
-      };
-    } else {
-      // Consulta upstream pelo email do usuário.
-      const endpoint = `${apiUrl.replace(/\/$/, "")}/subscription?email=${encodeURIComponent(email)}`;
-      const upstream = await fetch(endpoint, {
-        headers: {
-          Authorization: `Bearer ${apiToken}`,
-          Accept: "application/json",
-        },
-      });
-      const parsed = await parseUpstream(upstream);
-      // Atualiza o profile com o resultado.
-      await admin
-        .from("profiles")
-        .update({
-          spaceincloud_active: parsed.active,
-          spaceincloud_external_id: parsed.externalId ?? null,
-          spaceincloud_synced_at: new Date().toISOString(),
-        })
-        .eq("user_id", userId);
-      result = {
-        active: parsed.active,
-        source: "upstream",
-        externalId: parsed.externalId ?? null,
-      };
+      return new Response(
+        JSON.stringify({
+          active: !!profile?.spaceincloud_active,
+          source: "cached",
+          externalId: profile?.spaceincloud_external_id ?? null,
+          syncedAt: profile?.spaceincloud_synced_at ?? null,
+        }),
+        { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+      );
     }
 
-    return new Response(JSON.stringify(result), {
-      status: 200,
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    // 3. Login no Supabase do SpaceInCloud
+    const sicClient = createClient(SIC_URL, SIC_ANON);
+    const { data: sicAuth, error: sicErr } = await sicClient.auth.signInWithPassword({
+      email,
+      password,
     });
+
+    if (sicErr || !sicAuth?.session?.access_token) {
+      console.warn("[spaceincloud-sync] login fail", sicErr?.message);
+      return new Response(
+        JSON.stringify({
+          active: false,
+          error: "Não foi possível entrar no SpaceInCloud. Verifique email e senha.",
+        }),
+        { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+      );
+    }
+
+    const sicToken = sicAuth.session.access_token;
+    const sicUserId = sicAuth.user?.id ?? null;
+
+    // 4. Chama a API de validação do SpaceInCloud
+    const validateResp = await fetch(`${SIC_URL}/functions/v1/validate-kera-access`, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${sicToken}`,
+        apikey: SIC_ANON,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({}),
+    });
+
+    let validateData: ValidateResponse = {};
+    try {
+      validateData = await validateResp.json();
+    } catch {
+      // ignore
+    }
+
+    const active = validateResp.ok && isGrowthActive(validateData);
+
+    // 5. Atualiza profile
+    await admin
+      .from("profiles")
+      .update({
+        spaceincloud_active: active,
+        spaceincloud_external_id: sicUserId,
+        spaceincloud_synced_at: new Date().toISOString(),
+      })
+      .eq("user_id", userId);
+
+    // Encerra a sessão remota (não precisa manter)
+    try { await sicClient.auth.signOut(); } catch { /* noop */ }
+
+    return new Response(
+      JSON.stringify({
+        active,
+        source: "upstream",
+        externalId: sicUserId,
+        plan: validateData?.plan ?? null,
+        message: active
+          ? "Plano Growth ativo — agentes FIT liberados!"
+          : "Encontramos sua conta no SpaceInCloud, mas não há plano Growth ativo.",
+      }),
+      { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+    );
   } catch (error) {
     console.error("[spaceincloud-sync] error", error);
     const message = error instanceof Error ? error.message : "unknown";
