@@ -837,58 +837,63 @@ Por favor, analise: há perda de pacote? jitter alto sugere instabilidade de rot
       <ScrollArea className="flex-1">
 
         {/* Histórico agrupado */}
-        <div className="px-2 pt-3 pb-4">
-          <div className="flex items-center justify-between px-2.5 mb-1">
-            <h3 className="text-[11px] uppercase tracking-wider text-muted-foreground/70">Histórico</h3>
-            {conversations.length > 0 && (
-              <button
-                onClick={clearEmptyConversations}
-                className="text-[10px] uppercase tracking-wider text-muted-foreground/60 hover:text-foreground transition flex items-center gap-1"
-                title="Excluir conversas vazias (sem mensagens)"
-              >
-                <Eraser className="size-3" />
-                Limpar vazias
-              </button>
-            )}
-          </div>
-          {groupedConversations.length === 0 && (
-            <p className="text-xs text-muted-foreground/70 text-center py-4 px-2">Sem conversas ainda.</p>
-          )}
-          {groupedConversations.map(group => (
-            <div key={group.label} className="mt-2">
-              <div className="text-[10px] uppercase tracking-wider text-muted-foreground/60 px-2.5 mb-1">
-                {group.label}
-              </div>
-              {group.items.map(c => (
-                <div
-                  key={c.id}
-                  className={`group flex items-start gap-1 rounded-md px-2.5 py-1.5 text-sm cursor-pointer transition ${
-                    currentId === c.id ? "bg-secondary/80 text-foreground" : "hover:bg-secondary/60 text-muted-foreground hover:text-foreground"
-                  }`}
-                  onClick={() => selectConversation(c.id, c.agent_key)}
-                >
-                  <span className="flex-1 min-w-0 break-words leading-snug line-clamp-2">{c.title}</span>
-                  <button
-                    onClick={(e) => { e.stopPropagation(); renameConversation(c.id, c.title); }}
-                    className="opacity-0 group-hover:opacity-100 text-muted-foreground hover:text-foreground transition p-0.5"
-                    aria-label="Renomear conversa"
-                    title="Renomear"
-                  >
-                    <Pencil className="size-3.5" />
-                  </button>
-                  <button
-                    onClick={(e) => { e.stopPropagation(); deleteConversation(c.id); }}
-                    className="opacity-0 group-hover:opacity-100 text-muted-foreground hover:text-destructive transition p-0.5"
-                    aria-label="Excluir conversa"
-                    title="Excluir"
-                  >
-                    <Trash2 className="size-3.5" />
-                  </button>
-                </div>
-              ))}
-            </div>
-          ))}
-        </div>
+         <div className="px-4 pt-6 pb-6">
+           <div className="flex items-center justify-between px-3 mb-4">
+             <h3 className="text-[11px] font-bold uppercase tracking-[0.15em] text-muted-foreground/50">Histórico</h3>
+             {conversations.length > 0 && (
+               <button
+                 onClick={clearEmptyConversations}
+                 className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground/40 hover:text-primary transition-colors flex items-center gap-1.5 group"
+                 title="Excluir conversas vazias"
+               >
+                 <Eraser className="size-3 transition-transform group-hover:-rotate-12" />
+                 Limpar
+               </button>
+             )}
+           </div>
+           {groupedConversations.length === 0 && (
+             <p className="text-[11px] text-muted-foreground/30 text-center py-8 font-medium">O silêncio é uma tela em branco.</p>
+           )}
+           {groupedConversations.map(group => (
+             <div key={group.label} className="mt-4">
+               <div className="text-[10px] font-bold uppercase tracking-widest text-primary/40 px-3 mb-2 flex items-center gap-2">
+                 <span className="w-1 h-1 rounded-full bg-primary/40 block" />
+                 {group.label}
+               </div>
+               <div className="space-y-0.5">
+                 {group.items.map(c => (
+                   <div
+                     key={c.id}
+                     className={`group relative flex items-start gap-3 rounded-xl px-4 py-2.5 text-xs font-medium cursor-pointer transition-all duration-300 ${
+                       currentId === c.id 
+                         ? "bg-primary/10 text-primary shadow-sm ring-1 ring-primary/20" 
+                         : "hover:bg-white/5 text-muted-foreground hover:text-white"
+                     }`}
+                     onClick={() => selectConversation(c.id, c.agent_key)}
+                   >
+                     <span className="flex-1 min-w-0 leading-relaxed line-clamp-1">{c.title || "Sem título"}</span>
+                     <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                       <button
+                         onClick={(e) => { e.stopPropagation(); renameConversation(c.id, c.title); }}
+                         className="p-1 text-muted-foreground/50 hover:text-primary hover:bg-primary/10 rounded-md transition-all"
+                         aria-label="Renomear"
+                       >
+                         <Pencil className="size-3" />
+                       </button>
+                       <button
+                         onClick={(e) => { e.stopPropagation(); deleteConversation(c.id); }}
+                         className="p-1 text-muted-foreground/50 hover:text-destructive hover:bg-destructive/10 rounded-md transition-all"
+                         aria-label="Excluir"
+                       >
+                         <Trash2 className="size-3" />
+                       </button>
+                     </div>
+                   </div>
+                 ))}
+               </div>
+             </div>
+           ))}
+         </div>
       </ScrollArea>
 
       <div className="p-3 border-t border-border space-y-1">
