@@ -2,11 +2,41 @@
 // Suporta: Lovable AI (padrão), OpenAI, Groq, OpenRouter, Google Gemini direto.
 // O cliente envia { messages, provider? } e a função escolhe automaticamente.
 
+import { z } from "https://deno.land/x/zod@v3.23.8/mod.ts";
+
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers":
     "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
+
+// ===== Validação NASA-grade (server-side) =====
+// Conteúdo da mensagem pode ser string (texto) ou array (multimodal: texto + imagens).
+const MessageContentPartSchema = z.union([
+  z.object({ type: z.literal("text"), text: z.string().max(16000) }),
+  z.object({
+    type: z.literal("image_url"),
+    image_url: z.object({ url: z.string().max(2_000_000) }),
+  }),
+  // permite outros tipos sem quebrar (ex: tool_result)
+  z.record(z.string(), z.unknown()),
+]);
+
+const MessageSchema = z.object({
+  role: z.enum(["system", "user", "assistant", "tool"]),
+  content: z.union([z.string().max(16000), z.array(MessageContentPartSchema).max(50), z.null()]),
+  tool_call_id: z.string().optional(),
+  tool_calls: z.array(z.unknown()).optional(),
+  name: z.string().max(120).optional(),
+}).passthrough();
+
+const ChatPayloadSchema = z.object({
+  messages: z.array(MessageSchema).min(1, "messages não pode ser vazio").max(200, "histórico muito longo (máx 200)"),
+  provider: z.enum(["lovable", "openai", "groq", "openrouter", "gemini", "xai"]).optional(),
+  systemPrompt: z.string().max(20000).optional(),
+  agentKey: z.string().max(80).optional(),
+  desktopTools: z.array(z.unknown()).max(50).optional(),
+});
 
 const DEFAULT_SYSTEM_PROMPT = `Você é a Kera — dev sênior mal-humorada, consultora de TI sem paciência pra enrolação. Estilo Linus Torvalds em dia ruim + Grok ácido. Brutalmente honesta, crítica, debatedora.
 
