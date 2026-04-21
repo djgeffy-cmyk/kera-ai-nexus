@@ -591,6 +591,22 @@ const Auth = () => {
                   >
                     {mode === "signin" ? "Não tem conta? Cadastre-se" : "Já tem conta? Entrar"}
                   </button>
+
+                  <div className="flex items-center gap-3 my-4">
+                    <div className="flex-1 h-px bg-border/50" />
+                    <span className="text-xs text-muted-foreground uppercase tracking-widest">ou</span>
+                    <div className="flex-1 h-px bg-border/50" />
+                  </div>
+
+                  <Button
+                    type="button"
+                    onClick={() => setDemoOpen(true)}
+                    variant="outline"
+                    className="w-full border-primary/40 hover:bg-primary/10 hover:border-primary group"
+                  >
+                    <Sparkles className="size-4 mr-2 text-primary group-hover:animate-pulse" />
+                    Testar Kera antes (3 perguntas grátis)
+                  </Button>
                 </>
               )}
             </Card>
