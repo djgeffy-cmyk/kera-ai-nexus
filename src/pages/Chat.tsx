@@ -9,7 +9,7 @@ import {
   Plus, LogOut, Send, MessageSquare, Trash2, Menu, Settings, Calculator,
   Image as ImageIcon, LayoutGrid, FolderPlus, Mic, MicOff, Volume2, VolumeX, Bot, ChevronRight,
   Paperclip, X, FileText, ShieldCheck, Activity, Download, Ear, Sun, Moon, Sparkles, Gem,
-   PanelLeftClose, PanelLeftOpen, Camera, Pencil, Eraser, Monitor, Maximize2,
+   PanelLeftClose, PanelLeftOpen, Camera, Pencil, Eraser, Monitor,
   Scale, Heart, ScrollText, UserCheck, Accessibility,
 } from "lucide-react";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
@@ -40,8 +40,6 @@ import { exportConversationToPdf } from "@/lib/exportPdf";
 import { VoiceStatusIndicator } from "@/components/VoiceStatusIndicator";
 import { useTheme } from "@/hooks/useTheme";
 import { GalleryDialog } from "@/components/GalleryDialog";
-import KeraAvatar3D from "@/components/KeraAvatar3D";
-import { saveVRM, getVRMObjectURL, clearVRM } from "@/lib/vrmStorage";
 import ItcmdSCCalculator, { type ItcmdResult } from "@/components/ItcmdSCCalculator";
 import DanoMoralCalculator, { type DanoMoralResult } from "@/components/DanoMoralCalculator";
 import AtaNotarialGenerator, { type AtaNotarialResult } from "@/components/AtaNotarialGenerator";
@@ -92,54 +90,6 @@ const Chat = () => {
   useEffect(() => {
     try { localStorage.removeItem("kera:voiceMode"); } catch {}
   }, []);
-  // Avatar 3D (boneca da Kera) — persiste preferência
-  const [avatar3D, setAvatar3D] = useState<boolean>(() => {
-    try { return localStorage.getItem("kera:avatar3D") === "1"; } catch { return false; }
-  });
-  useEffect(() => {
-    try { localStorage.setItem("kera:avatar3D", avatar3D ? "1" : "0"); } catch {}
-  }, [avatar3D]);
-  // VRM personalizado da Kera (salvo localmente em IndexedDB).
-  // null = ainda não carregou; "" = nenhum salvo; string = blob URL pronta.
-  const [customVrmUrl, setCustomVrmUrl] = useState<string | null>(null);
-  useEffect(() => {
-    let revoked: string | null = null;
-    getVRMObjectURL().then((url) => {
-      setCustomVrmUrl(url ?? "");
-      revoked = url;
-    });
-    return () => {
-      if (revoked) URL.revokeObjectURL(revoked);
-    };
-  }, []);
-  const vrmFileInputRef = useRef<HTMLInputElement>(null);
-  const handleVrmUpload = async (file: File) => {
-    if (!file.name.toLowerCase().endsWith(".vrm")) {
-      toast.error("Arquivo precisa ser .vrm (exportado do VRoid Studio).");
-      return;
-    }
-    if (file.size > 60 * 1024 * 1024) {
-      toast.error("VRM muito grande (máx 60 MB). Otimize no VRoid Studio.");
-      return;
-    }
-    try {
-      await saveVRM(file);
-      // Revoga URL antiga e cria nova
-      if (customVrmUrl) URL.revokeObjectURL(customVrmUrl);
-      const url = URL.createObjectURL(file);
-      setCustomVrmUrl(url);
-      toast.success(`Kera 3D atualizada com seu modelo (${(file.size / 1024 / 1024).toFixed(1)} MB)`);
-    } catch (e: any) {
-      toast.error("Falha ao salvar VRM: " + (e?.message || "erro desconhecido"));
-    }
-  };
-  const handleVrmReset = async () => {
-    if (!window.confirm("Voltar ao modelo padrão e remover seu VRM salvo?")) return;
-    await clearVRM();
-    if (customVrmUrl) URL.revokeObjectURL(customVrmUrl);
-    setCustomVrmUrl("");
-    toast.success("Modelo padrão restaurado");
-  };
   // Texto da última resposta — usado pelo avatar 3D pra detectar emoção e animar boca
   const lastAssistantTextRef = useRef<string>("");
   const [lastAssistantText, setLastAssistantText] = useState<string>("");
@@ -980,75 +930,6 @@ Por favor, analise: há perda de pacote? jitter alto sugere instabilidade de rot
           </div>
         )}
 
-        {/* Kera 3D — boneca volumétrica que reage à voz e às emoções da resposta */}
-         {avatar3D && (
-           <div className="hidden md:block absolute right-4 bottom-24 z-10 w-[320px] h-[480px] animate-[fade-in_500ms_ease-out]">
-             <div className="relative w-full h-full rounded-3xl overflow-hidden border border-primary/30 bg-gradient-to-b from-primary/10 via-transparent to-primary/5 shadow-[0_0_60px_-10px_hsl(var(--primary)/0.4)] backdrop-blur-sm pointer-events-auto">
-              <KeraAvatar3D
-                speaking={voice.speaking}
-                audioElement={voice.audioRef.current}
-                lastReplyText={lastAssistantText}
-                 vrmUrl={customVrmUrl ? customVrmUrl : undefined}
-                 interactive={true}
-               />
-              {/* Indicador "ao vivo" */}
-              <div className="absolute top-2 left-2 flex items-center gap-1.5 text-[10px] font-medium text-primary bg-background/70 backdrop-blur-sm px-2 py-0.5 rounded-full border border-primary/30">
-                <span className={`size-1.5 rounded-full ${voice.speaking ? "bg-primary animate-pulse" : "bg-muted-foreground"}`} />
-                Kera 3D
-              </div>
-              {/* Controles de upload do VRM personalizado */}
-               <div className="pointer-events-auto absolute top-2 right-2 flex gap-2">
-                 <Button
-                   size="icon"
-                   variant="ghost"
-                   onClick={() => navigate("/kera-3d")}
-                   title="Abrir no Kera 3D Studio (Controles avançados)"
-                   className="h-7 w-7 bg-background/70 backdrop-blur-sm border border-primary/30 hover:bg-primary/20"
-                 >
-                   <Maximize2 className="size-3.5" />
-                 </Button>
-                <input
-                  ref={vrmFileInputRef}
-                  type="file"
-                  accept=".vrm"
-                  className="hidden"
-                  onChange={(e) => {
-                    const f = e.target.files?.[0];
-                    if (f) handleVrmUpload(f);
-                    e.currentTarget.value = "";
-                  }}
-                />
-                <Button
-                  size="icon"
-                  variant="ghost"
-                  onClick={() => vrmFileInputRef.current?.click()}
-                  title="Subir seu .vrm da Kera (VRoid Studio)"
-                  className="h-7 w-7 bg-background/70 backdrop-blur-sm border border-primary/30 hover:bg-primary/20"
-                >
-                  <Plus className="size-3.5" />
-                </Button>
-                {customVrmUrl ? (
-                  <Button
-                    size="icon"
-                    variant="ghost"
-                    onClick={handleVrmReset}
-                    title="Voltar ao modelo padrão"
-                    className="h-7 w-7 bg-background/70 backdrop-blur-sm border border-primary/30 hover:bg-destructive/20"
-                  >
-                    <Trash2 className="size-3.5" />
-                  </Button>
-                ) : null}
-              </div>
-              {/* Hint quando ainda está no modelo padrão */}
-              {customVrmUrl === "" && (
-                <div className="pointer-events-none absolute bottom-2 left-2 right-2 text-[10px] text-muted-foreground bg-background/70 backdrop-blur-sm rounded-md px-2 py-1 border border-border/50 text-center">
-                  Modelo padrão · clique <Plus className="inline size-2.5 -mt-0.5" /> pra subir seu .vrm
-                </div>
-              )}
-            </div>
-          </div>
-        )}
-
         {dragging && (
           <div className="absolute inset-0 z-50 pointer-events-none flex items-center justify-center bg-primary/10 backdrop-blur-sm border-4 border-dashed border-primary rounded-lg m-2">
             <div className="text-center">
@@ -1201,18 +1082,6 @@ Por favor, analise: há perda de pacote? jitter alto sugere instabilidade de rot
                 <FileText className="size-5" />
               </Button>
             )}
-            <Button
-              variant="ghost" size="icon"
-              onClick={() => {
-                setAvatar3D(v => !v);
-                if (!avatar3D) toast.success("Kera 3D ativada — boneca aparece no canto e fala com você");
-              }}
-              aria-label="Avatar 3D"
-              title={avatar3D ? "Ocultar Kera 3D" : "Mostrar Kera 3D"}
-              className={`shrink-0 h-9 w-9 ${avatar3D ? "text-primary" : ""}`}
-            >
-              <Bot className="size-5" />
-            </Button>
             <Button
               variant="ghost" size="icon"
               onClick={() => {
