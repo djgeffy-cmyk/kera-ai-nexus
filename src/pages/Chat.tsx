@@ -43,6 +43,7 @@ import { GalleryDialog } from "@/components/GalleryDialog";
 import KeraAvatar3D from "@/components/KeraAvatar3D";
 import { saveVRM, getVRMObjectURL, clearVRM } from "@/lib/vrmStorage";
 import ItcmdSCCalculator, { type ItcmdResult } from "@/components/ItcmdSCCalculator";
+import DanoMoralCalculator, { type DanoMoralResult } from "@/components/DanoMoralCalculator";
 
 type Conversation = { id: string; title: string; updated_at: string; agent_key: string };
 type CustomAgent = { id: string; name: string; system_prompt: string; description: string | null };
@@ -80,6 +81,7 @@ const Chat = () => {
     }), []);
   const [galleryOpen, setGalleryOpen] = useState(false);
   const [itcmdOpen, setItcmdOpen] = useState(false);
+  const [danoMoralOpen, setDanoMoralOpen] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
   const [provider, setProvider] = useState<ProviderId>(getPreferredProvider());
   // Modo voz NÃO persiste — sempre começa desligado a cada sessão para evitar
@@ -1151,6 +1153,17 @@ Por favor, analise: há perda de pacote? jitter alto sugere instabilidade de rot
                 <Calculator className="size-5" />
               </Button>
             )}
+            {agentKey === "kera-personalidade" && (
+              <Button
+                variant="ghost" size="icon"
+                onClick={() => setDanoMoralOpen(true)}
+                aria-label="Calculadora de Dano Moral"
+                title="Calculadora de Dano Moral — Método Bifásico STJ (REsp 1.152.541/RS)"
+                className="text-rose-400 hover:text-rose-300 shrink-0 h-9 w-9"
+              >
+                <Scale className="size-5" />
+              </Button>
+            )}
             <Button
               variant="ghost" size="icon"
               onClick={() => {
@@ -1504,6 +1517,16 @@ Por favor, analise: há perda de pacote? jitter alto sugere instabilidade de rot
           setInput(r.markdown);
           setTimeout(() => sendText(r.markdown), 80);
           toast.success(`Cálculo enviado — ITCMD total estimado: ${r.total.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}`);
+        }}
+      />
+      <DanoMoralCalculator
+        open={danoMoralOpen}
+        onOpenChange={setDanoMoralOpen}
+        onSendToChat={(r: DanoMoralResult) => {
+          if (agentKey !== "kera-personalidade") setAgentKey("kera-personalidade");
+          setInput(r.markdown);
+          setTimeout(() => sendText(r.markdown), 80);
+          toast.success(`Cálculo enviado — Dano moral sugerido: ${r.valorFinal.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}`);
         }}
       />
     </div>
