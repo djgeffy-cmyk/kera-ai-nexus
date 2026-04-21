@@ -1110,7 +1110,13 @@ Por favor, analise: há perda de pacote? jitter alto sugere instabilidade de rot
             </div>
           </div>
         )}
-         <header className="relative z-40 h-16 md:h-20 border-b border-white/5 bg-background/40 backdrop-blur-xl flex items-center px-4 md:px-8 gap-3 md:gap-4 overflow-hidden transition-all duration-300 shadow-sm">
+         <header
+           className="relative z-40 border-b border-white/5 bg-background/40 backdrop-blur-xl flex items-center px-4 md:px-8 gap-3 md:gap-4 overflow-hidden transition-all duration-300 shadow-sm md:h-20"
+           style={{
+             paddingTop: "env(safe-area-inset-top, 0px)",
+             minHeight: "calc(4rem + env(safe-area-inset-top, 0px))",
+           }}
+         >
            {/* Botão para ocultar/mostrar a sidebar (desktop) */}
            <Button
              variant="ghost"
