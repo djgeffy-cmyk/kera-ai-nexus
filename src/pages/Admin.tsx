@@ -82,6 +82,11 @@ const Admin = () => {
         </Button>
         <img src={keraLogo} alt="Kera AI" className="h-7" />
         <h1 className="font-display text-glow text-lg ml-2">PAINEL ADMIN</h1>
+        <div className="ml-auto">
+          <Button variant="outline" size="sm" onClick={() => navigate("/admin/uso")}>
+            📊 Consumo de IA
+          </Button>
+        </div>
       </header>
 
       <main className="max-w-3xl mx-auto px-4 py-8 space-y-6 overflow-x-hidden">

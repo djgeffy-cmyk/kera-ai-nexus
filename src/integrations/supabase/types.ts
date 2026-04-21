@@ -755,6 +755,24 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      admin_list_users_usage: {
+        Args: never
+        Returns: {
+          created_at: string
+          display_name: string
+          email: string
+          images_month: number
+          images_today: number
+          onboarding_completed: boolean
+          plan_tier: string
+          selected_agents: string[]
+          user_id: string
+        }[]
+      }
+      admin_set_user_plan: {
+        Args: { _plan: string; _target_user: string }
+        Returns: undefined
+      }
       consume_image_quota: { Args: { _user_id: string }; Returns: Json }
       has_role: {
         Args: {
