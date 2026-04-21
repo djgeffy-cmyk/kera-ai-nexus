@@ -296,7 +296,20 @@ async function handleAuthVerify(req: Request) {
     })
     .eq("id", cred.id);
 
-  return json({ ok: true, user_id: cred.user_id });
+  // Gera magic link para criar sessão real no client
+  const { data: linkData, error: linkErr } = await admin.auth.admin.generateLink({
+    type: "magiclink",
+    email,
+  });
+  if (linkErr || !linkData?.properties?.hashed_token) {
+    return json({ error: linkErr?.message || "Falha ao gerar sessão" }, 500);
+  }
+
+  return json({
+    ok: true,
+    user_id: cred.user_id,
+    token_hash: linkData.properties.hashed_token,
+  });
 }
 
 function json(body: unknown, status = 200) {
