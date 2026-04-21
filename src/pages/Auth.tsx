@@ -38,6 +38,7 @@ const Auth = () => {
   const [supportsPasskey] = useState(() => webauthnSupported());
   const [inIframe] = useState(() => isInIframe());
   const [isUnlocked, setIsUnlocked] = useState(false);
+  const [isOpening, setIsOpening] = useState(false);
   const passkeyAvailable = supportsPasskey && !inIframe;
 
   useEffect(() => {
@@ -262,6 +263,63 @@ const Auth = () => {
       />
       <div aria-hidden className="absolute inset-0 bg-background/30" />
       <ParticlesOverlay />
+
+      {/* Heavy rain overlay during umbrella opening transition */}
+      <AnimatePresence>
+        {isOpening && (
+          <motion.div
+            key="rain-burst"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.4 }}
+            className="fixed inset-0 z-30 pointer-events-none overflow-hidden"
+          >
+            {[...Array(80)].map((_, i) => {
+              const left = Math.random() * 100;
+              const delay = Math.random() * 0.6;
+              const duration = 0.6 + Math.random() * 0.6;
+              const height = 12 + Math.random() * 28;
+              return (
+                <motion.div
+                  key={i}
+                  initial={{ y: -50, opacity: 0 }}
+                  animate={{ y: "110vh", opacity: [0, 1, 1, 0.8] }}
+                  transition={{
+                    duration,
+                    delay,
+                    repeat: Infinity,
+                    ease: "easeIn",
+                  }}
+                  className="absolute w-px bg-gradient-to-b from-transparent via-primary/60 to-primary/90 rounded-full"
+                  style={{
+                    left: `${left}%`,
+                    height: `${height}px`,
+                    filter: "blur(0.3px)",
+                  }}
+                />
+              );
+            })}
+            {/* Splash particles at bottom */}
+            {[...Array(20)].map((_, i) => (
+              <motion.div
+                key={`splash-${i}`}
+                initial={{ scale: 0, opacity: 0 }}
+                animate={{ scale: [0, 1.5, 0], opacity: [0, 0.7, 0] }}
+                transition={{
+                  duration: 0.8,
+                  delay: 0.3 + Math.random() * 0.6,
+                  repeat: Infinity,
+                  repeatDelay: Math.random() * 0.5,
+                }}
+                className="absolute bottom-0 size-2 rounded-full bg-primary/50"
+                style={{ left: `${Math.random() * 100}%` }}
+              />
+            ))}
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       <div
         aria-hidden
         className="absolute inset-0 pointer-events-none"
@@ -288,10 +346,28 @@ const Auth = () => {
             className="relative z-20 flex flex-col items-center"
           >
             <button
-              onClick={() => setIsUnlocked(true)}
+              onClick={() => {
+                setIsOpening(true);
+                setTimeout(() => setIsUnlocked(true), 700);
+              }}
               aria-label="Abrir o guarda-chuva e revelar o login"
               className="group relative p-8 rounded-full bg-background/10 backdrop-blur-md border border-white/10 shadow-2xl hover:bg-background/20 hover:shadow-glow hover:scale-105 active:scale-95 transition-all duration-500"
             >
+              {/* Ripples expanding from umbrella on click */}
+              {isOpening && (
+                <>
+                  {[0, 0.15, 0.3].map((delay, i) => (
+                    <motion.span
+                      key={`ripple-${i}`}
+                      initial={{ scale: 0.8, opacity: 0.6 }}
+                      animate={{ scale: 4, opacity: 0 }}
+                      transition={{ duration: 1.2, delay, ease: "easeOut" }}
+                      className="absolute inset-0 rounded-full border-2 border-primary/60 pointer-events-none"
+                    />
+                  ))}
+                </>
+              )}
+
               <motion.div
                 animate={{ 
                   y: [0, -10, 0],
@@ -313,20 +389,21 @@ const Auth = () => {
                 </motion.div>
               </motion.div>
               
-              <div className="absolute inset-0 pointer-events-none overflow-hidden rounded-full">
-                {[...Array(6)].map((_, i) => (
+              {/* Local droplets falling around umbrella button */}
+              <div className="absolute -inset-8 pointer-events-none overflow-visible">
+                {[...Array(isOpening ? 24 : 10)].map((_, i) => (
                   <motion.div
                     key={i}
-                    initial={{ y: 20, opacity: 0 }}
-                    animate={{ y: 80, opacity: [0, 1, 0] }}
-                    transition={{ 
-                      duration: 1.5 + Math.random(), 
-                      repeat: Infinity, 
-                      delay: Math.random() * 2,
-                      ease: "linear"
+                    initial={{ y: -10, opacity: 0 }}
+                    animate={{ y: 140, opacity: [0, 1, 1, 0] }}
+                    transition={{
+                      duration: isOpening ? 0.8 + Math.random() * 0.4 : 1.5 + Math.random(),
+                      repeat: Infinity,
+                      delay: Math.random() * (isOpening ? 0.6 : 2),
+                      ease: "easeIn",
                     }}
-                    className="absolute w-0.5 h-3 bg-primary/40 rounded-full"
-                    style={{ left: `${20 + Math.random() * 60}%` }}
+                    className="absolute w-0.5 h-4 bg-gradient-to-b from-transparent via-primary/70 to-primary rounded-full"
+                    style={{ left: `${Math.random() * 100}%`, top: 0 }}
                   />
                 ))}
               </div>
