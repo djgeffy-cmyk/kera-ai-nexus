@@ -141,7 +141,7 @@ const AgentsPage = () => {
             </p>
           )}
           <div className="grid sm:grid-cols-2 gap-3">
-            {BUILTIN_AGENTS.map(a => {
+            {BUILTIN_AGENTS.filter(a => canSee(a.key)).map(a => {
               const Icon = a.icon;
               const allowed = canAccess(a.key);
               return (
