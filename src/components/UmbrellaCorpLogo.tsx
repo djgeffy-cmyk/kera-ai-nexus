@@ -39,23 +39,24 @@ export const UmbrellaCorpLogo = ({ className, size = 96 }: UmbrellaCorpLogoProps
         strokeLinejoin="round"
       />
 
-      {/* 8 pétalas alternadas (cheia / vazia) — top, top-right, right, bottom-right, ... */}
-      {/* Pétala 1 - topo (cheia) */}
-      <path d="M50,8 L50,50 L24,24 Z" fill="hsl(var(--primary))" />
-      {/* Pétala 2 - topo-direita (vazia) */}
-      <path d="M50,8 L50,50 L76,24 Z" fill="hsl(var(--background))" stroke="hsl(var(--primary))" strokeWidth="1.2" />
-      {/* Pétala 3 - direita (cheia) */}
-      <path d="M92,50 L50,50 L76,76 Z" fill="hsl(var(--primary))" />
-      {/* Pétala 4 - baixo-direita (vazia) */}
-      <path d="M92,50 L50,50 L76,24 Z" fill="hsl(var(--background))" stroke="hsl(var(--primary))" strokeWidth="1.2" />
-      {/* Pétala 5 - baixo (cheia) */}
-      <path d="M50,92 L50,50 L76,76 Z" fill="hsl(var(--primary))" />
-      {/* Pétala 6 - baixo-esquerda (vazia) */}
-      <path d="M50,92 L50,50 L24,76 Z" fill="hsl(var(--background))" stroke="hsl(var(--primary))" strokeWidth="1.2" />
-      {/* Pétala 7 - esquerda (cheia) */}
-      <path d="M8,50 L50,50 L24,24 Z" fill="hsl(var(--primary))" />
-      {/* Pétala 8 - cima-esquerda (vazia) */}
-      <path d="M8,50 L50,50 L24,76 Z" fill="hsl(var(--background))" stroke="hsl(var(--primary))" strokeWidth="1.2" />
+      {/* 8 pétalas alternadas (cheia / vazia) — sentido horário a partir do topo */}
+      {/* Vértices do octógono: T(50,8) TR(76,24) R(92,50) BR(76,76) B(50,92) BL(24,76) L(8,50) TL(24,24) */}
+      {/* 1 - topo → topo-direita (cheia) */}
+      <path d="M50,50 L50,8 L76,24 Z" fill="hsl(var(--primary))" />
+      {/* 2 - topo-direita → direita (vazia) */}
+      <path d="M50,50 L76,24 L92,50 Z" fill="hsl(var(--background))" stroke="hsl(var(--primary))" strokeWidth="1" />
+      {/* 3 - direita → baixo-direita (cheia) */}
+      <path d="M50,50 L92,50 L76,76 Z" fill="hsl(var(--primary))" />
+      {/* 4 - baixo-direita → baixo (vazia) */}
+      <path d="M50,50 L76,76 L50,92 Z" fill="hsl(var(--background))" stroke="hsl(var(--primary))" strokeWidth="1" />
+      {/* 5 - baixo → baixo-esquerda (cheia) */}
+      <path d="M50,50 L50,92 L24,76 Z" fill="hsl(var(--primary))" />
+      {/* 6 - baixo-esquerda → esquerda (vazia) */}
+      <path d="M50,50 L24,76 L8,50 Z" fill="hsl(var(--background))" stroke="hsl(var(--primary))" strokeWidth="1" />
+      {/* 7 - esquerda → cima-esquerda (cheia) */}
+      <path d="M50,50 L8,50 L24,24 Z" fill="hsl(var(--primary))" />
+      {/* 8 - cima-esquerda → topo (vazia) */}
+      <path d="M50,50 L24,24 L50,8 Z" fill="hsl(var(--background))" stroke="hsl(var(--primary))" strokeWidth="1" />
 
       {/* Centro */}
       <circle cx="50" cy="50" r="5" fill="hsl(var(--primary))" />
