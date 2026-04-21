@@ -1285,7 +1285,7 @@ Por favor, analise: há perda de pacote? jitter alto sugere instabilidade de rot
                  <div className="relative group inline-block">
                    <div className="absolute inset-0 bg-primary/20 blur-[60px] animate-pulse rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-1000" />
                    <video
-                     src={assetUrl(keraAvatarVideo)}
+                     src={agentKey === "kera-security-nasa" ? assetUrl(keraAvatarNasaVideo) : assetUrl(keraAvatarVideo)}
                      poster={keraAvatar}
                      autoPlay
                      loop
