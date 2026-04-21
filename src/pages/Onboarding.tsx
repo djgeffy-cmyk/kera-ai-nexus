@@ -7,7 +7,7 @@ import { ArrowLeft, Check, Sparkles } from "lucide-react";
 import { toast } from "sonner";
 import { BUILTIN_AGENTS } from "@/lib/agents";
 import { useUserAccess } from "@/hooks/useUserAccess";
-import keraLogo from "@/assets/kera-logo.png";
+import keraWaterHero from "@/assets/kera-water-hero.jpg";
 
 /**
  * Tela mostrada uma única vez após o cadastro.
@@ -108,7 +108,19 @@ const Onboarding = () => {
           </button>
         )}
         <header className="text-center mb-8 md:mb-10">
-          <img src={keraLogo} alt="Kera AI" className="h-10 md:h-14 mx-auto mb-4" />
+          <div className="relative mx-auto mb-5 size-28 md:size-36 rounded-full overflow-hidden ring-2 ring-primary/60 shadow-glow bg-background">
+            <img
+              src={keraWaterHero}
+              alt="Kera — IA"
+              width={1024}
+              height={1024}
+              className="w-full h-full object-cover"
+            />
+            <div
+              aria-hidden
+              className="absolute inset-0 rounded-full ring-1 ring-primary/40 pointer-events-none"
+            />
+          </div>
           <h1 className="font-display text-2xl md:text-4xl text-glow mb-2">
             {isEditing ? "Suas áreas liberadas" : "Bem-vindo à Kera"}
           </h1>
