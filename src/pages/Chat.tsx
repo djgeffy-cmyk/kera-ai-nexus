@@ -66,7 +66,8 @@ import {
   Dumbbell,
   Trophy,
   Languages,
-  Baby,
+   Baby,
+   ShieldAlert,
 } from "lucide-react";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
