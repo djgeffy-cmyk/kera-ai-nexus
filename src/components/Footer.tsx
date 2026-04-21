@@ -3,9 +3,9 @@ import keraSpaceLogo from "@/assets/kera-spaceincloud-logo.png";
 const Footer = () => {
   return (
     <>
-      {/* Rodapé compacto (texto + QR) — centralizado */}
+      {/* Rodapé compacto (texto + QR) — escondido no mobile pra não atrapalhar o chat */}
       <div
-        className="fixed bottom-0 right-0 z-30 pointer-events-none transition-[left] duration-300 ease-in-out"
+        className="hidden md:block fixed bottom-0 right-0 z-30 pointer-events-none transition-[left] duration-300 ease-in-out"
         style={{ left: "var(--chat-sidebar-w, 0px)" }}
       >
         <div className="mx-auto w-fit max-w-[95vw] mb-2 px-4 py-1.5 rounded-full bg-background/80 backdrop-blur-md border border-border/60 pointer-events-auto flex items-center gap-3 shadow-lg shadow-background/40">
@@ -38,14 +38,14 @@ const Footer = () => {
         </div>
       </div>
 
-      {/* Logo flutuante BEM no canto inferior direito */}
+      {/* Logo flutuante — só no desktop */}
       <a
         href="https://app.spaceincloud.com.br/"
         target="_blank"
         rel="noopener noreferrer"
         aria-label="Acessar Kera AI Space in Cloud"
         title="Kera AI · Space in Cloud — Soluções em Nuvem"
-        className="fixed z-40 opacity-90 md:opacity-95 hover:opacity-100 hover:scale-105 transition-all pointer-events-auto left-1/2 -translate-x-1/2 md:left-auto md:translate-x-0 md:right-5"
+        className="hidden md:block fixed z-40 opacity-95 hover:opacity-100 hover:scale-105 transition-all pointer-events-auto md:right-5"
         style={{
           position: "fixed",
           bottom: "calc(env(safe-area-inset-bottom, 0px) + 3.5rem)",
@@ -55,7 +55,7 @@ const Footer = () => {
         <img
           src={keraSpaceLogo}
           alt="Kera AI Space in Cloud"
-          className="h-12 md:h-36 w-auto max-w-[40vw] md:max-w-none object-contain bg-transparent drop-shadow-[0_6px_18px_rgba(0,0,0,0.7)]"
+          className="h-36 w-auto object-contain bg-transparent drop-shadow-[0_6px_18px_rgba(0,0,0,0.7)]"
           loading="lazy"
           decoding="async"
           style={{ background: "transparent" }}
