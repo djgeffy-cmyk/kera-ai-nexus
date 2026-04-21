@@ -390,3 +390,33 @@
     }
   }
 }
+
+/* ===========================================================
+   Chat — root fixo (impede "balanço" da tela no iOS Safari)
+   Usa 100dvh quando disponível pra ignorar a barra dinâmica
+   do Safari, e bloqueia overscroll/pull-to-refresh.
+   =========================================================== */
+.chat-root {
+  height: 100vh;
+  height: 100dvh;
+  max-height: 100vh;
+  max-height: 100dvh;
+  overflow: hidden;
+  overscroll-behavior: none;
+  -webkit-overflow-scrolling: touch;
+}
+
+html, body {
+  overscroll-behavior-y: none;
+}
+
+/* Composer do chat: padding inferior compacto no mobile (sem rodapé)
+   e maior no desktop pra não colidir com o Footer flutuante. */
+.chat-composer-wrap {
+  padding-bottom: max(env(safe-area-inset-bottom, 0px), 0.75rem);
+}
+@media (min-width: 768px) {
+  .chat-composer-wrap {
+    padding-bottom: 8rem; /* equivalente ao antigo pb-32 */
+  }
+}

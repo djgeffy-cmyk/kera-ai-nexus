@@ -1395,10 +1395,7 @@ Por favor, analise: há perda de pacote? jitter alto sugere instabilidade de rot
           </div>
         </div>
 
-        <div
-          className="relative z-10 border-t border-border panel p-3 md:p-4 pb-3 md:pb-32"
-          style={{ paddingBottom: "max(env(safe-area-inset-bottom, 0px), 0.75rem)" }}
-        >
+        <div className="chat-composer-wrap relative z-10 border-t border-border panel p-3 md:p-4">
           <div className="max-w-6xl mx-auto space-y-2">
              {isSentinela && (
                <div className="flex flex-wrap justify-center gap-3 animate-in slide-in-from-bottom-2 duration-500">
