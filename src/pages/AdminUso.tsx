@@ -6,6 +6,15 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ArrowLeft, ImageIcon, Users, TrendingUp, DollarSign, RefreshCw } from "lucide-react";
 import { toast } from "sonner";
+import {
+  ResponsiveContainer,
+  AreaChart,
+  Area,
+  XAxis,
+  YAxis,
+  Tooltip,
+  CartesianGrid,
+} from "recharts";
 
 type UsageRow = {
   user_id: string;
@@ -17,6 +26,12 @@ type UsageRow = {
   images_today: number;
   images_month: number;
   created_at: string;
+};
+
+type DailyRow = {
+  usage_date: string;
+  total_images: number;
+  unique_users: number;
 };
 
 const PLAN_LABEL: Record<string, string> = {
@@ -40,18 +55,30 @@ const COST_PER_IMAGE_BRL = 0.15;
 export default function AdminUso() {
   const navigate = useNavigate();
   const [rows, setRows] = useState<UsageRow[]>([]);
+  const [daily, setDaily] = useState<DailyRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [savingUserId, setSavingUserId] = useState<string | null>(null);
 
   const load = async () => {
     setLoading(true);
-    const { data, error } = await supabase.rpc("admin_list_users_usage");
-    if (error) {
-      toast.error(error.message);
+    const [usageRes, dailyRes] = await Promise.all([
+      supabase.rpc("admin_list_users_usage"),
+      supabase.rpc("admin_image_usage_daily", { _days: 30 }),
+    ]);
+    if (usageRes.error) {
+      toast.error(usageRes.error.message);
       setLoading(false);
       return;
     }
-    setRows((data || []) as UsageRow[]);
+    if (dailyRes.error) {
+      toast.error(dailyRes.error.message);
+    }
+    setRows((usageRes.data || []) as UsageRow[]);
+    setDaily(((dailyRes.data || []) as any[]).map((d) => ({
+      usage_date: d.usage_date,
+      total_images: Number(d.total_images) || 0,
+      unique_users: Number(d.unique_users) || 0,
+    })));
     setLoading(false);
   };
 
