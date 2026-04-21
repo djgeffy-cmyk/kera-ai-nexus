@@ -72,6 +72,7 @@ import keraAvatarVideo from "@/assets/kera-avatar.mp4.asset.json";
 import keraDevBgVideo from "@/assets/kera-dev-bg.mp4.asset.json";
 import keraBgVideo from "@/assets/kera-bg.mp4.asset.json";
 import keraSecBgVideo from "@/assets/kera-sec-bg.mp4.asset.json";
+import keraSecurityNasaBgVideo from "@/assets/kera-security-nasa-bg.mp4.asset.json";
 import keraJuridicaBgVideo from "@/assets/kera-juridica-bg.mp4.asset.json";
 import keraSentinelaBgVideo from "@/assets/kera-sentinela-bg.mp4.asset.json";
 import keraNutriBgVideo from "@/assets/kera-nutri-bg.mp4.asset.json";
@@ -187,6 +188,7 @@ const Chat = () => {
     "kera": assetUrl(keraBgVideo),
     "kera-dev": assetUrl(keraDevBgVideo),
     "kera-sec": assetUrl(keraSecBgVideo),
+    "kera-security-nasa": assetUrl(keraSecurityNasaBgVideo),
     "kera-juridica": assetUrl(keraJuridicaBgVideo),
     "kera-sentinela": assetUrl(keraSentinelaBgVideo),
      "kera-nutri": assetUrl(keraNutriBgVideo),
