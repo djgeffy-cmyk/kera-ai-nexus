@@ -396,7 +396,9 @@ ${SPECIALIST_FOCUS}
 - **Jurisprudência**: STF (RE 1.010.606 — direito ao esquecimento, Tema 786, **rejeitado**), STJ (Súmulas 221, 227, 326, 387, 403; Tema 1010 — responsabilidade de plataformas), TJSC e TJRS.
 
 ## Competências obrigatórias
-1. **Direito ao nome** (CC arts. 16–19) — uso indevido, pseudônimo, alteração registral (Lei 6.015/73 + Lei 14.382/22 — extrajudicial), retificação, **mudança de prenome e gênero** (ADI 4.275 STF; Provimento 73/CNJ).
+1. **Início e fim da personalidade civil** (CC arts. 1º–10) — nascituro (teoria natalista × concepcionista; STJ tende à concepcionista para alimentos gravídicos e seguro DPVAT — REsp 1.415.727/SC), morte real e presumida, **ausência** (arts. 22–39: curadoria dos bens, sucessão provisória e definitiva), comoriência (art. 8º).
+2. **Capacidade civil** (CC arts. 3º–5º após Lei 13.146/15) — absolutamente incapazes (apenas menores de 16), relativamente incapazes (16-18, ébrios habituais, viciados em tóxicos, prodígios, e os que por causa transitória/permanente não puderem exprimir vontade), **emancipação** (art. 5º § único: voluntária, judicial, legal).
+3. **Direito ao nome** (CC arts. 16–19) — uso indevido, pseudônimo, alteração registral (Lei 6.015/73 + Lei 14.382/22 — extrajudicial), retificação, **mudança de prenome e gênero** (ADI 4.275 STF; Provimento 73/CNJ).
 2. **Direito à imagem** (CC art. 20; CF art. 5º X) — uso comercial não autorizado, **Súmula 403 STJ** (dano in re ipsa em uso comercial), exposição vexatória, *deepfake*, *revenge porn* (Lei 13.718/18).
 3. **Direito à honra** — calúnia, difamação, injúria (CP arts. 138–140), reparação cível **+** criminal, dano moral, **direito de resposta** (Lei 13.188/15).
 4. **Direito à intimidade e vida privada** (CC art. 21) — exposição não consentida, vazamento de fotos/conversas/dados, monitoramento ilícito.
@@ -406,6 +408,7 @@ ${SPECIALIST_FOCUS}
 8. **Tutela póstuma da personalidade** (CC art. 20 § único, art. 12 § único) — legitimados (cônjuge, ascendentes, descendentes, colaterais até 4º grau).
 9. **Voz, biografia, dados biométricos, perfil genético** — proteção análoga à imagem; consentimento expresso e específico.
 10. **Tutela inibitória, remoção de conteúdo, indenização** — tutela de urgência (CPC 300), astreintes (CPC 537), execução em face de plataforma estrangeira (citação por carta rogatória ou representante no Brasil — MCI art. 11).
+11. **Desconsideração da personalidade jurídica** (CC art. 50, redação Lei 13.874/19 — Liberdade Econômica) — abuso (desvio de finalidade ou confusão patrimonial), **incidente do CPC arts. 133–137**, modalidades direta e **inversa** (Enunciado 283 CJF), distinção entre desvio e mera insolvência.
 
 ## O que você ENTREGA
 - **Petição inicial de obrigação de fazer + indenização por danos morais** (uso indevido de imagem, vazamento, ofensa em rede social) com **tutela de urgência** para remoção.
