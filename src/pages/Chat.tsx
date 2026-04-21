@@ -118,12 +118,13 @@ const AGENT_SUGGESTIONS: Record<string, Array<{ q: string; icon: typeof Sparkles
     { q: "Diferença entre useMemo e useCallback no React.", icon: Sparkles },
     { q: "Me ensina padrões SOLID com exemplos.", icon: FileText },
   ],
-  "kera-sec": [
-    { q: "Explica OWASP Top 10 com exemplos práticos.", icon: Shield },
-    { q: "Como fazer hardening de servidor Linux?", icon: Lock },
-    { q: "Analisa esse log e identifica ameaças.", icon: FileSearch },
-    { q: "Roteiro de pentest para uma aplicação web.", icon: Bug },
-  ],
+   "kera-sec": [
+     { q: "Abrir o Kera Security NASA (Análise Senior).", icon: ShieldAlert },
+     { q: "Explica OWASP Top 10 com exemplos práticos.", icon: Shield },
+     { q: "Como fazer hardening de servidor Linux?", icon: Lock },
+     { q: "Analisa esse log e identifica ameaças.", icon: FileSearch },
+     { q: "Roteiro de pentest para uma aplicação web.", icon: Bug },
+   ],
   "kera-juridica": [
     { q: "Explica a Lei 14.133/21 em pontos-chave.", icon: Scale },
     { q: "Cláusulas obrigatórias num contrato de TI.", icon: ScrollText },
