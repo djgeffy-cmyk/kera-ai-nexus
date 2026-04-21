@@ -90,54 +90,6 @@ const Chat = () => {
   useEffect(() => {
     try { localStorage.removeItem("kera:voiceMode"); } catch {}
   }, []);
-  // Avatar 3D (boneca da Kera) — persiste preferência
-  const [avatar3D, setAvatar3D] = useState<boolean>(() => {
-    try { return localStorage.getItem("kera:avatar3D") === "1"; } catch { return false; }
-  });
-  useEffect(() => {
-    try { localStorage.setItem("kera:avatar3D", avatar3D ? "1" : "0"); } catch {}
-  }, [avatar3D]);
-  // VRM personalizado da Kera (salvo localmente em IndexedDB).
-  // null = ainda não carregou; "" = nenhum salvo; string = blob URL pronta.
-  const [customVrmUrl, setCustomVrmUrl] = useState<string | null>(null);
-  useEffect(() => {
-    let revoked: string | null = null;
-    getVRMObjectURL().then((url) => {
-      setCustomVrmUrl(url ?? "");
-      revoked = url;
-    });
-    return () => {
-      if (revoked) URL.revokeObjectURL(revoked);
-    };
-  }, []);
-  const vrmFileInputRef = useRef<HTMLInputElement>(null);
-  const handleVrmUpload = async (file: File) => {
-    if (!file.name.toLowerCase().endsWith(".vrm")) {
-      toast.error("Arquivo precisa ser .vrm (exportado do VRoid Studio).");
-      return;
-    }
-    if (file.size > 60 * 1024 * 1024) {
-      toast.error("VRM muito grande (máx 60 MB). Otimize no VRoid Studio.");
-      return;
-    }
-    try {
-      await saveVRM(file);
-      // Revoga URL antiga e cria nova
-      if (customVrmUrl) URL.revokeObjectURL(customVrmUrl);
-      const url = URL.createObjectURL(file);
-      setCustomVrmUrl(url);
-      toast.success(`Kera 3D atualizada com seu modelo (${(file.size / 1024 / 1024).toFixed(1)} MB)`);
-    } catch (e: any) {
-      toast.error("Falha ao salvar VRM: " + (e?.message || "erro desconhecido"));
-    }
-  };
-  const handleVrmReset = async () => {
-    if (!window.confirm("Voltar ao modelo padrão e remover seu VRM salvo?")) return;
-    await clearVRM();
-    if (customVrmUrl) URL.revokeObjectURL(customVrmUrl);
-    setCustomVrmUrl("");
-    toast.success("Modelo padrão restaurado");
-  };
   // Texto da última resposta — usado pelo avatar 3D pra detectar emoção e animar boca
   const lastAssistantTextRef = useRef<string>("");
   const [lastAssistantText, setLastAssistantText] = useState<string>("");
