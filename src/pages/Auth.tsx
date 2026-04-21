@@ -275,14 +275,22 @@ const Auth = () => {
         {!isUnlocked ? (
           <motion.div
             key="umbrella-trigger"
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 1.1, filter: "blur(10px)" }}
+            initial={{ opacity: 0, scale: 0.9, y: 20 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{
+              opacity: 0,
+              scale: 1.5,
+              y: -60,
+              filter: "blur(24px)",
+              transition: { duration: 0.7, ease: [0.4, 0, 0.2, 1] },
+            }}
+            transition={{ duration: 0.6, ease: "easeOut" }}
             className="relative z-20 flex flex-col items-center"
           >
             <button
               onClick={() => setIsUnlocked(true)}
-              className="group relative p-8 rounded-full bg-background/10 backdrop-blur-md border border-white/10 shadow-2xl hover:bg-background/20 transition-all duration-500"
+              aria-label="Abrir o guarda-chuva e revelar o login"
+              className="group relative p-8 rounded-full bg-background/10 backdrop-blur-md border border-white/10 shadow-2xl hover:bg-background/20 hover:shadow-glow hover:scale-105 active:scale-95 transition-all duration-500"
             >
               <motion.div
                 animate={{ 
@@ -293,7 +301,7 @@ const Auth = () => {
                   repeat: Infinity, 
                   ease: "easeInOut" 
                 }}
-                className="relative"
+                className="relative group-hover:scale-110 transition-transform duration-500"
               >
                 <Umbrella className="size-24 text-primary/80 group-hover:text-primary transition-colors duration-500" strokeWidth={1.5} />
                 <motion.div
@@ -336,9 +344,15 @@ const Auth = () => {
         ) : (
           <motion.div
             key="auth-card"
-            initial={{ opacity: 0, y: 20, scale: 0.95 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            transition={{ type: "spring", damping: 20, stiffness: 100 }}
+            initial={{ opacity: 0, y: 40, scale: 0.85, filter: "blur(12px)" }}
+            animate={{ opacity: 1, y: 0, scale: 1, filter: "blur(0px)" }}
+            transition={{
+              type: "spring",
+              damping: 22,
+              stiffness: 110,
+              delay: 0.15,
+              filter: { duration: 0.5, delay: 0.15 },
+            }}
           >
             <Card
               className="relative w-full max-w-sm p-5 sm:p-6 shadow-glow z-10 max-h-[calc(100vh-2rem)] overflow-y-auto scrollbar-thin rounded-2xl"
