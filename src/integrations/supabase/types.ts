@@ -113,6 +113,30 @@ export type Database = {
         }
         Relationships: []
       }
+      image_quota_usage: {
+        Row: {
+          count: number
+          id: string
+          updated_at: string
+          usage_date: string
+          user_id: string
+        }
+        Insert: {
+          count?: number
+          id?: string
+          updated_at?: string
+          usage_date?: string
+          user_id: string
+        }
+        Update: {
+          count?: number
+          id?: string
+          updated_at?: string
+          usage_date?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       ipm_endpoints: {
         Row: {
           auth_type: string
@@ -542,6 +566,7 @@ export type Database = {
           id: string
           onboarding_completed: boolean
           paywall_trial_count: number
+          plan_tier: string
           selected_agents: string[]
           updated_at: string
           user_id: string
@@ -553,6 +578,7 @@ export type Database = {
           id?: string
           onboarding_completed?: boolean
           paywall_trial_count?: number
+          plan_tier?: string
           selected_agents?: string[]
           updated_at?: string
           user_id: string
@@ -564,6 +590,7 @@ export type Database = {
           id?: string
           onboarding_completed?: boolean
           paywall_trial_count?: number
+          plan_tier?: string
           selected_agents?: string[]
           updated_at?: string
           user_id?: string
@@ -728,6 +755,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      consume_image_quota: { Args: { _user_id: string }; Returns: Json }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
