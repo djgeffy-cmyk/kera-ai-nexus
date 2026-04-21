@@ -1135,6 +1135,17 @@ Por favor, analise: há perda de pacote? jitter alto sugere instabilidade de rot
                 {PROVIDERS.map(p => (<SelectItem key={p.id} value={p.id} className="text-xs">{p.label}</SelectItem>))}
               </SelectContent>
             </Select>
+            {agentKey === "kera-sucessoes" && (
+              <Button
+                variant="ghost" size="icon"
+                onClick={() => setItcmdOpen(true)}
+                aria-label="Calculadora ITCMD/SC"
+                title="Calculadora ITCMD/SC (Lei 13.136/2004)"
+                className="text-yellow-500 hover:text-yellow-400 shrink-0 h-9 w-9"
+              >
+                <Calculator className="size-5" />
+              </Button>
+            )}
             <Button
               variant="ghost" size="icon"
               onClick={() => {
