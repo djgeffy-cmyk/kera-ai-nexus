@@ -380,13 +380,18 @@ const Auth = () => {
                 }}
                 className="relative group-hover:scale-110 transition-transform duration-500"
               >
-                <Umbrella className="size-24 text-primary/80 group-hover:text-primary transition-colors duration-500" strokeWidth={1.5} />
                 <motion.div
-                  className="absolute top-0 left-0 w-full h-full"
-                  animate={{ opacity: [0.2, 0.5, 0.2] }}
-                  transition={{ duration: 2, repeat: Infinity }}
+                  animate={{ rotate: 360 }}
+                  transition={{ duration: 30, repeat: Infinity, ease: "linear" }}
                 >
-                  <Umbrella className="size-24 text-primary blur-sm" strokeWidth={1.5} />
+                  <UmbrellaCorpLogo size={120} className="group-hover:drop-shadow-[0_0_24px_hsl(var(--primary))] transition-all duration-500" />
+                </motion.div>
+                <motion.div
+                  className="absolute inset-0 flex items-center justify-center pointer-events-none"
+                  animate={{ opacity: [0.3, 0.7, 0.3] }}
+                  transition={{ duration: 2.5, repeat: Infinity }}
+                >
+                  <UmbrellaCorpLogo size={120} className="blur-md opacity-60" />
                 </motion.div>
               </motion.div>
               
