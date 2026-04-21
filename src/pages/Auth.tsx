@@ -18,6 +18,7 @@ import {
   loginWithPasskey,
   registerPasskey,
   webauthnSupported,
+  isInIframe,
 } from "@/lib/webauthn";
 
 type Mode = "signin" | "signup" | "totp";
@@ -33,6 +34,8 @@ const Auth = () => {
   const [loading, setLoading] = useState(false);
   const [passkeyLoading, setPasskeyLoading] = useState(false);
   const [supportsPasskey] = useState(() => webauthnSupported());
+  const [inIframe] = useState(() => isInIframe());
+  const passkeyAvailable = supportsPasskey && !inIframe;
 
   // Refs pro parallax (movimento sutil via CSS vars — não re-renderiza React)
   const mainRef = useRef<HTMLElement | null>(null);
