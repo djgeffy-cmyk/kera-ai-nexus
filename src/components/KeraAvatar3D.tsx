@@ -252,7 +252,7 @@ export default function KeraAvatar3D({
   return (
     <div className={className} style={{ width: "100%", height: "100%" }}>
       <Canvas
-        camera={{ position: [0, 1.35, 1.6], fov: 28 }}
+        camera={{ position: [0, 1.3, 2.8], fov: 32 }}
         gl={{ antialias: true, alpha: true }}
         dpr={[1, 2]}
       >
@@ -270,7 +270,7 @@ export default function KeraAvatar3D({
         </Suspense>
         {interactive && (
           <OrbitControls
-            target={[0, 1.3, 0]}
+            target={[0, 1.1, 0]}
             enablePan={false}
             minDistance={0.8}
             maxDistance={3}
