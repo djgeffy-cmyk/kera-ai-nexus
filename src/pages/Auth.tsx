@@ -7,10 +7,11 @@ import { Label } from "@/components/ui/label";
 import { Card } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { toast } from "sonner";
-import { ShieldCheck, KeyRound, Mail, ScanFace, Eye, EyeOff, Sparkles, MousePointerClick } from "lucide-react";
+import { ShieldCheck, KeyRound, Mail, ScanFace, Eye, EyeOff, Sparkles, MousePointerClick, Volume2, VolumeX } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import keraAvatar from "@/assets/kera-avatar.png";
 import keraAvatarVideo from "@/assets/kera-avatar-rain.mp4.asset.json";
+import rainAmbientUrl from "@/assets/rain-ambient.mp3";
 import ParticlesOverlay from "@/components/ParticlesOverlay";
 import DemoKeraDialog from "@/components/DemoKeraDialog";
 import { assetUrl } from "@/lib/assetUrl";
@@ -40,6 +41,9 @@ const Auth = () => {
   const [inIframe] = useState(() => isInIframe());
   const [isUnlocked, setIsUnlocked] = useState(false);
   const [demoOpen, setDemoOpen] = useState(false);
+  const [audioMuted, setAudioMuted] = useState(false);
+  const [audioStarted, setAudioStarted] = useState(false);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
   const passkeyAvailable = supportsPasskey && !inIframe;
 
   useEffect(() => {
@@ -125,6 +129,38 @@ const Auth = () => {
       if (data.session) navigate("/", { replace: true });
     });
   }, [navigate]);
+
+  // Áudio ambiente de chuva: começa a tocar na primeira interação do usuário
+  // (autoplay policy do navegador exige gesture).
+  useEffect(() => {
+    if (audioStarted) return;
+    const tryStart = async () => {
+      const a = audioRef.current;
+      if (!a || audioStarted) return;
+      try {
+        a.volume = 0.35;
+        await a.play();
+        setAudioStarted(true);
+        cleanup();
+      } catch {
+        /* ignora — espera próxima interação */
+      }
+    };
+    const cleanup = () => {
+      window.removeEventListener("pointerdown", tryStart);
+      window.removeEventListener("keydown", tryStart);
+      window.removeEventListener("touchstart", tryStart);
+    };
+    window.addEventListener("pointerdown", tryStart);
+    window.addEventListener("keydown", tryStart);
+    window.addEventListener("touchstart", tryStart);
+    return cleanup;
+  }, [audioStarted]);
+
+  // Sincroniza mute com estado
+  useEffect(() => {
+    if (audioRef.current) audioRef.current.muted = audioMuted;
+  }, [audioMuted]);
 
   const checkAndChallengeMfa = async (): Promise<boolean> => {
     const { data: factors, error } = await supabase.auth.mfa.listFactors();
@@ -264,6 +300,26 @@ const Auth = () => {
       />
       <div aria-hidden className="absolute inset-0 bg-background/30" />
       <ParticlesOverlay />
+
+      {/* Áudio ambiente de chuva — começa após primeira interação */}
+      <audio
+        ref={audioRef}
+        src={rainAmbientUrl}
+        loop
+        preload="auto"
+        aria-hidden
+      />
+
+      {/* Toggle mute discreto — canto superior direito */}
+      <button
+        type="button"
+        onClick={() => setAudioMuted((m) => !m)}
+        aria-label={audioMuted ? "Ativar som da chuva" : "Silenciar chuva"}
+        title={audioMuted ? "Ativar som da chuva" : "Silenciar chuva"}
+        className="fixed top-4 right-4 z-40 size-10 rounded-full bg-background/40 backdrop-blur-md border border-white/10 flex items-center justify-center text-primary/80 hover:text-primary hover:bg-background/60 hover:scale-105 active:scale-95 transition-all duration-300 shadow-soft"
+      >
+        {audioMuted ? <VolumeX className="size-4" /> : <Volume2 className="size-4" />}
+      </button>
 
       <div
         aria-hidden
