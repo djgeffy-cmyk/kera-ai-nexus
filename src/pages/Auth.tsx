@@ -127,11 +127,6 @@ const Auth = () => {
     });
   }, [navigate]);
 
-  const isEmailAllowed = (raw: string) => {
-    const e = raw.trim().toLowerCase();
-    return e === "dj.geffy@gmail.com" || e.endsWith("@guaramirim.sc.gov.br");
-  };
-
   const checkAndChallengeMfa = async (): Promise<boolean> => {
     // Verifica se o usuário tem fator TOTP verificado
     const { data: factors, error } = await supabase.auth.mfa.listFactors();
@@ -151,10 +146,6 @@ const Auth = () => {
 
   const handleAuth = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (mode === "signup" && !isEmailAllowed(email)) {
-      toast.error("Cadastro permitido apenas para emails @guaramirim.sc.gov.br.");
-      return;
-    }
     // Validação NASA-grade
     const schema = mode === "signup" ? MissionCriticalSchema.authSignup : MissionCriticalSchema.authSignin;
     const parsed = schema.safeParse({ email, password });
