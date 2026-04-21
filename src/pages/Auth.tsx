@@ -184,6 +184,36 @@ const Auth = () => {
     }
   };
 
+  const handlePasskeyLogin = async () => {
+    if (!email.trim()) {
+      toast.error("Digite seu email primeiro.");
+      return;
+    }
+    setPasskeyLoading(true);
+    try {
+      await loginWithPasskey(email.trim().toLowerCase());
+      toast.success("Acesso liberado pelo Face ID!");
+      navigate("/", { replace: true });
+    } catch (err: any) {
+      toast.error(err.message || "Falha no Face ID");
+    } finally {
+      setPasskeyLoading(false);
+    }
+  };
+
+  const handlePasskeyRegister = async () => {
+    setPasskeyLoading(true);
+    try {
+      await registerPasskey();
+      toast.success("Face ID cadastrado! Da próxima vez, use o botão Face ID.");
+      navigate("/", { replace: true });
+    } catch (err: any) {
+      toast.error(err.message || "Falha ao cadastrar Face ID");
+    } finally {
+      setPasskeyLoading(false);
+    }
+  };
+
   const submitReset = async () => {
     const e = resetEmail.trim().toLowerCase();
     if (!e || !e.includes("@")) {
