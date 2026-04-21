@@ -12,7 +12,15 @@ execSync("npm run build", {
   env: { ...process.env, ELECTRON_BUILD: "true" },
 });
 
-const platform = process.env.BUILD_PLATFORM === "win32" ? "--win" : "--linux AppImage";
+let platform;
+if (process.env.BUILD_PLATFORM === "win32") {
+  platform = "--win";
+} else if (process.env.BUILD_PLATFORM === "darwin") {
+  const arch = process.env.BUILD_ARCH === "arm64" ? "--arm64" : "--x64";
+  platform = `--mac zip ${arch}`;
+} else {
+  platform = "--linux AppImage";
+}
 console.log(`[2/2] electron-builder (${platform})...`);
 execSync(`npx electron-builder ${platform} --config electron-builder.config.cjs --publish never`, {
   stdio: "inherit",
@@ -42,10 +50,15 @@ async function zipArtifacts() {
     return;
   }
 
-  const target =
-    process.env.BUILD_PLATFORM === "win32"
-      ? "KeraDesktop-win32-x64.zip"
-      : "KeraDesktop-linux-x64.zip";
+  let target;
+  if (process.env.BUILD_PLATFORM === "win32") {
+    target = "KeraDesktop-win32-x64.zip";
+  } else if (process.env.BUILD_PLATFORM === "darwin") {
+    const a = process.env.BUILD_ARCH === "arm64" ? "arm64" : "x64";
+    target = `KeraDesktop-darwin-${a}.zip`;
+  } else {
+    target = "KeraDesktop-linux-x64.zip";
+  }
   const targetPath = path.join(outDir, target);
 
   // Remove ZIPs antigos

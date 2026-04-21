@@ -62,3 +62,47 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GH_OWNER: ${{ github.repository_owner }}
           GH_REPO: ${{ github.event.repository.name }}
+
+  release-mac-x64:
+    runs-on: macos-13
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: 'npm'
+      - name: Install
+        run: npm install --no-audit --no-fund
+      - name: Vite build
+        run: npm run build
+        env:
+          ELECTRON_BUILD: 'true'
+      - name: Build & publish macOS Intel (.dmg + .zip)
+        run: npx electron-builder --mac dmg zip --x64 --config electron-builder.config.cjs --publish always
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_OWNER: ${{ github.repository_owner }}
+          GH_REPO: ${{ github.event.repository.name }}
+          CSC_IDENTITY_AUTO_DISCOVERY: 'false'
+
+  release-mac-arm64:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: 'npm'
+      - name: Install
+        run: npm install --no-audit --no-fund
+      - name: Vite build
+        run: npm run build
+        env:
+          ELECTRON_BUILD: 'true'
+      - name: Build & publish macOS Apple Silicon (.dmg + .zip)
+        run: npx electron-builder --mac dmg zip --arm64 --config electron-builder.config.cjs --publish always
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_OWNER: ${{ github.repository_owner }}
+          GH_REPO: ${{ github.event.repository.name }}
+          CSC_IDENTITY_AUTO_DISCOVERY: 'false'
