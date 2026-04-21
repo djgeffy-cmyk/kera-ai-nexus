@@ -45,16 +45,18 @@ const Footer = () => {
         rel="noopener noreferrer"
         aria-label="Acessar Kera AI Space in Cloud"
         title="Kera AI · Space in Cloud — Soluções em Nuvem"
-        className="fixed z-20 md:z-40 opacity-80 md:opacity-95 hover:opacity-100 hover:scale-105 transition-all pointer-events-auto"
+        className="fixed z-40 opacity-90 md:opacity-95 hover:opacity-100 hover:scale-105 transition-all pointer-events-auto"
         style={{
-          bottom: "calc(env(safe-area-inset-bottom, 0px) + 4rem)",
+          position: "fixed",
+          bottom: "calc(env(safe-area-inset-bottom, 0px) + 3.5rem)",
           right: "calc(env(safe-area-inset-right, 0px) + 0.5rem)",
+          willChange: "transform",
         }}
       >
         <img
           src={keraSpaceLogo}
           alt="Kera AI Space in Cloud"
-          className="h-10 md:h-36 w-auto max-w-[35vw] md:max-w-none object-contain bg-transparent drop-shadow-[0_6px_18px_rgba(0,0,0,0.7)]"
+          className="h-12 md:h-36 w-auto max-w-[30vw] md:max-w-none object-contain bg-transparent drop-shadow-[0_6px_18px_rgba(0,0,0,0.7)]"
           loading="lazy"
           decoding="async"
           style={{ background: "transparent" }}
