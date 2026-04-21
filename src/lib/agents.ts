@@ -706,3 +706,24 @@ export const DEFAULT_AGENT_KEY = "kera";
 export function getBuiltinAgent(key: string): BuiltinAgent | undefined {
   return BUILTIN_AGENTS.find(a => a.key === key);
 }
+
+/**
+ * Agentes de uso restrito — aparecem APENAS para admin ou usuários
+ * com email da Prefeitura de Guaramirim (@guaramirim.sc.gov.br).
+ * Para os demais usuários ficam totalmente ocultos (não aparecem
+ * na sidebar, no onboarding, nem na página de agentes).
+ */
+export const RESTRICTED_AGENT_KEYS = new Set<string>(["kera-sentinela"]);
+
+export const GUARAMIRIM_EMAIL_DOMAIN = "@guaramirim.sc.gov.br";
+
+/** Decide se o usuário pode VER (não só usar) um agente builtin. */
+export function canSeeAgent(
+  agentKey: string,
+  ctx: { isAdmin: boolean; email?: string | null },
+): boolean {
+  if (!RESTRICTED_AGENT_KEYS.has(agentKey)) return true;
+  if (ctx.isAdmin) return true;
+  const e = (ctx.email ?? "").trim().toLowerCase();
+  return e.endsWith(GUARAMIRIM_EMAIL_DOMAIN);
+}
