@@ -1058,6 +1058,15 @@ Por favor, analise: há perda de pacote? jitter alto sugere instabilidade de rot
             <Monitor className="size-4 mr-2" /> Kera Desktop (PC)
           </Button>
         )}
+        {spaceincloudActive && (
+          <Button
+            variant="ghost"
+            onClick={() => window.open("https://app.spaceincloud.com.br/kera", "_blank", "noopener,noreferrer")}
+            className="w-full justify-start text-fuchsia-300 hover:text-fuchsia-200"
+          >
+            <Dumbbell className="size-4 mr-2" /> App de treino (SpaceInCloud)
+          </Button>
+        )}
         <Button variant="ghost" onClick={() => navigate("/security")} className="w-full justify-start text-muted-foreground hover:text-foreground">
           <ShieldCheck className="size-4 mr-2" /> Segurança (2FA)
         </Button>
