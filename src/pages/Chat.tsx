@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -89,7 +89,6 @@ import { useAlwaysListening } from "@/hooks/useAlwaysListening";
 import { fileToAttachment, buildUserContent, type Attachment } from "@/lib/attachments";
 import { getAvailableDesktopTools, executeDesktopTool } from "@/lib/keraTools";
 import { isImageRequest, extractImagePrompt } from "@/lib/imageDetect";
-import { exportConversationToPdf } from "@/lib/exportPdf";
 import { VoiceStatusIndicator } from "@/components/VoiceStatusIndicator";
 import { useTheme } from "@/hooks/useTheme";
 import { GalleryDialog } from "@/components/GalleryDialog";
