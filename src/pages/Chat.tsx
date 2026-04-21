@@ -1519,6 +1519,16 @@ Por favor, analise: há perda de pacote? jitter alto sugere instabilidade de rot
           toast.success(`Cálculo enviado — ITCMD total estimado: ${r.total.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}`);
         }}
       />
+      <DanoMoralCalculator
+        open={danoMoralOpen}
+        onOpenChange={setDanoMoralOpen}
+        onSendToChat={(r: DanoMoralResult) => {
+          if (agentKey !== "kera-personalidade") setAgentKey("kera-personalidade");
+          setInput(r.markdown);
+          setTimeout(() => sendText(r.markdown), 80);
+          toast.success(`Cálculo enviado — Dano moral sugerido: ${r.valorFinal.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}`);
+        }}
+      />
     </div>
   );
 };
