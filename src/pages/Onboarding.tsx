@@ -1,9 +1,9 @@
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Check, Sparkles } from "lucide-react";
+import { ArrowLeft, Check, Sparkles } from "lucide-react";
 import { toast } from "sonner";
 import { BUILTIN_AGENTS } from "@/lib/agents";
 import keraLogo from "@/assets/kera-logo.png";
@@ -15,12 +15,14 @@ import keraLogo from "@/assets/kera-logo.png";
  */
 const Onboarding = () => {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const isEditing = searchParams.get("edit") === "1";
   const [selected, setSelected] = useState<Set<string>>(new Set(["kera"]));
   const [saving, setSaving] = useState(false);
   const [userId, setUserId] = useState<string | null>(null);
 
   useEffect(() => {
-    document.title = "Kera AI — Escolha sua área";
+    document.title = isEditing ? "Kera AI — Minhas áreas" : "Kera AI — Escolha sua área";
     (async () => {
       const { data } = await supabase.auth.getUser();
       if (!data.user) {
@@ -28,17 +30,26 @@ const Onboarding = () => {
         return;
       }
       setUserId(data.user.id);
-      // se já completou, manda pro chat
       const { data: profile } = await supabase
         .from("profiles")
         .select("onboarding_completed, selected_agents")
         .eq("user_id", data.user.id)
         .maybeSingle();
-      if (profile?.onboarding_completed) {
+
+      // Se já completou e NÃO está editando, manda pro chat
+      if (profile?.onboarding_completed && !isEditing) {
         navigate("/", { replace: true });
+        return;
+      }
+
+      // Se está editando, pré-seleciona o que ele já tinha
+      if (isEditing && profile?.selected_agents) {
+        const current = new Set<string>(profile.selected_agents as string[]);
+        current.add("kera"); // Kera sempre marcada
+        setSelected(current);
       }
     })();
-  }, [navigate]);
+  }, [navigate, isEditing]);
 
   const toggle = (key: string) => {
     if (key === "kera") return; // sempre marcada
@@ -66,7 +77,11 @@ const Onboarding = () => {
       toast.error("Não consegui salvar sua escolha: " + error.message);
       return;
     }
-    toast.success(`${list.length} ${list.length === 1 ? "área liberada" : "áreas liberadas"}!`);
+    toast.success(
+      isEditing
+        ? "Suas áreas foram atualizadas!"
+        : `${list.length} ${list.length === 1 ? "área liberada" : "áreas liberadas"}!`
+    );
     navigate("/", { replace: true });
   };
 
@@ -81,13 +96,24 @@ const Onboarding = () => {
     <div className="min-h-screen bg-background relative overflow-hidden">
       <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-primary/10 pointer-events-none" />
       <main className="relative max-w-5xl mx-auto px-4 py-8 md:py-12">
+        {isEditing && (
+          <button
+            onClick={() => navigate("/")}
+            className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground mb-4 transition-colors"
+          >
+            <ArrowLeft className="size-4" />
+            Voltar ao chat
+          </button>
+        )}
         <header className="text-center mb-8 md:mb-10">
           <img src={keraLogo} alt="Kera AI" className="h-10 md:h-14 mx-auto mb-4" />
           <h1 className="font-display text-2xl md:text-4xl text-glow mb-2">
-            Bem-vindo à Kera
+            {isEditing ? "Suas áreas liberadas" : "Bem-vindo à Kera"}
           </h1>
           <p className="text-muted-foreground text-sm md:text-base max-w-xl mx-auto">
-            Escolha as áreas que você quer desbloquear agora. Você pode liberar mais a qualquer momento — basta pedir pra Kera.
+            {isEditing
+              ? "Marque ou desmarque áreas a qualquer momento. As alterações são salvas ao confirmar."
+              : "Escolha as áreas que você quer desbloquear agora. Você pode liberar mais a qualquer momento."}
           </p>
           <p className="text-xs text-muted-foreground/70 mt-2">
             <Sparkles className="inline size-3 mr-1 text-primary" />
@@ -149,7 +175,7 @@ const Onboarding = () => {
             size="lg"
             className="bg-gradient-cyber text-primary-foreground shadow-glow w-full sm:w-auto"
           >
-            {saving ? "Salvando..." : "Liberar e continuar"}
+            {saving ? "Salvando..." : isEditing ? "Salvar alterações" : "Liberar e continuar"}
           </Button>
         </div>
       </main>
