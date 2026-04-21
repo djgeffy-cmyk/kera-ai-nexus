@@ -50,6 +50,42 @@ export type Database = {
         }
         Relationships: []
       }
+      analyses: {
+        Row: {
+          code: string
+          corrected_code: string | null
+          created_at: string
+          findings: Json
+          id: string
+          language: string
+          overall_severity: string | null
+          recommendations: string[] | null
+          user_id: string
+        }
+        Insert: {
+          code: string
+          corrected_code?: string | null
+          created_at?: string
+          findings?: Json
+          id?: string
+          language: string
+          overall_severity?: string | null
+          recommendations?: string[] | null
+          user_id: string
+        }
+        Update: {
+          code?: string
+          corrected_code?: string | null
+          created_at?: string
+          findings?: Json
+          id?: string
+          language?: string
+          overall_severity?: string | null
+          recommendations?: string[] | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       conversations: {
         Row: {
           agent_key: string

@@ -7,6 +7,7 @@ import Auth from "./pages/Auth.tsx";
 import Admin from "./pages/Admin.tsx";
 import Agents from "./pages/Agents.tsx";
 import Security from "./pages/Security.tsx";
+ import KeraSecurityNASA from "./pages/KeraSecurityNASA.tsx";
 import Transparencia from "./pages/Transparencia.tsx";
 import TransparenciaHistorico from "./pages/TransparenciaHistorico.tsx";
 import NotFound from "./pages/NotFound.tsx";
@@ -30,6 +31,7 @@ const App = () => (
           <Route path="/admin" element={<ProtectedRoute requireAdmin><Admin /></ProtectedRoute>} />
           <Route path="/agents" element={<ProtectedRoute><Agents /></ProtectedRoute>} />
           <Route path="/security" element={<ProtectedRoute><Security /></ProtectedRoute>} />
+          <Route path="/kera-security-nasa" element={<ProtectedRoute><KeraSecurityNASA /></ProtectedRoute>} />
           <Route path="/transparencia" element={<ProtectedRoute><Transparencia /></ProtectedRoute>} />
           <Route path="/transparencia/historico" element={<ProtectedRoute><TransparenciaHistorico /></ProtectedRoute>} />
           <Route path="/desktop" element={<ProtectedRoute><KeraDesktopPage /></ProtectedRoute>} />
