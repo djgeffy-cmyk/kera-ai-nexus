@@ -391,9 +391,27 @@ const Auth = () => {
               </div>
               <div>
                 <Label htmlFor="password">Senha</Label>
-                <Input id="password" type="password" required minLength={6} value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  className="mt-1 bg-input/50 border-border focus-visible:ring-primary" />
+                <div className="relative mt-1">
+                  <Input
+                    id="password"
+                    type={showPassword ? "text" : "password"}
+                    required
+                    minLength={6}
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    className="bg-input/50 border-border focus-visible:ring-primary pr-10"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(v => !v)}
+                    aria-label={showPassword ? "Ocultar senha" : "Mostrar senha"}
+                    aria-pressed={showPassword}
+                    tabIndex={-1}
+                    className="absolute inset-y-0 right-0 flex items-center justify-center w-10 text-muted-foreground hover:text-primary transition-colors"
+                  >
+                    {showPassword ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
+                  </button>
+                </div>
                 {mode === "signup" && <PasswordStrengthMeter password={password} />}
               </div>
               <Button type="submit" disabled={loading}
