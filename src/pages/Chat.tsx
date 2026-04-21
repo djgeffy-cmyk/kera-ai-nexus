@@ -506,9 +506,20 @@ const Chat = () => {
   };
 
   const sendText = async (text?: string) => {
-    const rawText = (text ?? input).trim();
+    let rawText = (text ?? input).trim();
     const hasAttach = attachments.length > 0;
     if ((!rawText && !hasAttach) || streaming || !userId) return;
+
+    // Validação NASA-grade — limite anti-DoS de 16k caracteres
+    if (rawText) {
+      const { MissionCriticalSchema } = await import("@/lib/missionCriticalSchemas");
+      const parsed = MissionCriticalSchema.chat.safeParse({ message: rawText });
+      if (!parsed.success) {
+        toast.error(parsed.error.issues[0]?.message || "Mensagem inválida");
+        return;
+      }
+      rawText = parsed.data.message;
+    }
 
     // 🎨 Detecção de pedido de geração de imagem (sem anexos)
     if (rawText && !hasAttach && isImageRequest(rawText)) {
