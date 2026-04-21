@@ -960,6 +960,9 @@ Por favor, analise: há perda de pacote? jitter alto sugere instabilidade de rot
             <Monitor className="size-4 mr-2" /> Kera Desktop (PC)
           </Button>
         )}
+         <Button variant="ghost" onClick={() => navigate("/kera-security-nasa")} className="w-full justify-start text-primary hover:text-primary animate-pulse">
+           <Shield className="size-4 mr-2" /> Kera Security NASA
+         </Button>
         <Button variant="ghost" onClick={() => navigate("/security")} className="w-full justify-start text-muted-foreground hover:text-foreground">
           <ShieldCheck className="size-4 mr-2" /> Segurança (2FA)
         </Button>
