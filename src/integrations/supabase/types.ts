@@ -755,6 +755,14 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      admin_image_usage_daily: {
+        Args: { _days?: number }
+        Returns: {
+          total_images: number
+          unique_users: number
+          usage_date: string
+        }[]
+      }
       admin_list_users_usage: {
         Args: never
         Returns: {

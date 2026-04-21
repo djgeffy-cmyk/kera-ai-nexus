@@ -6,6 +6,15 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ArrowLeft, ImageIcon, Users, TrendingUp, DollarSign, RefreshCw } from "lucide-react";
 import { toast } from "sonner";
+import {
+  ResponsiveContainer,
+  AreaChart,
+  Area,
+  XAxis,
+  YAxis,
+  Tooltip,
+  CartesianGrid,
+} from "recharts";
 
 type UsageRow = {
   user_id: string;
@@ -17,6 +26,12 @@ type UsageRow = {
   images_today: number;
   images_month: number;
   created_at: string;
+};
+
+type DailyRow = {
+  usage_date: string;
+  total_images: number;
+  unique_users: number;
 };
 
 const PLAN_LABEL: Record<string, string> = {
@@ -40,18 +55,30 @@ const COST_PER_IMAGE_BRL = 0.15;
 export default function AdminUso() {
   const navigate = useNavigate();
   const [rows, setRows] = useState<UsageRow[]>([]);
+  const [daily, setDaily] = useState<DailyRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [savingUserId, setSavingUserId] = useState<string | null>(null);
 
   const load = async () => {
     setLoading(true);
-    const { data, error } = await supabase.rpc("admin_list_users_usage");
-    if (error) {
-      toast.error(error.message);
+    const [usageRes, dailyRes] = await Promise.all([
+      supabase.rpc("admin_list_users_usage"),
+      supabase.rpc("admin_image_usage_daily", { _days: 30 }),
+    ]);
+    if (usageRes.error) {
+      toast.error(usageRes.error.message);
       setLoading(false);
       return;
     }
-    setRows((data || []) as UsageRow[]);
+    if (dailyRes.error) {
+      toast.error(dailyRes.error.message);
+    }
+    setRows((usageRes.data || []) as UsageRow[]);
+    setDaily(((dailyRes.data || []) as any[]).map((d) => ({
+      usage_date: d.usage_date,
+      total_images: Number(d.total_images) || 0,
+      unique_users: Number(d.unique_users) || 0,
+    })));
     setLoading(false);
   };
 
@@ -158,6 +185,82 @@ export default function AdminUso() {
             </CardContent>
           </Card>
         </div>
+
+        {/* Gráfico — últimos 30 dias */}
+        <Card className="mb-8">
+          <CardHeader>
+            <CardTitle className="text-lg">Uso de imagens — últimos 30 dias</CardTitle>
+          </CardHeader>
+          <CardContent>
+            {loading ? (
+              <div className="text-center text-muted-foreground py-12">Carregando…</div>
+            ) : daily.length === 0 ? (
+              <div className="text-center text-muted-foreground py-12">Sem dados ainda.</div>
+            ) : (
+              <div className="h-64 w-full">
+                <ResponsiveContainer width="100%" height="100%">
+                  <AreaChart data={daily} margin={{ top: 10, right: 16, left: 0, bottom: 0 }}>
+                    <defs>
+                      <linearGradient id="imgFill" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="0%" stopColor="hsl(var(--primary))" stopOpacity={0.5} />
+                        <stop offset="100%" stopColor="hsl(var(--primary))" stopOpacity={0} />
+                      </linearGradient>
+                    </defs>
+                    <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" opacity={0.4} />
+                    <XAxis
+                      dataKey="usage_date"
+                      tickFormatter={(v) => {
+                        const d = new Date(v + "T00:00:00");
+                        return `${String(d.getDate()).padStart(2, "0")}/${String(d.getMonth() + 1).padStart(2, "0")}`;
+                      }}
+                      stroke="hsl(var(--muted-foreground))"
+                      fontSize={11}
+                      tickMargin={8}
+                      minTickGap={20}
+                    />
+                    <YAxis
+                      stroke="hsl(var(--muted-foreground))"
+                      fontSize={11}
+                      allowDecimals={false}
+                      width={32}
+                    />
+                    <Tooltip
+                      contentStyle={{
+                        background: "hsl(var(--card))",
+                        border: "1px solid hsl(var(--border))",
+                        borderRadius: 8,
+                        fontSize: 12,
+                      }}
+                      labelFormatter={(v) => {
+                        const d = new Date(v + "T00:00:00");
+                        return d.toLocaleDateString("pt-BR", { day: "2-digit", month: "long" });
+                      }}
+                      formatter={(value: any, name: string) => [
+                        value,
+                        name === "total_images" ? "Imagens" : "Usuários únicos",
+                      ]}
+                    />
+                    <Area
+                      type="monotone"
+                      dataKey="total_images"
+                      stroke="hsl(var(--primary))"
+                      strokeWidth={2}
+                      fill="url(#imgFill)"
+                    />
+                    <Area
+                      type="monotone"
+                      dataKey="unique_users"
+                      stroke="hsl(var(--muted-foreground))"
+                      strokeWidth={1.5}
+                      strokeDasharray="4 4"
+                      fill="transparent"
+                    />
+                  </AreaChart>
+                </ResponsiveContainer>
+              </div>
+            )}
+          </CardContent>
+        </Card>
 
         {/* Ranking */}
         <Card>
