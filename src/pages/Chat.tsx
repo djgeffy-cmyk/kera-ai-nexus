@@ -84,6 +84,7 @@ import { assetUrl } from "@/lib/assetUrl";
 import { MessageBubble, type ChatMessage } from "@/components/chat/MessageBubble";
 import { PROVIDERS, getPreferredProvider, setPreferredProvider, type ProviderId } from "@/lib/providers";
 import { BUILTIN_AGENTS, getBuiltinAgent, DEFAULT_AGENT_KEY } from "@/lib/agents";
+import { useUserAccess } from "@/hooks/useUserAccess";
 import { useVoice } from "@/hooks/useVoice";
 import { useAlwaysListening } from "@/hooks/useAlwaysListening";
 import { fileToAttachment, buildUserContent, type Attachment } from "@/lib/attachments";
