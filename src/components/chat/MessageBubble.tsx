@@ -21,22 +21,25 @@ const CodeBlock = ({ inline, className, children, ...props }: any) => {
     setTimeout(() => setCopied(false), 2000);
   };
 
-  return (
-    <div className="relative group my-3 rounded-lg overflow-hidden border border-border bg-muted/50">
-      <button
-        onClick={handleCopy}
-        className="absolute top-2 right-2 z-10 flex items-center gap-1 px-2 py-1 rounded-md text-xs bg-background/80 backdrop-blur border border-border text-muted-foreground hover:text-primary hover:border-primary/50 transition-colors opacity-0 group-hover:opacity-100 focus:opacity-100"
-        title="Copiar código"
-        aria-label="Copiar código"
-      >
-        {copied ? <Check className="size-3.5 text-green-500" /> : <Copy className="size-3.5" />}
-        {copied ? "Copiado" : "Copiar"}
-      </button>
-      <pre className="overflow-x-auto p-3 pr-20 text-[13px] leading-relaxed">
-        <code className={className} {...props}>{children}</code>
-      </pre>
-    </div>
-  );
+   return (
+     <div className="relative group my-4 rounded-xl overflow-hidden border border-border/40 bg-card/40 backdrop-blur-sm shadow-sm transition-all duration-300 hover:shadow-md hover:border-border/60">
+       <div className="flex items-center justify-between px-4 py-2 border-b border-border/30 bg-muted/30">
+         <span className="text-[11px] font-mono text-muted-foreground uppercase tracking-wider">{className?.replace('language-', '') || 'code'}</span>
+         <button
+           onClick={handleCopy}
+           className="flex items-center gap-1.5 px-2 py-1 rounded-md text-[11px] font-medium text-muted-foreground hover:text-primary hover:bg-primary/5 transition-all active:scale-95"
+           title="Copiar código"
+           aria-label="Copiar código"
+         >
+           {copied ? <Check className="size-3.5 text-emerald-400" /> : <Copy className="size-3.5" />}
+           {copied ? "Copiado" : "Copiar"}
+         </button>
+       </div>
+       <pre className="overflow-x-auto p-4 pr-12 text-[13px] leading-relaxed scrollbar-thin">
+         <code className={className} {...props}>{children}</code>
+       </pre>
+     </div>
+   );
 };
 import keraAvatar from "@/assets/kera-avatar.png";
 import { User, FileText, Volume2, Square, Sparkles, ArrowRight, Copy, Check } from "lucide-react";
@@ -82,13 +85,15 @@ const renderUserContent = (content: string | ContentPart[]) => {
         const name = parts[i];
         const preview = (parts[i + 1] || "").slice(0, 80);
         elements.push(
-          <div key={`f${i}`} className="mt-2 flex items-center gap-2 px-3 py-2 rounded-lg bg-background/50 border border-border text-xs">
-            <FileText className="size-4 text-primary shrink-0" />
-            <div className="min-w-0">
-              <p className="font-medium truncate">{name}</p>
-              <p className="text-muted-foreground truncate">{preview}…</p>
-            </div>
-          </div>
+     <div key={`f${i}`} className="mt-2 flex items-center gap-3 px-4 py-2.5 rounded-xl bg-background/40 backdrop-blur-sm border border-border/40 text-xs hover:border-primary/20 transition-colors group cursor-default">
+       <div className="size-8 rounded-lg bg-primary/10 flex items-center justify-center shrink-0 group-hover:bg-primary/20 transition-colors">
+         <FileText className="size-4.5 text-primary" />
+       </div>
+       <div className="min-w-0">
+         <p className="font-semibold text-foreground truncate">{name}</p>
+         <p className="text-muted-foreground truncate opacity-70 italic font-mono">{preview}…</p>
+       </div>
+     </div>
         );
       }
     }
@@ -141,80 +146,92 @@ export const MessageBubble = ({
     setTimeout(() => setCopied(false), 2000);
   };
 
-  return (
-    <div className={`flex gap-3 ${isUser ? "flex-row-reverse" : ""} animate-in fade-in slide-in-from-bottom-2 duration-300`}>
-      <div className={`shrink-0 size-10 rounded-full overflow-hidden border ${isUser ? "border-border bg-secondary flex items-center justify-center" : "border-primary/50 shadow-glow bg-background ring-2 ring-primary/20"}`}>
-        {isUser ? (
-          <User className="size-5 text-muted-foreground" />
-        ) : (
-          <img
-            src={keraAvatar}
-            alt="Kera"
-            className="size-full object-cover object-center scale-[1.35] origin-center"
-          />
-        )}
-      </div>
-      <div className={`max-w-[85%] md:max-w-[75%] min-w-0 rounded-2xl px-4 py-3 text-[15px] leading-relaxed break-words [overflow-wrap:anywhere] ${
-        isUser
-          ? "bg-secondary text-foreground rounded-tr-sm"
-          : "panel border border-primary/15 rounded-tl-sm prose-kera"
-      }`}>
-        {isUser ? (
-          renderUserContent(msg.content)
-        ) : (
-          <>
-            <ReactMarkdown remarkPlugins={[remarkGfm]} components={{ code: CodeBlock }}>{plainText || ""}</ReactMarkdown>
-            {streaming && <span className="inline-block w-2 h-4 bg-primary ml-1 align-middle animate-blink" />}
-            {shouldOfferSwitch && (
-              <div className="mt-3 flex items-center gap-2 px-3 py-2 rounded-lg bg-primary/10 border border-primary/30">
-                <Sparkles className="size-4 text-primary shrink-0" />
-                <span className="text-xs text-muted-foreground flex-1 min-w-0">
-                  Quer continuar essa conversa com a Kera principal?
-                </span>
-                <Button
-                  size="sm"
-                  variant="default"
-                  className="h-7 px-2 text-xs shrink-0"
-                  onClick={onSwitchToKera}
-                >
-                  Trocar <ArrowRight className="size-3 ml-1" />
-                </Button>
-              </div>
-            )}
-            {!streaming && plainText.trim() && (
-              <div className="mt-2 -mb-1 flex justify-end items-center gap-1">
-                <Button
-                  size="sm"
-                  variant="ghost"
-                  className="h-7 px-2 text-xs text-muted-foreground hover:text-primary"
-                  onClick={handleCopy}
-                  title="Copiar resposta"
-                >
-                  {copied ? <Check className="size-3.5 mr-1 text-green-500" /> : <Copy className="size-3.5 mr-1" />}
-                  {copied ? "Copiado" : "Copiar"}
-                </Button>
-                
-                {onSpeak && (
-                  <Button
-                    size="sm"
-                    variant="ghost"
-                    className="h-7 px-2 text-xs text-muted-foreground hover:text-primary"
-                    onClick={() => {
-                      if (isSpeaking) onStopSpeak?.();
-                      else onSpeak(plainText.replace(/```[\s\S]*?```/g, "(bloco de código)").replace(/[#*_`>]/g, ""));
-                    }}
-                    aria-label={isSpeaking ? "Parar áudio" : "Ouvir resposta"}
-                    title={isSpeaking ? "Parar" : "Ouvir com voz da Kera"}
-                  >
-                    {isSpeaking ? <Square className="size-3.5 mr-1" /> : <Volume2 className="size-3.5 mr-1" />}
-                    {isSpeaking ? "Parar" : "Ouvir"}
-                  </Button>
-                )}
-              </div>
-            )}
-          </>
-        )}
-      </div>
-    </div>
-  );
+   return (
+     <div className={`flex gap-3 w-full group/msg ${isUser ? "flex-row-reverse" : "flex-row"} animate-in fade-in slide-in-from-bottom-3 duration-500 ease-out`}>
+       <div className={`shrink-0 size-10 rounded-xl overflow-hidden border flex items-center justify-center transition-all duration-300 ${
+         isUser 
+           ? "border-border bg-secondary shadow-sm" 
+           : "border-primary/30 shadow-glow bg-card ring-1 ring-primary/10"
+       }`}>
+         {isUser ? (
+           <User className="size-5 text-muted-foreground" />
+         ) : (
+           <img
+             src={keraAvatar}
+             alt="Kera"
+             className="size-full object-cover object-center scale-[1.3] transition-transform duration-500 group-hover/msg:scale-[1.4]"
+           />
+         )}
+       </div>
+       <div className={`max-w-[88%] md:max-w-[80%] min-w-0 rounded-2xl px-5 py-4 text-[15px] leading-relaxed shadow-sm transition-all duration-300 ${
+         isUser
+           ? "bg-primary/5 text-foreground border border-primary/10 rounded-tr-sm hover:bg-primary/10"
+           : "panel border border-white/5 rounded-tl-sm prose-kera hover:shadow-md hover:border-white/10"
+       }`}>
+         {isUser ? (
+           <div className="font-medium">{renderUserContent(msg.content)}</div>
+         ) : (
+           <>
+             <ReactMarkdown remarkPlugins={[remarkGfm]} components={{ code: CodeBlock }}>{plainText || ""}</ReactMarkdown>
+             {streaming && <span className="inline-block w-2.5 h-5 bg-primary/80 rounded-sm ml-1.5 align-middle animate-blink" />}
+             
+             {shouldOfferSwitch && (
+               <div className="mt-4 flex items-center gap-3 px-4 py-3 rounded-xl bg-primary/5 border border-primary/20 animate-in zoom-in-95 duration-300">
+                 <div className="size-8 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
+                   <Sparkles className="size-4 text-primary" />
+                 </div>
+                 <span className="text-[13px] font-medium text-foreground/80 flex-1 min-w-0">
+                   Kera principal pode ajudar mais?
+                 </span>
+                 <Button
+                   size="sm"
+                   variant="default"
+                   className="h-8 px-3 text-xs font-semibold bg-primary hover:bg-primary-glow text-primary-foreground shadow-md transition-all active:scale-95"
+                   onClick={onSwitchToKera}
+                 >
+                   Trocar <ArrowRight className="size-3.5 ml-1.5" />
+                 </Button>
+               </div>
+             )}
+ 
+             {!streaming && plainText.trim() && (
+               <div className="mt-4 flex justify-end items-center gap-2 border-t border-border/10 pt-3 opacity-0 group-hover/msg:opacity-100 transition-opacity duration-300">
+                 <Button
+                   size="sm"
+                   variant="ghost"
+                   className="h-8 px-3 text-xs text-muted-foreground hover:text-primary hover:bg-primary/5 rounded-lg font-medium transition-all"
+                   onClick={handleCopy}
+                   title="Copiar resposta"
+                 >
+                   {copied ? <Check className="size-3.5 mr-1.5 text-emerald-400" /> : <Copy className="size-3.5 mr-1.5" />}
+                   {copied ? "Copiado" : "Copiar"}
+                 </Button>
+                 
+                 {onSpeak && (
+                   <Button
+                     size="sm"
+                     variant="ghost"
+                     className={`h-8 px-3 text-xs rounded-lg font-medium transition-all ${
+                       isSpeaking 
+                         ? "text-primary bg-primary/10 hover:bg-primary/20" 
+                         : "text-muted-foreground hover:text-primary hover:bg-primary/5"
+                     }`}
+                     onClick={() => {
+                       if (isSpeaking) onStopSpeak?.();
+                       else onSpeak(plainText.replace(/```[\s\S]*?```/g, "(bloco de código)").replace(/[#*_`>]/g, ""));
+                     }}
+                     aria-label={isSpeaking ? "Parar áudio" : "Ouvir resposta"}
+                     title={isSpeaking ? "Parar" : "Ouvir com voz da Kera"}
+                   >
+                     {isSpeaking ? <Square className="size-3.5 mr-1.5 fill-current" /> : <Volume2 className="size-3.5 mr-1.5" />}
+                     {isSpeaking ? "Parar" : "Ouvir"}
+                   </Button>
+                 )}
+               </div>
+             )}
+           </>
+         )}
+       </div>
+     </div>
+   );
 };
