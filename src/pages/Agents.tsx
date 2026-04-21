@@ -24,7 +24,7 @@ type Agent = {
 
 const AgentsPage = () => {
   const navigate = useNavigate();
-  const { canAccess, isAdmin, loading: accessLoading } = useUserAccess();
+  const { canAccess, canSee, isAdmin, loading: accessLoading } = useUserAccess();
   const [agents, setAgents] = useState<Agent[]>([]);
   const [editing, setEditing] = useState<Agent | null>(null);
   const [open, setOpen] = useState(false);
