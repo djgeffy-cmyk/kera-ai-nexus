@@ -1,5 +1,5 @@
 import { Suspense, useEffect, useMemo, useRef, useState } from "react";
-import { Canvas, useFrame, useLoader } from "@react-three/fiber";
+import { Canvas, useFrame, useLoader, useThree } from "@react-three/fiber";
 import { OrbitControls, Environment } from "@react-three/drei";
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
 import { VRM, VRMLoaderPlugin, VRMUtils, VRMExpressionPresetName } from "@pixiv/three-vrm";
@@ -207,6 +207,16 @@ function AvatarMesh({ vrmUrl, audioElement, speaking, emotion }: AvatarMeshProps
   return <primitive object={vrm.scene} />;
 }
 
+/** Garante que a câmera olhe para o tronco/cabeça da Kera, não para os pés. */
+function CameraRig({ targetY = 1.1 }: { targetY?: number }) {
+  const { camera } = useThree();
+  useEffect(() => {
+    camera.lookAt(0, targetY, 0);
+    camera.updateProjectionMatrix();
+  }, [camera, targetY]);
+  return null;
+}
+
 function LoadingOrb() {
   const ref = useRef<THREE.Mesh>(null);
   useFrame((_, delta) => {
@@ -252,10 +262,11 @@ export default function KeraAvatar3D({
   return (
     <div className={className} style={{ width: "100%", height: "100%" }}>
       <Canvas
-        camera={{ position: [0, 1.35, 1.6], fov: 28 }}
+        camera={{ position: [0, 1.3, 2.8], fov: 32 }}
         gl={{ antialias: true, alpha: true }}
         dpr={[1, 2]}
       >
+        <CameraRig targetY={1.1} />
         <ambientLight intensity={0.6} />
         <directionalLight position={[2, 4, 3]} intensity={1.1} color="#e9d5ff" />
         <directionalLight position={[-3, 2, -2]} intensity={0.5} color="#a855f7" />
@@ -270,7 +281,7 @@ export default function KeraAvatar3D({
         </Suspense>
         {interactive && (
           <OrbitControls
-            target={[0, 1.3, 0]}
+            target={[0, 1.1, 0]}
             enablePan={false}
             minDistance={0.8}
             maxDistance={3}
