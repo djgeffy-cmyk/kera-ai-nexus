@@ -459,6 +459,17 @@ const Chat = () => {
       });
       const j = await resp.json();
       if (!resp.ok) {
+        if (resp.status === 429 && j?.error === "image_quota_exceeded") {
+          // Estourou cota diária do plano — leva pro paywall com a mensagem
+          toast.message("Limite diário de imagens atingido", {
+            description: j.message || "Faça upgrade pra liberar mais imagens.",
+            duration: 6000,
+          });
+          setMessages(prev => prev.slice(0, -1));
+          setStreaming(false);
+          setTimeout(() => navigate("/planos?reason=image_quota"), 800);
+          return;
+        }
         if (resp.status === 429) toast.error("Muitas requisições. Aguarde alguns segundos.");
         else if (resp.status === 402) toast.error("Créditos de IA esgotados.");
         else toast.error(j.error || "Falha ao gerar imagem.");
