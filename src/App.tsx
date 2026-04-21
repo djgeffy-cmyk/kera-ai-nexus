@@ -15,6 +15,7 @@ import { ProtectedRoute } from "./components/ProtectedRoute";
 import Footer from "./components/Footer";
 import { LicitacoesAlertsListener } from "./components/LicitacoesAlertsListener";
 import { AskKeraFab } from "./components/AskKeraFab";
+import { IconUpdateBanner } from "./components/IconUpdateBanner";
 
 const queryClient = new QueryClient();
 
@@ -37,6 +38,7 @@ const App = () => (
         </Routes>
         <Footer />
         <AskKeraFab />
+        <IconUpdateBanner />
       </HashRouter>
     </TooltipProvider>
   </QueryClientProvider>
