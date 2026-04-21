@@ -7,8 +7,8 @@ import { Label } from "@/components/ui/label";
 import { Card } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { toast } from "sonner";
- import { ShieldCheck, KeyRound, Mail, ScanFace, Eye, EyeOff, Umbrella } from "lucide-react";
- import { motion, AnimatePresence } from "framer-motion";
+import { ShieldCheck, KeyRound, Mail, ScanFace, Eye, EyeOff, Umbrella } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
 import keraAvatar from "@/assets/kera-avatar.png";
 import keraAvatarVideo from "@/assets/kera-avatar-rain.mp4.asset.json";
 import ParticlesOverlay from "@/components/ParticlesOverlay";
@@ -36,11 +36,10 @@ const Auth = () => {
   const [passkeyLoading, setPasskeyLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [supportsPasskey] = useState(() => webauthnSupported());
-   const [inIframe] = useState(() => isInIframe());
-   const [isUnlocked, setIsUnlocked] = useState(false);
-   const passkeyAvailable = supportsPasskey && !inIframe;
+  const [inIframe] = useState(() => isInIframe());
+  const [isUnlocked, setIsUnlocked] = useState(false);
+  const passkeyAvailable = supportsPasskey && !inIframe;
 
-  // Diagnóstico — ajuda a entender quando o botão some no chat.kera.ia.br
   useEffect(() => {
     // eslint-disable-next-line no-console
     console.log("[passkey] diagnóstico", {
@@ -57,7 +56,6 @@ const Auth = () => {
     });
   }, [supportsPasskey, inIframe, passkeyAvailable]);
 
-  // Refs pro parallax (movimento sutil via CSS vars — não re-renderiza React)
   const mainRef = useRef<HTMLElement | null>(null);
   const bgVideoRef = useRef<HTMLVideoElement | null>(null);
   const rafRef = useRef<number | null>(null);
@@ -66,18 +64,17 @@ const Auth = () => {
     const el = mainRef.current;
     const video = bgVideoRef.current;
     if (!el || !video) return;
-    // Respeita preferência de movimento reduzido
     const prefersReduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     if (prefersReduced) return;
 
-    const MAX = 14; // deslocamento máximo em px — bem sutil
+    const MAX = 14;
     let targetX = 0, targetY = 0, currX = 0, currY = 0;
 
     const onMove = (e: PointerEvent) => {
       const rect = el.getBoundingClientRect();
-      const nx = (e.clientX - rect.left) / rect.width - 0.5;  // -0.5..0.5
+      const nx = (e.clientX - rect.left) / rect.width - 0.5;
       const ny = (e.clientY - rect.top) / rect.height - 0.5;
-      targetX = -nx * MAX * 2; // inverso pro efeito parallax natural
+      targetX = -nx * MAX * 2;
       targetY = -ny * MAX * 2;
       if (rafRef.current == null) tick();
     };
@@ -89,7 +86,6 @@ const Auth = () => {
     };
 
     const tick = () => {
-      // easing — aproxima 12% por frame, dá uma sensação suave/orgânica
       currX += (targetX - currX) * 0.12;
       currY += (targetY - currY) * 0.12;
       video.style.transform = `scale(1.08) translate3d(${currX.toFixed(2)}px, ${currY.toFixed(2)}px, 0)`;
@@ -100,7 +96,6 @@ const Auth = () => {
       }
     };
 
-    // estado inicial — escala leve pra esconder bordas no movimento
     video.style.transform = "scale(1.08) translate3d(0,0,0)";
     video.style.transition = "transform 120ms linear";
     video.style.willChange = "transform";
@@ -114,7 +109,6 @@ const Auth = () => {
     };
   }, []);
 
-  // Reset password modal
   const [resetOpen, setResetOpen] = useState(false);
   const [resetEmail, setResetEmail] = useState("");
   const [resetNote, setResetNote] = useState("");
@@ -131,7 +125,6 @@ const Auth = () => {
   }, [navigate]);
 
   const checkAndChallengeMfa = async (): Promise<boolean> => {
-    // Verifica se o usuário tem fator TOTP verificado
     const { data: factors, error } = await supabase.auth.mfa.listFactors();
     if (error) return false;
     const totp = factors?.totp?.find((f) => f.status === "verified");
@@ -149,7 +142,6 @@ const Auth = () => {
 
   const handleAuth = async (e: React.FormEvent) => {
     e.preventDefault();
-    // Validação NASA-grade
     const schema = mode === "signup" ? MissionCriticalSchema.authSignup : MissionCriticalSchema.authSignin;
     const parsed = schema.safeParse({ email, password });
     if (!parsed.success) {
@@ -171,7 +163,6 @@ const Auth = () => {
       } else {
         const { error } = await supabase.auth.signInWithPassword({ email: cleanEmail, password: cleanPassword });
         if (error) throw error;
-        // Após login, checa se tem 2FA
         const needs2fa = await checkAndChallengeMfa();
         if (!needs2fa) navigate("/", { replace: true });
       }
@@ -258,7 +249,6 @@ const Auth = () => {
 
   return (
     <main ref={mainRef} className="relative min-h-screen flex items-center justify-center p-4 overflow-hidden">
-      {/* Vídeo Kera de fundo — em alta qualidade, com overlay leve pra ela aparecer */}
       <video
         ref={bgVideoRef}
         aria-hidden
@@ -270,11 +260,8 @@ const Auth = () => {
         src={rainVideoUrl}
         poster={keraAvatar}
       />
-      {/* Overlay sutil — só o suficiente pra dar contraste no card, sem apagar a Kera */}
       <div aria-hidden className="absolute inset-0 bg-background/30" />
-      {/* Partículas/poeira luminosa flutuando sobre a Kera — dá profundidade */}
       <ParticlesOverlay />
-      {/* Vinheta bem leve — quase transparente pra Kera aparecer no fundo */}
       <div
         aria-hidden
         className="absolute inset-0 pointer-events-none"
@@ -284,271 +271,233 @@ const Auth = () => {
         }}
       />
 
-       <AnimatePresence mode="wait">
-         {!isUnlocked ? (
-           <motion.div
-             key="umbrella-trigger"
-             initial={{ opacity: 0, scale: 0.9 }}
-             animate={{ opacity: 1, scale: 1 }}
-             exit={{ opacity: 0, scale: 1.1, filter: "blur(10px)" }}
-             className="relative z-20 flex flex-col items-center"
-           >
-             <button
-               onClick={() => setIsUnlocked(true)}
-               className="group relative p-8 rounded-full bg-background/10 backdrop-blur-md border border-white/10 shadow-2xl hover:bg-background/20 transition-all duration-500"
-             >
-               <motion.div
-                 animate={{ 
-                   y: [0, -10, 0],
-                 }}
-                 transition={{ 
-                   duration: 4, 
-                   repeat: Infinity, 
-                   ease: "easeInOut" 
-                 }}
-                 className="relative"
-               >
-                 <Umbrella className="size-24 text-primary/80 group-hover:text-primary transition-colors duration-500" strokeWidth={1.5} />
-                 <motion.div
-                   className="absolute top-0 left-0 w-full h-full"
-                   animate={{ opacity: [0.2, 0.5, 0.2] }}
-                   transition={{ duration: 2, repeat: Infinity }}
-                 >
-                   <Umbrella className="size-24 text-primary blur-sm" strokeWidth={1.5} />
-                 </motion.div>
-               </motion.div>
-               
-               {/* Gotas de água caindo do guarda-chuva */}
-               <div className="absolute inset-0 pointer-events-none overflow-hidden rounded-full">
-                 {[...Array(6)].map((_, i) => (
-                   <motion.div
-                     key={i}
-                     initial={{ y: 20, opacity: 0 }}
-                     animate={{ y: 80, opacity: [0, 1, 0] }}
-                     transition={{ 
-                       duration: 1.5 + Math.random(), 
-                       repeat: Infinity, 
-                       delay: Math.random() * 2,
-                       ease: "linear"
-                     }}
-                     className="absolute w-0.5 h-3 bg-primary/40 rounded-full"
-                     style={{ left: `${20 + Math.random() * 60}%` }}
-                   />
-                 ))}
-               </div>
-             </button>
-             
-             <motion.p 
-               initial={{ opacity: 0, y: 10 }}
-               animate={{ opacity: 1, y: 0 }}
-               transition={{ delay: 0.5 }}
-               className="mt-6 text-primary/80 font-display tracking-widest text-lg uppercase"
-             >
-               Tudo o que você precisa está aqui embaixo
-             </motion.p>
-           </motion.div>
-         ) : (
-           <motion.div
-             key="auth-card"
-             initial={{ opacity: 0, y: 20, scale: 0.95 }}
-             animate={{ opacity: 1, y: 0, scale: 1 }}
-             transition={{ type: "spring", damping: 20, stiffness: 100 }}
-           >
-             <Card
-               className="relative w-full max-w-sm p-5 sm:p-6 shadow-glow z-10 max-h-[calc(100vh-2rem)] overflow-y-auto scrollbar-thin rounded-2xl"
-               style={{
-                 background: "rgba(0, 0, 0, 0.03)",
-                 backdropFilter: "blur(2px)",
-                 WebkitBackdropFilter: "blur(2px)",
-                 border: "1px solid rgba(255, 255, 255, 0.1)",
-                 textShadow: "0px 0px 5px rgba(0, 0, 0, 0.8)",
-               }}
-             >
-               <div className="flex flex-col items-center mb-4">
-                 <div className="relative size-20 sm:size-24 rounded-full overflow-hidden border-2 border-primary/70 shadow-glow mb-3 bg-background ring-4 ring-primary/20">
-                   <video
-                     aria-hidden
-                     autoPlay
-                     loop
-                     muted
-                     playsInline
-                     src={rainVideoUrl}
-                     poster={keraAvatar}
-                     className="w-full h-full object-cover"
-                   />
-                   {/* Ícone de guarda-chuva flutuando sobre a kera pra manter o tema */}
-                   <div className="absolute bottom-1 right-1 bg-background/80 p-1 rounded-full border border-primary/30">
-                     <Umbrella className="size-3 text-primary" />
-                   </div>
-                   <div aria-hidden className="absolute inset-0 rounded-full ring-1 ring-primary/40 pointer-events-none" />
-                 </div>
-                 <h1 className="font-display text-2xl text-glow text-center">
-                   {mode === "signin" && "Acesse a Kera"}
-                   {mode === "signup" && "Crie sua conta"}
-                   {mode === "totp" && "Verificação 2FA"}
-                 </h1>
-                 <p className="text-sm text-muted-foreground text-center mt-1">
-                   {mode === "totp"
-                     ? "Digite o código de 6 dígitos do seu app autenticador."
-                     : "Sua IA direta, honesta e útil ao máximo."}
-                 </p>
-               </div>
- 
-               {mode === "totp" ? (
-
-        {mode === "totp" ? (
-          <form onSubmit={verifyTotp} className="space-y-4">
-            <div>
-              <Label htmlFor="otp" className="flex items-center gap-2">
-                <ShieldCheck className="size-4 text-primary" /> Código TOTP
-              </Label>
-              <Input
-                id="otp"
-                inputMode="numeric"
-                pattern="[0-9]*"
-                maxLength={6}
-                required
-                value={otp}
-                onChange={(e) => setOtp(e.target.value.replace(/\D/g, ""))}
-                className="mt-1 bg-input/50 border-border focus-visible:ring-primary text-center text-2xl tracking-[0.5em] font-mono"
-                placeholder="000000"
-                autoFocus
-              />
-            </div>
-            <Button type="submit" disabled={loading || otp.length !== 6}
-              className="w-full bg-gradient-cyber text-primary-foreground font-display tracking-wider hover:opacity-90 shadow-glow">
-              {loading ? "Verificando..." : "Verificar"}
-            </Button>
-            {supportsPasskey && (
-              <>
-                <Button
-                  type="button"
-                  onClick={handlePasskeyRegister}
-                  disabled={passkeyLoading || inIframe}
-                  variant="outline"
-                  className="w-full border-primary/40 hover:bg-primary/10 hover:border-primary disabled:opacity-60"
-                  title={inIframe ? "Abra direto em chat.kera.ia.br" : undefined}
-                >
-                  <ScanFace className="size-4 mr-2 text-primary" />
-                  {passkeyLoading
-                    ? "Cadastrando..."
-                    : "Cadastrar Face ID neste dispositivo"}
-                </Button>
-                {inIframe && (
-                  <p className="text-[11px] text-muted-foreground text-center">
-                    Para cadastrar, abra <strong>chat.kera.ia.br</strong> direto no navegador.
-                  </p>
-                )}
-              </>
-            )}
-            {supportsPasskey && inIframe && (
-              <p className="text-xs text-muted-foreground text-center px-2">
-                Para cadastrar Face ID, abra direto em <strong>chat.kera.ia.br</strong> no Safari (não funciona dentro deste preview).
-              </p>
-            )}
+      <AnimatePresence mode="wait">
+        {!isUnlocked ? (
+          <motion.div
+            key="umbrella-trigger"
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 1.1, filter: "blur(10px)" }}
+            className="relative z-20 flex flex-col items-center"
+          >
             <button
-              type="button"
-              onClick={async () => {
-                await supabase.auth.signOut();
-                setMode("signin");
-                setOtp("");
-              }}
-              className="w-full text-sm text-muted-foreground hover:text-primary transition"
+              onClick={() => setIsUnlocked(true)}
+              className="group relative p-8 rounded-full bg-background/10 backdrop-blur-md border border-white/10 shadow-2xl hover:bg-background/20 transition-all duration-500"
             >
-              Cancelar
-            </button>
-          </form>
-        ) : (
-          <>
-            <form onSubmit={handleAuth} className="space-y-4">
-              <div>
-                <Label htmlFor="email">E-mail</Label>
-                <Input id="email" type="email" required value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  className="mt-1 bg-input/50 border-border focus-visible:ring-primary" />
-              </div>
-              <div>
-                <Label htmlFor="password">Senha</Label>
-                <div className="relative mt-1">
-                  <Input
-                    id="password"
-                    type={showPassword ? "text" : "password"}
-                    required
-                    minLength={6}
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    className="bg-input/50 border-border focus-visible:ring-primary pr-10"
+              <motion.div
+                animate={{ 
+                  y: [0, -10, 0],
+                }}
+                transition={{ 
+                  duration: 4, 
+                  repeat: Infinity, 
+                  ease: "easeInOut" 
+                }}
+                className="relative"
+              >
+                <Umbrella className="size-24 text-primary/80 group-hover:text-primary transition-colors duration-500" strokeWidth={1.5} />
+                <motion.div
+                  className="absolute top-0 left-0 w-full h-full"
+                  animate={{ opacity: [0.2, 0.5, 0.2] }}
+                  transition={{ duration: 2, repeat: Infinity }}
+                >
+                  <Umbrella className="size-24 text-primary blur-sm" strokeWidth={1.5} />
+                </motion.div>
+              </motion.div>
+              
+              <div className="absolute inset-0 pointer-events-none overflow-hidden rounded-full">
+                {[...Array(6)].map((_, i) => (
+                  <motion.div
+                    key={i}
+                    initial={{ y: 20, opacity: 0 }}
+                    animate={{ y: 80, opacity: [0, 1, 0] }}
+                    transition={{ 
+                      duration: 1.5 + Math.random(), 
+                      repeat: Infinity, 
+                      delay: Math.random() * 2,
+                      ease: "linear"
+                    }}
+                    className="absolute w-0.5 h-3 bg-primary/40 rounded-full"
+                    style={{ left: `${20 + Math.random() * 60}%` }}
                   />
+                ))}
+              </div>
+            </button>
+            
+            <motion.p 
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.5 }}
+              className="mt-6 text-primary/80 font-display tracking-widest text-lg uppercase text-center"
+            >
+              Tudo o que você precisa está aqui embaixo
+            </motion.p>
+          </motion.div>
+        ) : (
+          <motion.div
+            key="auth-card"
+            initial={{ opacity: 0, y: 20, scale: 0.95 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            transition={{ type: "spring", damping: 20, stiffness: 100 }}
+          >
+            <Card
+              className="relative w-full max-w-sm p-5 sm:p-6 shadow-glow z-10 max-h-[calc(100vh-2rem)] overflow-y-auto scrollbar-thin rounded-2xl"
+              style={{
+                background: "rgba(0, 0, 0, 0.03)",
+                backdropFilter: "blur(2px)",
+                WebkitBackdropFilter: "blur(2px)",
+                border: "1px solid rgba(255, 255, 255, 0.1)",
+                textShadow: "0px 0px 5px rgba(0, 0, 0, 0.8)",
+              }}
+            >
+              <div className="flex flex-col items-center mb-4">
+                <div className="relative size-20 sm:size-24 rounded-full overflow-hidden border-2 border-primary/70 shadow-glow mb-3 bg-background ring-4 ring-primary/20">
+                  <video
+                    aria-hidden
+                    autoPlay
+                    loop
+                    muted
+                    playsInline
+                    src={rainVideoUrl}
+                    poster={keraAvatar}
+                    className="w-full h-full object-cover"
+                  />
+                  <div className="absolute bottom-1 right-1 bg-background/80 p-1 rounded-full border border-primary/30">
+                    <Umbrella className="size-3 text-primary" />
+                  </div>
+                  <div aria-hidden className="absolute inset-0 rounded-full ring-1 ring-primary/40 pointer-events-none" />
+                </div>
+                <h1 className="font-display text-2xl text-glow text-center">
+                  {mode === "signin" && "Acesse a Kera"}
+                  {mode === "signup" && "Crie sua conta"}
+                  {mode === "totp" && "Verificação 2FA"}
+                </h1>
+                <p className="text-sm text-muted-foreground text-center mt-1">
+                  {mode === "totp"
+                    ? "Digite o código de 6 dígitos do seu app autenticador."
+                    : "Sua IA direta, honesta e útil ao máximo."}
+                </p>
+              </div>
+
+              {mode === "totp" ? (
+                <form onSubmit={verifyTotp} className="space-y-4">
+                  <div>
+                    <Label htmlFor="otp" className="flex items-center gap-2">
+                      <ShieldCheck className="size-4 text-primary" /> Código TOTP
+                    </Label>
+                    <Input
+                      id="otp"
+                      inputMode="numeric"
+                      pattern="[0-9]*"
+                      maxLength={6}
+                      required
+                      value={otp}
+                      onChange={(e) => setOtp(e.target.value.replace(/\D/g, ""))}
+                      className="mt-1 bg-input/50 border-border focus-visible:ring-primary text-center text-2xl tracking-[0.5em] font-mono"
+                      placeholder="000000"
+                      autoFocus
+                    />
+                  </div>
+                  <Button type="submit" disabled={loading || otp.length !== 6}
+                    className="w-full bg-gradient-cyber text-primary-foreground font-display tracking-wider hover:opacity-90 shadow-glow">
+                    {loading ? "Verificando..." : "Verificar"}
+                  </Button>
                   <button
                     type="button"
-                    onClick={() => setShowPassword(v => !v)}
-                    aria-label={showPassword ? "Ocultar senha" : "Mostrar senha"}
-                    aria-pressed={showPassword}
-                    tabIndex={-1}
-                    className="absolute inset-y-0 right-0 flex items-center justify-center w-10 text-muted-foreground hover:text-primary transition-colors"
+                    onClick={async () => {
+                      await supabase.auth.signOut();
+                      setMode("signin");
+                      setOtp("");
+                    }}
+                    className="w-full text-sm text-muted-foreground hover:text-primary transition"
                   >
-                    {showPassword ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
+                    Cancelar
                   </button>
-                </div>
-                {mode === "signup" && <PasswordStrengthMeter password={password} />}
-              </div>
-              <Button type="submit" disabled={loading}
-                className="w-full bg-gradient-cyber text-primary-foreground font-display tracking-wider hover:opacity-90 shadow-glow">
-                {loading ? "Aguarde..." : mode === "signin" ? "Entrar" : "Criar conta"}
-              </Button>
-            </form>
+                </form>
+              ) : (
+                <>
+                  <form onSubmit={handleAuth} className="space-y-4">
+                    <div>
+                      <Label htmlFor="email">E-mail</Label>
+                      <Input id="email" type="email" required value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                        className="mt-1 bg-input/50 border-border focus-visible:ring-primary" />
+                    </div>
+                    <div>
+                      <Label htmlFor="password">Senha</Label>
+                      <div className="relative mt-1">
+                        <Input
+                          id="password"
+                          type={showPassword ? "text" : "password"}
+                          required
+                          minLength={6}
+                          value={password}
+                          onChange={(e) => setPassword(e.target.value)}
+                          className="bg-input/50 border-border focus-visible:ring-primary pr-10"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => setShowPassword(v => !v)}
+                          aria-label={showPassword ? "Ocultar senha" : "Mostrar senha"}
+                          aria-pressed={showPassword}
+                          tabIndex={-1}
+                          className="absolute inset-y-0 right-0 flex items-center justify-center w-10 text-muted-foreground hover:text-primary transition-colors"
+                        >
+                          {showPassword ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
+                        </button>
+                      </div>
+                      {mode === "signup" && <PasswordStrengthMeter password={password} />}
+                    </div>
+                    <Button type="submit" disabled={loading}
+                      className="w-full bg-gradient-cyber text-primary-foreground font-display tracking-wider hover:opacity-90 shadow-glow">
+                      {loading ? "Aguarde..." : mode === "signin" ? "Entrar" : "Criar conta"}
+                    </Button>
+                  </form>
 
-            {mode === "signin" && supportsPasskey && (
-              <>
-                <div className="flex items-center gap-3 my-4">
-                  <div className="flex-1 h-px bg-border/50" />
-                  <span className="text-xs text-muted-foreground">ou</span>
-                  <div className="flex-1 h-px bg-border/50" />
-                </div>
-                <Button
-                  type="button"
-                  onClick={handlePasskeyLogin}
-                  disabled={passkeyLoading || !email.trim() || inIframe}
-                  variant="outline"
-                  className="w-full border-primary/40 hover:bg-primary/10 hover:border-primary disabled:opacity-60"
-                  title={inIframe ? "Abra direto em chat.kera.ia.br" : undefined}
-                >
-                  <ScanFace className="size-4 mr-2 text-primary" />
-                  {passkeyLoading ? "Aguarde..." : "Entrar com Face ID / Touch ID"}
-                </Button>
-                {inIframe && (
-                  <p className="text-[11px] text-muted-foreground mt-2 text-center">
-                    Face ID não funciona dentro do preview. Abra <strong>chat.kera.ia.br</strong> direto no navegador.
-                  </p>
-                )}
-              </>
-            )}
-            {mode === "signin" && !supportsPasskey && (
-              <p className="text-[11px] text-muted-foreground mt-3 text-center">
-                Este navegador não suporta Face ID/Touch ID via web (WebAuthn).
-              </p>
-            )}
+                  {mode === "signin" && supportsPasskey && (
+                    <>
+                      <div className="flex items-center gap-3 my-4">
+                        <div className="flex-1 h-px bg-border/50" />
+                        <span className="text-xs text-muted-foreground">ou</span>
+                        <div className="flex-1 h-px bg-border/50" />
+                      </div>
+                      <Button
+                        type="button"
+                        onClick={handlePasskeyLogin}
+                        disabled={passkeyLoading || !email.trim() || inIframe}
+                        variant="outline"
+                        className="w-full border-primary/40 hover:bg-primary/10 hover:border-primary disabled:opacity-60"
+                        title={inIframe ? "Abra direto em chat.kera.ia.br" : undefined}
+                      >
+                        <ScanFace className="size-4 mr-2 text-primary" />
+                        {passkeyLoading ? "Aguarde..." : "Entrar com Face ID / Touch ID"}
+                      </Button>
+                    </>
+                  )}
 
-            {mode === "signin" && (
-              <button
-                type="button"
-                onClick={() => { setResetEmail(email); setResetOpen(true); }}
-                className="w-full text-xs text-muted-foreground hover:text-primary mt-3 transition flex items-center justify-center gap-1"
-              >
-                <KeyRound className="size-3" /> Esqueci minha senha
-              </button>
-            )}
+                  {mode === "signin" && (
+                    <button
+                      type="button"
+                      onClick={() => { setResetEmail(email); setResetOpen(true); }}
+                      className="w-full text-xs text-muted-foreground hover:text-primary mt-3 transition flex items-center justify-center gap-1"
+                    >
+                      <KeyRound className="size-3" /> Esqueci minha senha
+                    </button>
+                  )}
 
-            <button
-              type="button"
-              onClick={() => setMode(mode === "signin" ? "signup" : "signin")}
-              className="w-full text-sm text-muted-foreground hover:text-primary mt-4 transition"
-            >
-              {mode === "signin" ? "Não tem conta? Cadastre-se" : "Já tem conta? Entrar"}
-            </button>
-          </>
+                  <button
+                    type="button"
+                    onClick={() => setMode(mode === "signin" ? "signup" : "signin")}
+                    className="w-full text-sm text-muted-foreground hover:text-primary mt-4 transition"
+                  >
+                    {mode === "signin" ? "Não tem conta? Cadastre-se" : "Já tem conta? Entrar"}
+                  </button>
+                </>
+              )}
+            </Card>
+          </motion.div>
         )}
-      </Card>
+      </AnimatePresence>
 
       <Dialog open={resetOpen} onOpenChange={setResetOpen}>
         <DialogContent className="panel border-primary/30">
