@@ -24,7 +24,7 @@ type Agent = {
 
 const AgentsPage = () => {
   const navigate = useNavigate();
-  const { canAccess, isAdmin, loading: accessLoading } = useUserAccess();
+  const { canAccess, canSee, isAdmin, loading: accessLoading } = useUserAccess();
   const [agents, setAgents] = useState<Agent[]>([]);
   const [editing, setEditing] = useState<Agent | null>(null);
   const [open, setOpen] = useState(false);
@@ -141,7 +141,7 @@ const AgentsPage = () => {
             </p>
           )}
           <div className="grid sm:grid-cols-2 gap-3">
-            {BUILTIN_AGENTS.map(a => {
+            {BUILTIN_AGENTS.filter(a => canSee(a.key)).map(a => {
               const Icon = a.icon;
               const allowed = canAccess(a.key);
               return (

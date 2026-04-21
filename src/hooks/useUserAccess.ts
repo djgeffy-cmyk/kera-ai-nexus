@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { canSeeAgent, GUARAMIRIM_EMAIL_DOMAIN } from "@/lib/agents";
 
 /** Quantas perguntas "palhinha" o usuário pode fazer a um agente bloqueado antes do paywall. */
 export const PAYWALL_FREE_TRIES = 3;
@@ -17,6 +18,7 @@ export function useUserAccess() {
   const [onboardingCompleted, setOnboardingCompleted] = useState<boolean>(false);
   const [isAdmin, setIsAdmin] = useState(false);
   const [userId, setUserId] = useState<string | null>(null);
+  const [userEmail, setUserEmail] = useState<string | null>(null);
   const [paywallTrialCount, setPaywallTrialCount] = useState<number>(0);
 
   useEffect(() => {
@@ -30,7 +32,10 @@ export function useUserAccess() {
         }
         return;
       }
-      if (!cancelled) setUserId(u.user.id);
+      if (!cancelled) {
+        setUserId(u.user.id);
+        setUserEmail(u.user.email ?? null);
+      }
 
       const [{ data: profile }, { data: adminFlag }] = await Promise.all([
         supabase
@@ -61,8 +66,19 @@ export function useUserAccess() {
     if (isAdmin) return true;
     // "kera" (generalista) é sempre liberada — porta de entrada
     if (agentKey === "kera") return true;
+    // Agentes da Prefeitura de Guaramirim já vêm liberados pra emails do domínio.
+    if (
+      agentKey === "kera-sentinela" &&
+      (userEmail ?? "").toLowerCase().endsWith(GUARAMIRIM_EMAIL_DOMAIN)
+    ) {
+      return true;
+    }
     return selectedAgents.includes(agentKey);
   };
+
+  /** Esconde totalmente agentes restritos pra quem não é admin nem da prefeitura. */
+  const canSee = (agentKey: string) =>
+    canSeeAgent(agentKey, { isAdmin, email: userEmail });
 
   /**
    * Tenta consumir 1 "palhinha" para um agente bloqueado.
@@ -91,11 +107,13 @@ export function useUserAccess() {
     loading,
     isAdmin,
     userId,
+    userEmail,
     selectedAgents,
     onboardingCompleted,
     paywallTrialCount,
     trialsRemaining: Math.max(0, PAYWALL_FREE_TRIES - paywallTrialCount),
     canAccess,
+    canSee,
     consumeTrial,
   };
 }
