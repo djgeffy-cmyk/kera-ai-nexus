@@ -1039,7 +1039,7 @@ Por favor, analise: há perda de pacote? jitter alto sugere instabilidade de rot
   );
 
   return (
-    <div className="h-screen flex">
+    <div className="chat-root flex">
       <div
         className={`hidden md:flex transition-all duration-300 ease-in-out overflow-hidden ${
           sidebarOpen ? "w-80 opacity-100" : "w-0 opacity-0 pointer-events-none"
@@ -1395,7 +1395,10 @@ Por favor, analise: há perda de pacote? jitter alto sugere instabilidade de rot
           </div>
         </div>
 
-        <div className="relative z-10 border-t border-border panel p-3 md:p-4 pb-28 md:pb-32">
+        <div
+          className="relative z-10 border-t border-border panel p-3 md:p-4 pb-3 md:pb-32"
+          style={{ paddingBottom: "max(env(safe-area-inset-bottom, 0px), 0.75rem)" }}
+        >
           <div className="max-w-6xl mx-auto space-y-2">
              {isSentinela && (
                <div className="flex flex-wrap justify-center gap-3 animate-in slide-in-from-bottom-2 duration-500">
