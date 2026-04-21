@@ -170,7 +170,7 @@
              <ArrowLeft className="size-5" />
            </Button>
            <div className="flex flex-col">
-             <h1 className="font-display text-xl tracking-tighter text-glow-primary flex items-center gap-2">
+             <h1 className="font-display text-xl tracking-tighter text-glow flex items-center gap-2">
                <ShieldAlert className="size-5 text-primary" />
                KERA SECURITY NASA
              </h1>
@@ -223,7 +223,7 @@
                <Button 
                  onClick={handleAnalyze} 
                  disabled={isAnalyzing}
-                 className="h-8 bg-primary hover:bg-primary/90 text-primary-foreground font-display text-[10px] tracking-widest px-4 shadow-glow active:scale-95 transition-all"
+                 className={`h-8 bg-primary hover:bg-primary/90 text-primary-foreground font-display text-[10px] tracking-widest px-4 shadow-glow active:scale-95 transition-all ${isAnalyzing ? 'animate-pulse' : ''}`}
                >
                  {isAnalyzing ? (
                    <>
