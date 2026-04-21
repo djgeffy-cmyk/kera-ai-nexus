@@ -277,6 +277,7 @@
 @layer base {
   * { @apply border-border; }
   html, body, #root { height: 100%; }
+  html, body { overflow-x: hidden; max-width: 100vw; }
   body {
     @apply text-foreground transition-colors duration-300;
     background: var(--gradient-bg);
