@@ -46,8 +46,10 @@ function useVRM(url: string): VRM | null {
     loaded.scene.traverse((obj: any) => {
       if (obj.isMesh) obj.frustumCulled = false;
     });
-    // Vira a Kera pra olhar pra câmera (VRM padrão olha pro -Z, viramos pro +Z).
-    loaded.scene.rotation.y = Math.PI;
+    // VRM padrão (pixiv/three-vrm) já é exportado olhando para +Z.
+    // Como nossa câmera fica em z positivo, NÃO rotacionamos — caso contrário
+    // ela apareceria de costas.
+    loaded.scene.rotation.y = 0;
     setVrm(loaded);
     return () => {
       VRMUtils.deepDispose(loaded.scene);
@@ -262,11 +264,11 @@ export default function KeraAvatar3D({
   return (
     <div className={className} style={{ width: "100%", height: "100%" }}>
       <Canvas
-        camera={{ position: [0, 1.3, 2.8], fov: 32 }}
+        camera={{ position: [0, 1.35, 3.5], fov: 35 }}
         gl={{ antialias: true, alpha: true }}
         dpr={[1, 2]}
       >
-        <CameraRig targetY={1.1} />
+        <CameraRig targetY={1.25} />
         <ambientLight intensity={0.6} />
         <directionalLight position={[2, 4, 3]} intensity={1.1} color="#e9d5ff" />
         <directionalLight position={[-3, 2, -2]} intensity={0.5} color="#a855f7" />
