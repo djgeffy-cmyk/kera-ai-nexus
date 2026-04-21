@@ -107,6 +107,7 @@ function LoadingOrb() {
 
 export default function KeraDesktop3D() {
   const [vrmUrl, setVrmUrl] = useState<string>(bundledDefaultVrm);
+  const [modelKind, setModelKind] = useState<"vrm" | "glb">("vrm");
   const [emotion, setEmotion] = useState<Emotion>("neutral");
   const [intensity, setIntensity] = useState(0.7);
   const [autoRotate, setAutoRotate] = useState(false);
@@ -124,15 +125,23 @@ export default function KeraDesktop3D() {
   async function handleUpload(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
     if (!file) return;
-    if (!file.name.toLowerCase().endsWith(".vrm")) {
-      toast.error("Arquivo precisa ter extensão .vrm");
+    const name = file.name.toLowerCase();
+    const isVrm = name.endsWith(".vrm");
+    const isGlb = name.endsWith(".glb") || name.endsWith(".gltf");
+    if (!isVrm && !isGlb) {
+      toast.error("Arquivo precisa ter extensão .vrm, .glb ou .gltf");
       return;
     }
     try {
-      await saveVRM(file);
+      if (isVrm) await saveVRM(file);
       const url = URL.createObjectURL(file);
       setVrmUrl(url);
-      toast.success(`Modelo carregado: ${file.name}`);
+      setModelKind(isVrm ? "vrm" : "glb");
+      toast.success(
+        isVrm
+          ? `Modelo VRM carregado: ${file.name}`
+          : `Modelo GLB carregado: ${file.name} (sem lipsync/expressões)`
+      );
     } catch (err) {
       toast.error("Erro ao salvar modelo: " + (err as Error).message);
     }
@@ -141,6 +150,7 @@ export default function KeraDesktop3D() {
   async function handleClearVRM() {
     await clearVRM();
     setVrmUrl(bundledDefaultVrm);
+    setModelKind("vrm");
     toast.success("Modelo personalizado removido. Usando Kera padrão.");
   }
 
