@@ -1,7 +1,7 @@
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Check, Sparkles, Crown, Rocket, ArrowLeft, Image as ImageIcon } from "lucide-react";
+import { Check, Sparkles, Crown, Rocket, ArrowLeft, Image as ImageIcon, Dumbbell, ExternalLink } from "lucide-react";
 
 type Plan = {
   key: "essencial" | "pro" | "master";
@@ -69,6 +69,8 @@ const PLANS: Plan[] = [
     cta: "Quero o Master",
   },
 ];
+
+const SPACEINCLOUD_URL = "https://app.spaceincloud.com.br/kera";
 
 export default function Planos() {
   const navigate = useNavigate();
@@ -167,6 +169,94 @@ export default function Planos() {
         <p className="text-center text-xs text-muted-foreground mt-10">
           Pagamento seguro · Cancele quando quiser · Nota fiscal automática
         </p>
+
+        {/* ============================================================
+            Plano Growth FIT — área Fitness (Kera + SpaceInCloud)
+            ============================================================ */}
+        <section className="mt-20">
+          <header className="text-center mb-10">
+            <span className="inline-flex items-center gap-2 rounded-full border border-fuchsia-400/30 bg-fuchsia-500/10 px-3 py-1 text-xs font-semibold text-fuchsia-300">
+              <Dumbbell className="h-3.5 w-3.5" /> ÁREA FITNESS
+            </span>
+            <h2 className="font-display text-3xl md:text-4xl text-glow mt-4 mb-3">
+              Plano Growth FIT
+            </h2>
+            <p className="text-muted-foreground max-w-2xl mx-auto">
+              Combo exclusivo pra quem leva treino e dieta a sério. Os 3 agentes FIT da Kera
+              liberados <strong>+ acesso completo ao app SpaceInCloud</strong> (treinos, nutrição,
+              avaliações, Body Scan por IA e gestão financeira).
+            </p>
+          </header>
+
+          <div className="mx-auto max-w-2xl">
+            <Card className="relative overflow-hidden p-6 md:p-10 border-fuchsia-400/40 shadow-[0_0_60px_-15px_hsl(280_90%_60%/0.5)]">
+              <div className="absolute inset-0 bg-gradient-to-br from-fuchsia-500/10 via-transparent to-orange-500/10 pointer-events-none" />
+              <div className="relative">
+                <div className="flex items-center gap-3 mb-2">
+                  <div className="rounded-lg bg-fuchsia-500/20 p-2">
+                    <Dumbbell className="h-6 w-6 text-fuchsia-300" />
+                  </div>
+                  <div>
+                    <h3 className="font-display text-2xl">Growth FIT</h3>
+                    <p className="text-sm text-muted-foreground">Kera + SpaceInCloud — pacote único</p>
+                  </div>
+                </div>
+
+                <div className="my-6 flex items-baseline gap-1">
+                  <span className="text-5xl font-bold">R$ 99</span>
+                  <span className="text-2xl text-muted-foreground">,00</span>
+                  <span className="text-sm text-muted-foreground ml-2">/mês</span>
+                </div>
+
+                <div className="grid sm:grid-cols-2 gap-x-6 gap-y-3 mb-8">
+                  {[
+                    "Kera Nutricionista — dieta, macros e zoeira inteligente",
+                    "Kera Treinador — fichas, periodização e progressão",
+                    "Kera Iron — bodybuilding feminino (prep e palco)",
+                    "App SpaceInCloud completo",
+                    "Body Scan por IA (composição corporal)",
+                    "Avaliações e anamnese digital",
+                    "Gestão financeira (alunos, recibos, agenda)",
+                    "Suporte prioritário nos dois apps",
+                  ].map((f) => (
+                    <div key={f} className="flex items-start gap-2 text-sm">
+                      <Check className="h-4 w-4 text-fuchsia-300 mt-0.5 shrink-0" />
+                      <span>{f}</span>
+                    </div>
+                  ))}
+                </div>
+
+                <div className="flex flex-col sm:flex-row gap-3">
+                  <Button
+                    size="lg"
+                    className="flex-1 bg-gradient-to-r from-fuchsia-500 to-orange-500 hover:opacity-90 text-white border-0"
+                    onClick={() => {
+                      // TODO: integrar checkout do plano Growth FIT
+                      window.alert(
+                        "Plano Growth FIT selecionado!\n\nA cobrança ainda não está ativa — em breve enviaremos o link de pagamento."
+                      );
+                    }}
+                  >
+                    Quero o Growth FIT
+                  </Button>
+                  <Button
+                    size="lg"
+                    variant="outline"
+                    className="flex-1"
+                    onClick={() => window.open(SPACEINCLOUD_URL, "_blank", "noopener,noreferrer")}
+                  >
+                    Conhecer o SpaceInCloud <ExternalLink className="h-4 w-4 ml-2" />
+                  </Button>
+                </div>
+
+                <p className="text-xs text-muted-foreground mt-4 text-center">
+                  Já é assinante do SpaceInCloud? Use o mesmo email no cadastro da Kera —
+                  liberamos o pacote FIT automaticamente.
+                </p>
+              </div>
+            </Card>
+          </div>
+        </section>
       </div>
     </main>
   );

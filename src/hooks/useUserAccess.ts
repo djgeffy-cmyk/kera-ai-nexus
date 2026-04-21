@@ -6,11 +6,23 @@ import { canSeeAgent, GUARAMIRIM_EMAIL_DOMAIN } from "@/lib/agents";
 export const PAYWALL_FREE_TRIES = 3;
 
 /**
+ * Agentes que fazem parte do pacote Growth FIT (Kera + SpaceInCloud).
+ * Quem tem `spaceincloud_active = true` no profile vê esses 3 liberados,
+ * independentemente do plano padrão.
+ */
+export const FIT_AGENT_KEYS = new Set<string>([
+  "kera-nutri",
+  "kera-treinador",
+  "kera-iron",
+]);
+
+/**
  * Carrega informações de acesso do usuário logado:
  * - selectedAgents: chaves dos agentes que ele liberou no onboarding
  * - onboardingCompleted: se já passou pela tela de escolha
  * - isAdmin: admin enxerga todos os agentes
  * - paywallTrialCount: nº de perguntas a agentes bloqueados já consumidas
+ * - spaceincloudActive: usuário tem o pacote Growth FIT (Kera + SpaceInCloud) ativo
  */
 export function useUserAccess() {
   const [loading, setLoading] = useState(true);
@@ -20,6 +32,7 @@ export function useUserAccess() {
   const [userId, setUserId] = useState<string | null>(null);
   const [userEmail, setUserEmail] = useState<string | null>(null);
   const [paywallTrialCount, setPaywallTrialCount] = useState<number>(0);
+  const [spaceincloudActive, setSpaceincloudActive] = useState<boolean>(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -40,7 +53,7 @@ export function useUserAccess() {
       const [{ data: profile }, { data: adminFlag }] = await Promise.all([
         supabase
           .from("profiles")
-          .select("selected_agents, onboarding_completed, paywall_trial_count")
+          .select("selected_agents, onboarding_completed, paywall_trial_count, spaceincloud_active")
           .eq("user_id", u.user.id)
           .maybeSingle(),
         supabase.rpc("has_role", { _user_id: u.user.id, _role: "admin" }),
@@ -51,6 +64,7 @@ export function useUserAccess() {
       setSelectedAgents((profile?.selected_agents as string[] | null) ?? []);
       setOnboardingCompleted(!!profile?.onboarding_completed);
       setPaywallTrialCount(((profile as any)?.paywall_trial_count as number | null) ?? 0);
+      setSpaceincloudActive(!!(profile as any)?.spaceincloud_active);
       setIsAdmin(!!adminFlag);
       setLoading(false);
     };
@@ -73,6 +87,8 @@ export function useUserAccess() {
     ) {
       return true;
     }
+    // Pacote Growth FIT — libera nutri/treinador/iron pra quem tem SpaceInCloud ativo.
+    if (spaceincloudActive && FIT_AGENT_KEYS.has(agentKey)) return true;
     return selectedAgents.includes(agentKey);
   };
 
@@ -112,6 +128,7 @@ export function useUserAccess() {
     onboardingCompleted,
     paywallTrialCount,
     trialsRemaining: Math.max(0, PAYWALL_FREE_TRIES - paywallTrialCount),
+    spaceincloudActive,
     canAccess,
     canSee,
     consumeTrial,

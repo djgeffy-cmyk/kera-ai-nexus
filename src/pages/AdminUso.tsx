@@ -4,7 +4,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { ArrowLeft, ImageIcon, Users, TrendingUp, DollarSign, RefreshCw } from "lucide-react";
+import { ArrowLeft, ImageIcon, Users, TrendingUp, DollarSign, RefreshCw, Dumbbell } from "lucide-react";
+import { Switch } from "@/components/ui/switch";
 import { toast } from "sonner";
 import {
   ResponsiveContainer,
@@ -26,6 +27,7 @@ type UsageRow = {
   images_today: number;
   images_month: number;
   created_at: string;
+  spaceincloud_active?: boolean;
 };
 
 type DailyRow = {
@@ -61,9 +63,10 @@ export default function AdminUso() {
 
   const load = async () => {
     setLoading(true);
-    const [usageRes, dailyRes] = await Promise.all([
+    const [usageRes, dailyRes, fitRes] = await Promise.all([
       supabase.rpc("admin_list_users_usage"),
       supabase.rpc("admin_image_usage_daily", { _days: 30 }),
+      supabase.from("profiles").select("user_id, spaceincloud_active"),
     ]);
     if (usageRes.error) {
       toast.error(usageRes.error.message);
@@ -73,7 +76,13 @@ export default function AdminUso() {
     if (dailyRes.error) {
       toast.error(dailyRes.error.message);
     }
-    setRows((usageRes.data || []) as UsageRow[]);
+    const fitMap = new Map<string, boolean>();
+    ((fitRes.data || []) as Array<{ user_id: string; spaceincloud_active: boolean }>)
+      .forEach((r) => fitMap.set(r.user_id, !!r.spaceincloud_active));
+    setRows(((usageRes.data || []) as UsageRow[]).map((r) => ({
+      ...r,
+      spaceincloud_active: fitMap.get(r.user_id) ?? false,
+    })));
     setDaily(((dailyRes.data || []) as any[]).map((d) => ({
       usage_date: d.usage_date,
       total_images: Number(d.total_images) || 0,
@@ -111,6 +120,21 @@ export default function AdminUso() {
     setRows((prev) =>
       prev.map((r) => (r.user_id === user_id ? { ...r, plan_tier: plan as UsageRow["plan_tier"] } : r))
     );
+  };
+
+  const toggleFit = async (user_id: string, active: boolean) => {
+    const prev = rows;
+    setRows((p) => p.map((r) => (r.user_id === user_id ? { ...r, spaceincloud_active: active } : r)));
+    const { error } = await supabase.rpc("admin_set_spaceincloud_active", {
+      _target_user: user_id,
+      _active: active,
+    });
+    if (error) {
+      toast.error(error.message);
+      setRows(prev);
+      return;
+    }
+    toast.success(active ? "Growth FIT liberado." : "Growth FIT removido.");
   };
 
   return (
@@ -285,6 +309,7 @@ export default function AdminUso() {
                       <th className="px-3 py-2 text-right">Hoje</th>
                       <th className="px-3 py-2 text-right">Mês</th>
                       <th className="px-3 py-2 text-right">Custo</th>
+                      <th className="px-3 py-2 text-center w-28">FIT</th>
                       <th className="px-3 py-2 w-44">Mudar plano</th>
                     </tr>
                   </thead>
@@ -306,6 +331,15 @@ export default function AdminUso() {
                           <td className="px-3 py-3 text-right tabular-nums">{r.images_today}</td>
                           <td className="px-3 py-3 text-right tabular-nums font-semibold">{r.images_month}</td>
                           <td className="px-3 py-3 text-right tabular-nums text-muted-foreground">R$ {cost}</td>
+                          <td className="px-3 py-3">
+                            <div className="flex items-center justify-center gap-2">
+                              <Dumbbell className={`h-3.5 w-3.5 ${r.spaceincloud_active ? "text-fuchsia-300" : "text-muted-foreground/40"}`} />
+                              <Switch
+                                checked={!!r.spaceincloud_active}
+                                onCheckedChange={(v) => toggleFit(r.user_id, v)}
+                              />
+                            </div>
+                          </td>
                           <td className="px-3 py-3">
                             <Select
                               value={r.plan_tier}
