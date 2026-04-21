@@ -31,6 +31,8 @@ const Auth = () => {
   const [factorId, setFactorId] = useState<string | null>(null);
   const [challengeId, setChallengeId] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [passkeyLoading, setPasskeyLoading] = useState(false);
+  const [supportsPasskey] = useState(() => webauthnSupported());
 
   // Refs pro parallax (movimento sutil via CSS vars — não re-renderiza React)
   const mainRef = useRef<HTMLElement | null>(null);
