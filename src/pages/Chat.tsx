@@ -69,6 +69,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel,
 import keraLogo from "@/assets/kera-logo.png";
 import keraAvatar from "@/assets/kera-avatar.png";
 import keraAvatarVideo from "@/assets/kera-avatar.mp4.asset.json";
+import keraAvatarNasaVideo from "@/assets/kera-avatar-nasa.mp4.asset.json";
 import keraDevBgVideo from "@/assets/kera-dev-bg.mp4.asset.json";
 import keraBgVideo from "@/assets/kera-bg.mp4.asset.json";
 import keraSecBgVideo from "@/assets/kera-sec-bg.mp4.asset.json";
@@ -1284,7 +1285,7 @@ Por favor, analise: há perda de pacote? jitter alto sugere instabilidade de rot
                  <div className="relative group inline-block">
                    <div className="absolute inset-0 bg-primary/20 blur-[60px] animate-pulse rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-1000" />
                    <video
-                     src={assetUrl(keraAvatarVideo)}
+                     src={agentKey === "kera-security-nasa" ? assetUrl(keraAvatarNasaVideo) : assetUrl(keraAvatarVideo)}
                      poster={keraAvatar}
                      autoPlay
                      loop
