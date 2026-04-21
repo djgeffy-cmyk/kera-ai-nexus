@@ -7,7 +7,8 @@ import { Label } from "@/components/ui/label";
 import { Card } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { toast } from "sonner";
-import { ShieldCheck, KeyRound, Mail, ScanFace, Eye, EyeOff } from "lucide-react";
+ import { ShieldCheck, KeyRound, Mail, ScanFace, Eye, EyeOff, Umbrella } from "lucide-react";
+ import { motion, AnimatePresence } from "framer-motion";
 import keraAvatar from "@/assets/kera-avatar.png";
 import keraAvatarVideo from "@/assets/kera-avatar-rain.mp4.asset.json";
 import ParticlesOverlay from "@/components/ParticlesOverlay";
@@ -35,8 +36,9 @@ const Auth = () => {
   const [passkeyLoading, setPasskeyLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [supportsPasskey] = useState(() => webauthnSupported());
-  const [inIframe] = useState(() => isInIframe());
-  const passkeyAvailable = supportsPasskey && !inIframe;
+   const [inIframe] = useState(() => isInIframe());
+   const [isUnlocked, setIsUnlocked] = useState(false);
+   const passkeyAvailable = supportsPasskey && !inIframe;
 
   // Diagnóstico — ajuda a entender quando o botão some no chat.kera.ia.br
   useEffect(() => {
@@ -282,41 +284,117 @@ const Auth = () => {
         }}
       />
 
-      <Card
-        className="relative w-full max-w-sm p-5 sm:p-6 shadow-glow z-10 max-h-[calc(100vh-2rem)] overflow-y-auto scrollbar-thin rounded-2xl"
-        style={{
-          background: "rgba(0, 0, 0, 0.03)",
-          backdropFilter: "blur(2px)",
-          WebkitBackdropFilter: "blur(2px)",
-          border: "1px solid rgba(255, 255, 255, 0.1)",
-          textShadow: "0px 0px 5px rgba(0, 0, 0, 0.8)",
-        }}
-      >
-        <div className="flex flex-col items-center mb-4">
-          <div className="relative size-20 sm:size-24 rounded-full overflow-hidden border-2 border-primary/70 shadow-glow mb-3 bg-background ring-4 ring-primary/20">
-            <video
-              aria-hidden
-              autoPlay
-              loop
-              muted
-              playsInline
-              src={rainVideoUrl}
-              poster={keraAvatar}
-              className="w-full h-full object-cover"
-            />
-            <div aria-hidden className="absolute inset-0 rounded-full ring-1 ring-primary/40 pointer-events-none" />
-          </div>
-          <h1 className="font-display text-2xl text-glow text-center">
-            {mode === "signin" && "Acesse a Kera"}
-            {mode === "signup" && "Crie sua conta"}
-            {mode === "totp" && "Verificação 2FA"}
-          </h1>
-          <p className="text-sm text-muted-foreground text-center mt-1">
-            {mode === "totp"
-              ? "Digite o código de 6 dígitos do seu app autenticador."
-              : "Sua IA direta, honesta e útil ao máximo."}
-          </p>
-        </div>
+       <AnimatePresence mode="wait">
+         {!isUnlocked ? (
+           <motion.div
+             key="umbrella-trigger"
+             initial={{ opacity: 0, scale: 0.9 }}
+             animate={{ opacity: 1, scale: 1 }}
+             exit={{ opacity: 0, scale: 1.1, filter: "blur(10px)" }}
+             className="relative z-20 flex flex-col items-center"
+           >
+             <button
+               onClick={() => setIsUnlocked(true)}
+               className="group relative p-8 rounded-full bg-background/10 backdrop-blur-md border border-white/10 shadow-2xl hover:bg-background/20 transition-all duration-500"
+             >
+               <motion.div
+                 animate={{ 
+                   y: [0, -10, 0],
+                 }}
+                 transition={{ 
+                   duration: 4, 
+                   repeat: Infinity, 
+                   ease: "easeInOut" 
+                 }}
+                 className="relative"
+               >
+                 <Umbrella className="size-24 text-primary/80 group-hover:text-primary transition-colors duration-500" strokeWidth={1.5} />
+                 <motion.div
+                   className="absolute top-0 left-0 w-full h-full"
+                   animate={{ opacity: [0.2, 0.5, 0.2] }}
+                   transition={{ duration: 2, repeat: Infinity }}
+                 >
+                   <Umbrella className="size-24 text-primary blur-sm" strokeWidth={1.5} />
+                 </motion.div>
+               </motion.div>
+               
+               {/* Gotas de água caindo do guarda-chuva */}
+               <div className="absolute inset-0 pointer-events-none overflow-hidden rounded-full">
+                 {[...Array(6)].map((_, i) => (
+                   <motion.div
+                     key={i}
+                     initial={{ y: 20, opacity: 0 }}
+                     animate={{ y: 80, opacity: [0, 1, 0] }}
+                     transition={{ 
+                       duration: 1.5 + Math.random(), 
+                       repeat: Infinity, 
+                       delay: Math.random() * 2,
+                       ease: "linear"
+                     }}
+                     className="absolute w-0.5 h-3 bg-primary/40 rounded-full"
+                     style={{ left: `${20 + Math.random() * 60}%` }}
+                   />
+                 ))}
+               </div>
+             </button>
+             
+             <motion.p 
+               initial={{ opacity: 0, y: 10 }}
+               animate={{ opacity: 1, y: 0 }}
+               transition={{ delay: 0.5 }}
+               className="mt-6 text-primary/80 font-display tracking-widest text-lg uppercase"
+             >
+               Tudo o que você precisa está aqui embaixo
+             </motion.p>
+           </motion.div>
+         ) : (
+           <motion.div
+             key="auth-card"
+             initial={{ opacity: 0, y: 20, scale: 0.95 }}
+             animate={{ opacity: 1, y: 0, scale: 1 }}
+             transition={{ type: "spring", damping: 20, stiffness: 100 }}
+           >
+             <Card
+               className="relative w-full max-w-sm p-5 sm:p-6 shadow-glow z-10 max-h-[calc(100vh-2rem)] overflow-y-auto scrollbar-thin rounded-2xl"
+               style={{
+                 background: "rgba(0, 0, 0, 0.03)",
+                 backdropFilter: "blur(2px)",
+                 WebkitBackdropFilter: "blur(2px)",
+                 border: "1px solid rgba(255, 255, 255, 0.1)",
+                 textShadow: "0px 0px 5px rgba(0, 0, 0, 0.8)",
+               }}
+             >
+               <div className="flex flex-col items-center mb-4">
+                 <div className="relative size-20 sm:size-24 rounded-full overflow-hidden border-2 border-primary/70 shadow-glow mb-3 bg-background ring-4 ring-primary/20">
+                   <video
+                     aria-hidden
+                     autoPlay
+                     loop
+                     muted
+                     playsInline
+                     src={rainVideoUrl}
+                     poster={keraAvatar}
+                     className="w-full h-full object-cover"
+                   />
+                   {/* Ícone de guarda-chuva flutuando sobre a kera pra manter o tema */}
+                   <div className="absolute bottom-1 right-1 bg-background/80 p-1 rounded-full border border-primary/30">
+                     <Umbrella className="size-3 text-primary" />
+                   </div>
+                   <div aria-hidden className="absolute inset-0 rounded-full ring-1 ring-primary/40 pointer-events-none" />
+                 </div>
+                 <h1 className="font-display text-2xl text-glow text-center">
+                   {mode === "signin" && "Acesse a Kera"}
+                   {mode === "signup" && "Crie sua conta"}
+                   {mode === "totp" && "Verificação 2FA"}
+                 </h1>
+                 <p className="text-sm text-muted-foreground text-center mt-1">
+                   {mode === "totp"
+                     ? "Digite o código de 6 dígitos do seu app autenticador."
+                     : "Sua IA direta, honesta e útil ao máximo."}
+                 </p>
+               </div>
+ 
+               {mode === "totp" ? (
 
         {mode === "totp" ? (
           <form onSubmit={verifyTotp} className="space-y-4">
