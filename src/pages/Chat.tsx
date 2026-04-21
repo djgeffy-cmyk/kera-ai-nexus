@@ -791,99 +791,109 @@ Por favor, analise: há perda de pacote? jitter alto sugere instabilidade de rot
     return groups.filter(g => g.items.length > 0);
   })();
 
-  const Sidebar = () => (
-    <aside className="h-full w-full md:w-80 panel border-r border-border flex flex-col">
-      {/* Topo: avatar minimalista */}
-      <div className="px-3 pt-4 pb-2 flex items-center gap-2">
-        <div
-          className="w-8 h-8 rounded-full overflow-hidden ring-1 ring-border"
-          style={{ boxShadow: "0 0 12px hsl(var(--primary) / 0.25)" }}
-        >
-          <img src={keraLogo} alt="Kera AI" className="w-full h-full object-cover" style={{ transform: "scale(1.1)" }} />
-        </div>
-        <span className="font-display text-sm tracking-wide">Kera</span>
-      </div>
-
-      {/* Ações principais — estilo Grok (linhas limpas) */}
-      <nav className="px-2 pt-1 pb-2">
-        <button
-          onClick={() => newConversation()}
-          className="w-full flex items-center gap-3 px-2.5 py-2 rounded-md hover:bg-secondary/60 transition text-sm"
-        >
-          <MessageSquare className="size-4 text-muted-foreground" />
-          <span>Novo bate-papo</span>
-        </button>
-        <button
-          onClick={() => navigate("/agents")}
-          className="w-full flex items-center gap-3 px-2.5 py-2 rounded-md hover:bg-secondary/60 transition text-sm"
-        >
-          <LayoutGrid className="size-4 text-muted-foreground" />
-          <span>Agentes</span>
-        </button>
-        <button
-          onClick={() => setGalleryOpen(true)}
-          className="w-full flex items-center gap-3 px-2.5 py-2 rounded-md hover:bg-secondary/60 transition text-sm"
-        >
-          <ImageIcon className="size-4 text-muted-foreground" />
-          <span>Galeria</span>
-        </button>
-      </nav>
+   const Sidebar = () => (
+     <aside className="h-full w-full md:w-80 bg-background/95 backdrop-blur-2xl border-r border-white/5 flex flex-col shadow-2xl">
+       {/* Topo: avatar minimalista */}
+       <div className="px-6 pt-8 pb-6 flex items-center gap-3">
+         <div className="relative group">
+           <div className="absolute inset-0 bg-primary/20 rounded-xl blur-lg opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+           <div className="relative w-10 h-10 rounded-xl overflow-hidden ring-1 ring-white/10 bg-black/20 flex items-center justify-center">
+             <img src={keraLogo} alt="Kera AI" className="w-8 h-8 object-contain transition-transform duration-500 group-hover:scale-110" />
+           </div>
+         </div>
+         <div>
+           <span className="font-display text-base font-black tracking-widest text-white/90">KERA</span>
+           <p className="text-[10px] text-muted-foreground uppercase tracking-[0.2em] -mt-1 font-semibold opacity-60">Intelligence</p>
+         </div>
+       </div>
+ 
+       {/* Ações principais — estilo moderno */}
+       <nav className="px-4 space-y-1">
+         <button
+           onClick={() => newConversation()}
+           className="w-full flex items-center gap-3 px-4 py-3 rounded-xl bg-primary/10 text-primary border border-primary/20 hover:bg-primary/20 transition-all duration-300 text-sm font-semibold group"
+         >
+           <Plus className="size-4 transition-transform group-hover:rotate-90" />
+           <span>Novo Chat</span>
+         </button>
+         <div className="grid grid-cols-2 gap-1 pt-1">
+           <button
+             onClick={() => navigate("/agents")}
+             className="flex items-center justify-center gap-2 py-2.5 rounded-xl hover:bg-white/5 transition-all text-xs font-medium text-muted-foreground hover:text-white"
+           >
+             <LayoutGrid className="size-3.5" />
+             <span>Agentes</span>
+           </button>
+           <button
+             onClick={() => setGalleryOpen(true)}
+             className="flex items-center justify-center gap-2 py-2.5 rounded-xl hover:bg-white/5 transition-all text-xs font-medium text-muted-foreground hover:text-white"
+           >
+             <ImageIcon className="size-3.5" />
+             <span>Galeria</span>
+           </button>
+         </div>
+       </nav>
 
       <ScrollArea className="flex-1">
 
         {/* Histórico agrupado */}
-        <div className="px-2 pt-3 pb-4">
-          <div className="flex items-center justify-between px-2.5 mb-1">
-            <h3 className="text-[11px] uppercase tracking-wider text-muted-foreground/70">Histórico</h3>
-            {conversations.length > 0 && (
-              <button
-                onClick={clearEmptyConversations}
-                className="text-[10px] uppercase tracking-wider text-muted-foreground/60 hover:text-foreground transition flex items-center gap-1"
-                title="Excluir conversas vazias (sem mensagens)"
-              >
-                <Eraser className="size-3" />
-                Limpar vazias
-              </button>
-            )}
-          </div>
-          {groupedConversations.length === 0 && (
-            <p className="text-xs text-muted-foreground/70 text-center py-4 px-2">Sem conversas ainda.</p>
-          )}
-          {groupedConversations.map(group => (
-            <div key={group.label} className="mt-2">
-              <div className="text-[10px] uppercase tracking-wider text-muted-foreground/60 px-2.5 mb-1">
-                {group.label}
-              </div>
-              {group.items.map(c => (
-                <div
-                  key={c.id}
-                  className={`group flex items-start gap-1 rounded-md px-2.5 py-1.5 text-sm cursor-pointer transition ${
-                    currentId === c.id ? "bg-secondary/80 text-foreground" : "hover:bg-secondary/60 text-muted-foreground hover:text-foreground"
-                  }`}
-                  onClick={() => selectConversation(c.id, c.agent_key)}
-                >
-                  <span className="flex-1 min-w-0 break-words leading-snug line-clamp-2">{c.title}</span>
-                  <button
-                    onClick={(e) => { e.stopPropagation(); renameConversation(c.id, c.title); }}
-                    className="opacity-0 group-hover:opacity-100 text-muted-foreground hover:text-foreground transition p-0.5"
-                    aria-label="Renomear conversa"
-                    title="Renomear"
-                  >
-                    <Pencil className="size-3.5" />
-                  </button>
-                  <button
-                    onClick={(e) => { e.stopPropagation(); deleteConversation(c.id); }}
-                    className="opacity-0 group-hover:opacity-100 text-muted-foreground hover:text-destructive transition p-0.5"
-                    aria-label="Excluir conversa"
-                    title="Excluir"
-                  >
-                    <Trash2 className="size-3.5" />
-                  </button>
-                </div>
-              ))}
-            </div>
-          ))}
-        </div>
+         <div className="px-4 pt-6 pb-6">
+           <div className="flex items-center justify-between px-3 mb-4">
+             <h3 className="text-[11px] font-bold uppercase tracking-[0.15em] text-muted-foreground/50">Histórico</h3>
+             {conversations.length > 0 && (
+               <button
+                 onClick={clearEmptyConversations}
+                 className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground/40 hover:text-primary transition-colors flex items-center gap-1.5 group"
+                 title="Excluir conversas vazias"
+               >
+                 <Eraser className="size-3 transition-transform group-hover:-rotate-12" />
+                 Limpar
+               </button>
+             )}
+           </div>
+           {groupedConversations.length === 0 && (
+             <p className="text-[11px] text-muted-foreground/30 text-center py-8 font-medium">O silêncio é uma tela em branco.</p>
+           )}
+           {groupedConversations.map(group => (
+             <div key={group.label} className="mt-4">
+               <div className="text-[10px] font-bold uppercase tracking-widest text-primary/40 px-3 mb-2 flex items-center gap-2">
+                 <span className="w-1 h-1 rounded-full bg-primary/40 block" />
+                 {group.label}
+               </div>
+               <div className="space-y-0.5">
+                 {group.items.map(c => (
+                   <div
+                     key={c.id}
+                     className={`group relative flex items-start gap-3 rounded-xl px-4 py-2.5 text-xs font-medium cursor-pointer transition-all duration-300 ${
+                       currentId === c.id 
+                         ? "bg-primary/10 text-primary shadow-sm ring-1 ring-primary/20" 
+                         : "hover:bg-white/5 text-muted-foreground hover:text-white"
+                     }`}
+                     onClick={() => selectConversation(c.id, c.agent_key)}
+                   >
+                     <span className="flex-1 min-w-0 leading-relaxed line-clamp-1">{c.title || "Sem título"}</span>
+                     <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                       <button
+                         onClick={(e) => { e.stopPropagation(); renameConversation(c.id, c.title); }}
+                         className="p-1 text-muted-foreground/50 hover:text-primary hover:bg-primary/10 rounded-md transition-all"
+                         aria-label="Renomear"
+                       >
+                         <Pencil className="size-3" />
+                       </button>
+                       <button
+                         onClick={(e) => { e.stopPropagation(); deleteConversation(c.id); }}
+                         className="p-1 text-muted-foreground/50 hover:text-destructive hover:bg-destructive/10 rounded-md transition-all"
+                         aria-label="Excluir"
+                       >
+                         <Trash2 className="size-3" />
+                       </button>
+                     </div>
+                   </div>
+                 ))}
+               </div>
+             </div>
+           ))}
+         </div>
       </ScrollArea>
 
       <div className="p-3 border-t border-border space-y-1">
@@ -1038,33 +1048,37 @@ Por favor, analise: há perda de pacote? jitter alto sugere instabilidade de rot
             </div>
           </div>
         )}
-        <header className="relative z-10 h-14 border-b border-border panel flex items-center px-2 md:px-6 gap-1.5 md:gap-3 overflow-hidden">
-          {/* Botão para ocultar/mostrar a sidebar (desktop) */}
-          <Button
-            variant="ghost"
-            size="icon"
-            className="hidden md:inline-flex shrink-0 h-9 w-9"
-            onClick={() => setSidebarOpen((v) => !v)}
-            aria-label={sidebarOpen ? "Ocultar menu lateral" : "Mostrar menu lateral"}
-            title={sidebarOpen ? "Ocultar menu lateral" : "Mostrar menu lateral"}
-          >
-            {sidebarOpen ? <PanelLeftClose className="size-5" /> : <PanelLeftOpen className="size-5" />}
-          </Button>
-          <Sheet>
-            <SheetTrigger asChild>
-              <Button variant="ghost" size="icon" className="md:hidden shrink-0 h-9 w-9"><Menu className="size-5" /></Button>
-            </SheetTrigger>
-            <SheetContent side="left" className="p-0 w-80 bg-transparent border-r-0"><Sidebar /></SheetContent>
-          </Sheet>
-
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <button className="flex items-center gap-1.5 md:gap-2 hover:bg-secondary/60 px-1.5 md:px-2 py-1 rounded-lg transition min-w-0 max-w-[42vw] md:max-w-none">
-                <span className="size-2 rounded-full bg-primary shadow-glow animate-pulse-glow shrink-0" />
-                <h1 className="font-display text-sm md:text-lg text-glow truncate">{currentAgentName.toUpperCase()}</h1>
-                <ChevronRight className="size-4 rotate-90 text-muted-foreground shrink-0" />
-              </button>
-            </DropdownMenuTrigger>
+         <header className="relative z-40 h-16 md:h-20 border-b border-white/5 bg-background/40 backdrop-blur-xl flex items-center px-4 md:px-8 gap-3 md:gap-4 overflow-hidden transition-all duration-300 shadow-sm">
+           {/* Botão para ocultar/mostrar a sidebar (desktop) */}
+           <Button
+             variant="ghost"
+             size="icon"
+             className="hidden md:inline-flex shrink-0 h-10 w-10 hover:bg-white/5 rounded-xl transition-all active:scale-95"
+             onClick={() => setSidebarOpen((v) => !v)}
+             aria-label={sidebarOpen ? "Ocultar menu lateral" : "Mostrar menu lateral"}
+           >
+             {sidebarOpen ? <PanelLeftClose className="size-5.5" /> : <PanelLeftOpen className="size-5.5" />}
+           </Button>
+           <Sheet>
+             <SheetTrigger asChild>
+               <Button variant="ghost" size="icon" className="md:hidden shrink-0 h-10 w-10 hover:bg-white/5 rounded-xl"><Menu className="size-5.5" /></Button>
+             </SheetTrigger>
+             <SheetContent side="left" className="p-0 w-80 bg-background/95 backdrop-blur-2xl border-r border-white/5 shadow-2xl"><Sidebar /></SheetContent>
+           </Sheet>
+ 
+           <div className="h-8 w-px bg-white/10 hidden md:block mx-1" />
+ 
+           <DropdownMenu>
+             <DropdownMenuTrigger asChild>
+               <button className="flex items-center gap-2.5 hover:bg-white/5 px-3 py-1.5 rounded-xl transition-all min-w-0 group">
+                 <div className="relative">
+                   <span className="size-2.5 rounded-full bg-primary shadow-glow animate-pulse-glow block" />
+                   <span className="absolute inset-0 size-2.5 rounded-full bg-primary animate-ping opacity-20" />
+                 </div>
+                 <h1 className="font-display text-sm md:text-base font-bold tracking-wider text-glow truncate group-hover:text-primary transition-colors">{currentAgentName.toUpperCase()}</h1>
+                 <ChevronRight className="size-4 rotate-90 text-muted-foreground opacity-50 group-hover:opacity-100 transition-all shrink-0" />
+               </button>
+             </DropdownMenuTrigger>
             <DropdownMenuContent className="w-64 bg-card border-border">
               <DropdownMenuLabel className="text-xs text-muted-foreground">Agentes prontos</DropdownMenuLabel>
               {BUILTIN_AGENTS.map(a => {
@@ -1253,27 +1267,52 @@ Por favor, analise: há perda de pacote? jitter alto sugere instabilidade de rot
           );
         })()}
 
-        <div ref={scrollerRef} className="relative z-10 flex-1 overflow-y-auto overflow-x-hidden scrollbar-thin">
-          <div className="max-w-6xl mx-auto px-6 md:px-10 py-6 space-y-5 [.light_&]:[text-shadow:0_1px_2px_hsl(var(--background)/0.8)]">
-            {messages.length === 0 && !streaming && (
-              <div className="text-center pt-10 md:pt-20">
-                <video
-                  src={assetUrl(keraAvatarVideo)}
-                  poster={keraAvatar}
-                  autoPlay
-                  loop
-                  muted
-                  playsInline
-                  aria-label="Avatar animado da Kera"
-                  className="size-28 md:size-36 mx-auto rounded-full object-cover object-top border border-primary/40 shadow-glow bg-background"
-                />
-                <h2 className="font-display text-2xl md:text-3xl mt-6 text-glow">Olá, eu sou a {currentAgentName}</h2>
-                <p className="text-muted-foreground mt-2 max-w-md mx-auto">
-                  {currentAgent && "description" in currentAgent ? currentAgent.description : "Sua IA truth-seeking. Direta. Honesta. Útil."}
-                </p>
-              </div>
-            )}
-            {messages.map((m, i) => {
+         <div ref={scrollerRef} className="relative z-10 flex-1 overflow-y-auto overflow-x-hidden scrollbar-thin pb-32">
+           <div className="max-w-5xl mx-auto px-6 md:px-10 py-10 md:py-16 space-y-8 [.light_&]:[text-shadow:0_1px_2px_hsl(var(--background)/0.8)]">
+             {messages.length === 0 && !streaming && (
+               <div className="text-center animate-in fade-in zoom-in-95 duration-1000">
+                 <div className="relative group inline-block">
+                   <div className="absolute inset-0 bg-primary/20 blur-[60px] animate-pulse rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-1000" />
+                   <video
+                     src={assetUrl(keraAvatarVideo)}
+                     poster={keraAvatar}
+                     autoPlay
+                     loop
+                     muted
+                     playsInline
+                     aria-label="Avatar animado da Kera"
+                     className="size-32 md:size-48 mx-auto rounded-[2.5rem] object-cover object-top border border-white/10 shadow-glow bg-black/40 backdrop-blur-md transform transition-transform duration-500 group-hover:scale-105"
+                   />
+                 </div>
+                 <h2 className="font-display text-3xl md:text-5xl mt-10 font-black tracking-tighter uppercase leading-tight">
+                   Olá, eu sou a <span className="kera-gradient-text">{currentAgentName}</span>
+                 </h2>
+                 <p className="text-sm md:text-lg text-muted-foreground mt-4 max-w-lg mx-auto font-medium opacity-80 leading-relaxed">
+                   {currentAgent && "description" in currentAgent ? currentAgent.description : "Sua assistente de inteligência avançada. Em que posso ser útil hoje?"}
+                 </p>
+ 
+                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 w-full max-w-2xl mx-auto mt-12 px-4">
+                   {[
+                     { q: "Quais são suas capacidades?", icon: Sparkles },
+                     { q: "Otimize meu fluxo de trabalho.", icon: Activity },
+                     { q: "Análise jurídica inteligente.", icon: Scale },
+                     { q: "Gerar relatório de rede.", icon: Monitor },
+                   ].map(({ q, icon: Icon }) => (
+                     <button
+                       key={q}
+                       onClick={() => { setInput(q); setTimeout(() => sendText(q), 50); }}
+                       className="flex items-center gap-4 text-left px-6 py-4.5 rounded-2xl bg-white/5 border border-white/5 hover:border-primary/30 hover:bg-primary/5 transition-all duration-300 group shadow-sm active:scale-95"
+                     >
+                       <div className="size-10 rounded-xl bg-white/5 flex items-center justify-center group-hover:bg-primary/20 transition-colors shadow-inner">
+                         <Icon className="size-5 text-muted-foreground group-hover:text-primary transition-colors" />
+                       </div>
+                       <span className="text-muted-foreground group-hover:text-foreground transition-colors font-semibold text-sm">{q}</span>
+                     </button>
+                   ))}
+                 </div>
+               </div>
+             )}
+             {messages.map((m, i) => {
               const isLast = i === messages.length - 1;
               return (
                 <MessageBubble
@@ -1317,30 +1356,30 @@ Por favor, analise: há perda de pacote? jitter alto sugere instabilidade de rot
 
         <div className="relative z-10 border-t border-border panel p-3 md:p-4 pb-28 md:pb-32">
           <div className="max-w-6xl mx-auto space-y-2">
-            {isSentinela && (
-              <div className="flex flex-wrap justify-center gap-2">
-                <Button
-                  onClick={runSentinelaCheck}
-                  disabled={streaming}
-                  variant="outline"
-                  size="sm"
-                  className="border-emerald-500/40 text-emerald-400 hover:bg-emerald-500/10 hover:text-emerald-300 gap-2"
-                >
-                  <ShieldCheck className="size-4" />
-                  Verificar status (HTTP)
-                </Button>
-                <Button
-                  onClick={runNetworkTrace}
-                  disabled={streaming}
-                  variant="outline"
-                  size="sm"
-                  className="border-cyan-500/40 text-cyan-400 hover:bg-cyan-500/10 hover:text-cyan-300 gap-2"
-                >
-                  <Activity className="size-4" />
-                  Análise de rede (ping/jitter/perda)
-                </Button>
-              </div>
-            )}
+             {isSentinela && (
+               <div className="flex flex-wrap justify-center gap-3 animate-in slide-in-from-bottom-2 duration-500">
+                 <Button
+                   onClick={runSentinelaCheck}
+                   disabled={streaming}
+                   variant="outline"
+                   size="sm"
+                   className="h-9 px-4 rounded-xl border-emerald-500/30 text-emerald-400 bg-emerald-500/5 hover:bg-emerald-500/15 hover:border-emerald-500/50 hover:text-emerald-300 gap-2.5 shadow-sm active:scale-95 transition-all"
+                 >
+                   <ShieldCheck className="size-4" />
+                   <span className="text-xs font-bold uppercase tracking-wider">Monitor Sentinela</span>
+                 </Button>
+                 <Button
+                   onClick={runNetworkTrace}
+                   disabled={streaming}
+                   variant="outline"
+                   size="sm"
+                   className="h-9 px-4 rounded-xl border-cyan-500/30 text-cyan-400 bg-cyan-500/5 hover:bg-cyan-500/15 hover:border-cyan-500/50 hover:text-cyan-300 gap-2.5 shadow-sm active:scale-95 transition-all"
+                 >
+                   <Activity className="size-4" />
+                   <span className="text-xs font-bold uppercase tracking-wider">Trace de Rede</span>
+                 </Button>
+               </div>
+             )}
             {attachments.length > 0 && (
               <div className="flex flex-wrap gap-2">
                 {attachments.map((a, i) => (
