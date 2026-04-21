@@ -74,6 +74,7 @@ const Chat = () => {
     "kera-gamer": assetUrl(keraGamerBgVideo),
   }), []);
   const [galleryOpen, setGalleryOpen] = useState(false);
+  const [itcmdOpen, setItcmdOpen] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
   const [provider, setProvider] = useState<ProviderId>(getPreferredProvider());
   // Modo voz NÃO persiste — sempre começa desligado a cada sessão para evitar
