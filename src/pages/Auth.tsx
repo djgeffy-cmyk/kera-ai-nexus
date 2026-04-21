@@ -423,7 +423,15 @@ const Auth = () => {
               transition={{ delay: 0.5 }}
               className="mt-6 text-primary/80 font-display tracking-widest text-lg uppercase text-center"
             >
-              Tudo o que você precisa está aqui embaixo
+              Sob o guarda-chuva está tudo
+            </motion.p>
+            <motion.p
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.8 }}
+              className="mt-2 text-xs text-muted-foreground tracking-wider text-center max-w-xs"
+            >
+              Clique para entrar — ou testar a Kera sem cadastro
             </motion.p>
           </motion.div>
         ) : (
