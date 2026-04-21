@@ -13,6 +13,7 @@ import keraAvatar from "@/assets/kera-avatar.png";
 import keraAvatarVideo from "@/assets/kera-avatar-rain.mp4.asset.json";
 import ParticlesOverlay from "@/components/ParticlesOverlay";
 import UmbrellaCorpLogo from "@/components/UmbrellaCorpLogo";
+import DemoKeraDialog from "@/components/DemoKeraDialog";
 import { assetUrl } from "@/lib/assetUrl";
 import { MissionCriticalSchema } from "@/lib/missionCriticalSchemas";
 import { PasswordStrengthMeter } from "@/components/PasswordStrengthMeter";
