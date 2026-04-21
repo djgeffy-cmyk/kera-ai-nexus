@@ -342,3 +342,51 @@
 .prose-kera blockquote { @apply border-l-2 border-primary/60 pl-3 italic text-muted-foreground my-2; }
 .prose-kera table { @apply w-full text-sm my-3 border-collapse; }
 .prose-kera th, .prose-kera td { @apply border border-border px-2 py-1; }
+
+/* ===========================================================
+   iOS Safari — Safe-area helpers
+   Compensam o notch/Dynamic Island, especialmente em PWA
+   standalone com status-bar-style "black-translucent".
+   Usa constant() (iOS 11) + env() (iOS 11.2+) como fallback.
+   =========================================================== */
+:root {
+  --safe-top: constant(safe-area-inset-top, 0px);
+  --safe-top: env(safe-area-inset-top, 0px);
+  --safe-bottom: constant(safe-area-inset-bottom, 0px);
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+  /* Margem mínima garantida no topo, mesmo sem notch reportado */
+  --ios-min-top: 12px;
+}
+
+/* Header com margem consistente em iOS Safari (claro ou escuro).
+   max() garante o maior valor entre o notch e nosso mínimo. */
+.ios-safe-header {
+  padding-top: max(var(--safe-top), var(--ios-min-top));
+  min-height: calc(4rem + max(var(--safe-top), var(--ios-min-top)));
+}
+@media (min-width: 768px) {
+  .ios-safe-header {
+    min-height: calc(5rem + max(var(--safe-top), var(--ios-min-top)));
+  }
+}
+
+/* Compensa o offset do header no conteúdo logo abaixo,
+   evitando que o primeiro item "suba" pra trás do notch
+   quando há scroll-snap ou alturas calculadas via JS. */
+.ios-safe-content {
+  scroll-padding-top: max(var(--safe-top), var(--ios-min-top));
+}
+
+/* Específico p/ iOS Safari standalone (PWA fullscreen escuro):
+   reforça a margem porque o iOS desenha sob a status bar. */
+@supports (-webkit-touch-callout: none) {
+  @media (display-mode: standalone) {
+    .ios-safe-header {
+      padding-top: max(var(--safe-top), 20px);
+      min-height: calc(4rem + max(var(--safe-top), 20px));
+    }
+    .ios-safe-content {
+      scroll-padding-top: max(var(--safe-top), 20px);
+    }
+  }
+}
