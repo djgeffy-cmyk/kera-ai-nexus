@@ -103,6 +103,64 @@ const MONITOR_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/monitor-u
 const NETTRACE_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/network-trace`;
 const IMAGE_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/generate-image`;
 
+// Sugestões de boas-vindas específicas por agente
+const AGENT_SUGGESTIONS: Record<string, Array<{ q: string; icon: typeof Sparkles }>> = {
+  kera: [
+    { q: "Quais são suas capacidades?", icon: Sparkles },
+    { q: "Gere uma imagem de um pôr-do-sol cyberpunk.", icon: Camera },
+    { q: "Me explica o que é a Lei 14.133 em 5 linhas.", icon: ScrollText },
+    { q: "Bora trocar uma ideia sobre IA hoje.", icon: Bot },
+  ],
+  "kera-dev": [
+    { q: "Revisa esse código e me aponta bugs.", icon: Bug },
+    { q: "Como estruturar uma API REST escalável?", icon: Code2 },
+    { q: "Diferença entre useMemo e useCallback no React.", icon: Sparkles },
+    { q: "Me ensina padrões SOLID com exemplos.", icon: FileText },
+  ],
+  "kera-sec": [
+    { q: "Explica OWASP Top 10 com exemplos práticos.", icon: Shield },
+    { q: "Como fazer hardening de servidor Linux?", icon: Lock },
+    { q: "Analisa esse log e identifica ameaças.", icon: FileSearch },
+    { q: "Roteiro de pentest para uma aplicação web.", icon: Bug },
+  ],
+  "kera-juridica": [
+    { q: "Explica a Lei 14.133/21 em pontos-chave.", icon: Scale },
+    { q: "Cláusulas obrigatórias num contrato de TI.", icon: ScrollText },
+    { q: "LGPD: o que minha empresa precisa fazer?", icon: ShieldCheck },
+    { q: "Modelo de Termo de Referência para software.", icon: FileText },
+  ],
+  "kera-sentinela": [
+    { q: "Verifica o status dos portais da Prefeitura.", icon: Radar },
+    { q: "Esse e-mail é phishing? Vou colar o cabeçalho.", icon: ShieldCheck },
+    { q: "Gerar relatório de rede da última hora.", icon: Activity },
+    { q: "O que checar num incidente de segurança?", icon: Bug },
+  ],
+  "kera-nutri": [
+    { q: "Calcula meus macros pra hipertrofia.", icon: Apple },
+    { q: "Treino ABC pra ganhar massa em 12 semanas.", icon: Dumbbell },
+    { q: "Suplementação básica que vale a pena.", icon: Heart },
+    { q: "Como o Denis tá indo no treino hoje?", icon: Sparkles },
+  ],
+  "kera-gamer": [
+    { q: "Build pra Elden Ring DEX iniciante.", icon: Gamepad2 },
+    { q: "Como pegar a platina de Spider-Man 2?", icon: Trophy },
+    { q: "Estratégia pro Malenia (Elden Ring).", icon: Sparkles },
+    { q: "Melhores jogos exclusivos do PS5 em 2025.", icon: Gamepad2 },
+  ],
+  "kera-tradutora": [
+    { q: "Traduz esse trecho de livro pro PT-BR.", icon: Languages },
+    { q: "Como adaptar gírias americanas em diálogos?", icon: BookOpen },
+    { q: "Diferença entre tradução literal e literária.", icon: FileText },
+    { q: "Glossário de termos pra série de fantasia.", icon: BookOpen },
+  ],
+  "kera-familia": [
+    { q: "Como funciona partilha em comunhão parcial?", icon: Heart },
+    { q: "Pensão alimentícia: como calcular?", icon: Scale },
+    { q: "Inventário extrajudicial: passo a passo.", icon: ScrollText },
+    { q: "Guarda compartilhada: direitos e deveres.", icon: Baby },
+  ],
+};
+
 const Chat = () => {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
