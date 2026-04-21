@@ -611,6 +611,7 @@ const Auth = () => {
         open={demoOpen}
         onOpenChange={setDemoOpen}
         onWantToSignUp={() => {
+          setIsUnlocked(true);
           setMode("signup");
         }}
       />
