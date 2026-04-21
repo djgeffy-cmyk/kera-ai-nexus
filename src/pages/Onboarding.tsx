@@ -6,6 +6,7 @@ import { Card } from "@/components/ui/card";
 import { ArrowLeft, Check, Sparkles } from "lucide-react";
 import { toast } from "sonner";
 import { BUILTIN_AGENTS } from "@/lib/agents";
+import { useUserAccess } from "@/hooks/useUserAccess";
 import keraLogo from "@/assets/kera-logo.png";
 
 /**
@@ -20,6 +21,7 @@ const Onboarding = () => {
   const [selected, setSelected] = useState<Set<string>>(new Set(["kera"]));
   const [saving, setSaving] = useState(false);
   const [userId, setUserId] = useState<string | null>(null);
+  const { canSee } = useUserAccess();
 
   useEffect(() => {
     document.title = isEditing ? "Kera AI — Minhas áreas" : "Kera AI — Escolha sua área";
@@ -86,7 +88,7 @@ const Onboarding = () => {
   };
 
   // ordena: Kera principal primeiro, depois o resto
-  const ordered = [...BUILTIN_AGENTS].sort((a, b) => {
+  const ordered = [...BUILTIN_AGENTS].filter(a => canSee(a.key)).sort((a, b) => {
     if (a.key === "kera") return -1;
     if (b.key === "kera") return 1;
     return a.name.localeCompare(b.name);
