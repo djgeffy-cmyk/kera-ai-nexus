@@ -11,6 +11,7 @@ import { ShieldCheck, KeyRound, Mail, ScanFace, Eye, EyeOff, Sparkles, MousePoin
 import { motion, AnimatePresence } from "framer-motion";
 import keraAvatar from "@/assets/kera-avatar.png";
 import keraAvatarVideo from "@/assets/kera-avatar-rain.mp4.asset.json";
+import rainBgVideo from "@/assets/rain-bg-realistic.mp4.asset.json";
 import rainAmbientUrl from "@/assets/rain-ambient.mp3";
 import ParticlesOverlay from "@/components/ParticlesOverlay";
 import DemoKeraDialog from "@/components/DemoKeraDialog";
@@ -120,6 +121,7 @@ const Auth = () => {
   const [resetNote, setResetNote] = useState("");
   const [resetLoading, setResetLoading] = useState(false);
   const rainVideoUrl = assetUrl(keraAvatarVideo);
+  const rainBgUrl = assetUrl(rainBgVideo);
 
   useEffect(() => {
     document.title = "Kera AI — Entrar";
@@ -295,7 +297,7 @@ const Auth = () => {
         muted
         playsInline
         className="absolute inset-0 w-full h-full object-cover"
-        src={rainVideoUrl}
+        src={rainBgUrl}
         poster={keraAvatar}
       />
       <div aria-hidden className="absolute inset-0 bg-background/30" />
