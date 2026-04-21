@@ -29,3 +29,6 @@ verify_jwt = false
 
 [functions.licitacoes-cron]
 verify_jwt = false
+
+[functions.webauthn]
+verify_jwt = false

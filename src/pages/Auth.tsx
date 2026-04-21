@@ -7,13 +7,18 @@ import { Label } from "@/components/ui/label";
 import { Card } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { toast } from "sonner";
-import { ShieldCheck, KeyRound, Mail } from "lucide-react";
+import { ShieldCheck, KeyRound, Mail, ScanFace } from "lucide-react";
 import keraAvatar from "@/assets/kera-avatar.png";
 import keraAvatarVideo from "@/assets/kera-avatar-rain.mp4.asset.json";
 import ParticlesOverlay from "@/components/ParticlesOverlay";
 import { assetUrl } from "@/lib/assetUrl";
 import { MissionCriticalSchema } from "@/lib/missionCriticalSchemas";
 import { PasswordStrengthMeter } from "@/components/PasswordStrengthMeter";
+import {
+  loginWithPasskey,
+  registerPasskey,
+  webauthnSupported,
+} from "@/lib/webauthn";
 
 type Mode = "signin" | "signup" | "totp";
 
@@ -26,6 +31,8 @@ const Auth = () => {
   const [factorId, setFactorId] = useState<string | null>(null);
   const [challengeId, setChallengeId] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [passkeyLoading, setPasskeyLoading] = useState(false);
+  const [supportsPasskey] = useState(() => webauthnSupported());
 
   // Refs pro parallax (movimento sutil via CSS vars — não re-renderiza React)
   const mainRef = useRef<HTMLElement | null>(null);
@@ -177,6 +184,36 @@ const Auth = () => {
     }
   };
 
+  const handlePasskeyLogin = async () => {
+    if (!email.trim()) {
+      toast.error("Digite seu email primeiro.");
+      return;
+    }
+    setPasskeyLoading(true);
+    try {
+      await loginWithPasskey(email.trim().toLowerCase());
+      toast.success("Acesso liberado pelo Face ID!");
+      navigate("/", { replace: true });
+    } catch (err: any) {
+      toast.error(err.message || "Falha no Face ID");
+    } finally {
+      setPasskeyLoading(false);
+    }
+  };
+
+  const handlePasskeyRegister = async () => {
+    setPasskeyLoading(true);
+    try {
+      await registerPasskey();
+      toast.success("Face ID cadastrado! Da próxima vez, use o botão Face ID.");
+      navigate("/", { replace: true });
+    } catch (err: any) {
+      toast.error(err.message || "Falha ao cadastrar Face ID");
+    } finally {
+      setPasskeyLoading(false);
+    }
+  };
+
   const submitReset = async () => {
     const e = resetEmail.trim().toLowerCase();
     if (!e || !e.includes("@")) {
@@ -292,6 +329,20 @@ const Auth = () => {
               className="w-full bg-gradient-cyber text-primary-foreground font-display tracking-wider hover:opacity-90 shadow-glow">
               {loading ? "Verificando..." : "Verificar"}
             </Button>
+            {supportsPasskey && (
+              <Button
+                type="button"
+                onClick={handlePasskeyRegister}
+                disabled={passkeyLoading}
+                variant="outline"
+                className="w-full border-primary/40 hover:bg-primary/10 hover:border-primary"
+              >
+                <ScanFace className="size-4 mr-2 text-primary" />
+                {passkeyLoading
+                  ? "Cadastrando..."
+                  : "Cadastrar Face ID neste dispositivo"}
+              </Button>
+            )}
             <button
               type="button"
               onClick={async () => {
@@ -325,6 +376,26 @@ const Auth = () => {
                 {loading ? "Aguarde..." : mode === "signin" ? "Entrar" : "Criar conta"}
               </Button>
             </form>
+
+            {mode === "signin" && supportsPasskey && (
+              <>
+                <div className="flex items-center gap-3 my-4">
+                  <div className="flex-1 h-px bg-border/50" />
+                  <span className="text-xs text-muted-foreground">ou</span>
+                  <div className="flex-1 h-px bg-border/50" />
+                </div>
+                <Button
+                  type="button"
+                  onClick={handlePasskeyLogin}
+                  disabled={passkeyLoading || !email.trim()}
+                  variant="outline"
+                  className="w-full border-primary/40 hover:bg-primary/10 hover:border-primary"
+                >
+                  <ScanFace className="size-4 mr-2 text-primary" />
+                  {passkeyLoading ? "Aguarde..." : "Entrar com Face ID / Touch ID"}
+                </Button>
+              </>
+            )}
 
             {mode === "signin" && (
               <button
