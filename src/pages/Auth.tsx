@@ -660,6 +660,14 @@ const Auth = () => {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      <DemoKeraDialog
+        open={demoOpen}
+        onOpenChange={setDemoOpen}
+        onWantToSignUp={() => {
+          setMode("signup");
+        }}
+      />
     </main>
   );
 };
