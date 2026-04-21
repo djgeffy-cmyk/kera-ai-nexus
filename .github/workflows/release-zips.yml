@@ -1,0 +1,113 @@
+name: Release ZIPs
+
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: 'true'
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build-windows-zip:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: 'npm'
+
+      - name: Install Dependencies
+        run: npm install --no-audit --no-fund
+
+      - name: Run Build Script
+        run: npm run electron:build
+        env:
+          ELECTRON_BUILD: 'true'
+          BUILD_PLATFORM: 'win32'
+          BUILD_ARCH: 'x64'
+
+      - name: Upload Windows ZIP
+        uses: actions/upload-artifact@v4
+        with:
+          name: KeraDesktop-win32-x64
+          path: release-builds/KeraDesktop-win32-x64.zip
+          if-no-files-found: error
+          retention-days: 7
+
+  build-linux-zip:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: 'npm'
+
+      - name: Install Dependencies
+        run: npm install --no-audit --no-fund
+
+      - name: Run Build Script
+        run: npm run electron:build
+        env:
+          ELECTRON_BUILD: 'true'
+          BUILD_PLATFORM: 'linux'
+          BUILD_ARCH: 'x64'
+
+      - name: Upload Linux ZIP
+        uses: actions/upload-artifact@v4
+        with:
+          name: KeraDesktop-linux-x64
+          path: release-builds/KeraDesktop-linux-x64.zip
+          if-no-files-found: error
+          retention-days: 7
+
+  publish-release:
+    needs: [build-windows-zip, build-linux-zip]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Download Windows ZIP
+        uses: actions/download-artifact@v4
+        with:
+          name: KeraDesktop-win32-x64
+          path: dist-release
+
+      - name: Download Linux ZIP
+        uses: actions/download-artifact@v4
+        with:
+          name: KeraDesktop-linux-x64
+          path: dist-release
+
+      - name: List artifacts
+        run: ls -la dist-release
+
+      - name: Resolve tag name
+        id: tag
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            echo "name=manual-${{ github.run_number }}" >> "$GITHUB_OUTPUT"
+          else
+            echo "name=${GITHUB_REF_NAME}" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Publish GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ steps.tag.outputs.name }}
+          name: Kera Desktop ${{ steps.tag.outputs.name }}
+          generate_release_notes: true
+          fail_on_unmatched_files: true
+          files: |
+            dist-release/KeraDesktop-win32-x64.zip
+            dist-release/KeraDesktop-linux-x64.zip
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
