@@ -37,6 +37,23 @@ const Auth = () => {
   const [inIframe] = useState(() => isInIframe());
   const passkeyAvailable = supportsPasskey && !inIframe;
 
+  // Diagnóstico — ajuda a entender quando o botão some no chat.kera.ia.br
+  useEffect(() => {
+    // eslint-disable-next-line no-console
+    console.log("[passkey] diagnóstico", {
+      supportsPasskey,
+      inIframe,
+      passkeyAvailable,
+      hasPublicKeyCredential:
+        typeof window !== "undefined" && !!(window as any).PublicKeyCredential,
+      origin: typeof window !== "undefined" ? window.location.origin : null,
+      isSecureContext:
+        typeof window !== "undefined" ? window.isSecureContext : null,
+      protocol:
+        typeof window !== "undefined" ? window.location.protocol : null,
+    });
+  }, [supportsPasskey, inIframe, passkeyAvailable]);
+
   // Refs pro parallax (movimento sutil via CSS vars — não re-renderiza React)
   const mainRef = useRef<HTMLElement | null>(null);
   const bgVideoRef = useRef<HTMLVideoElement | null>(null);
@@ -332,19 +349,27 @@ const Auth = () => {
               className="w-full bg-gradient-cyber text-primary-foreground font-display tracking-wider hover:opacity-90 shadow-glow">
               {loading ? "Verificando..." : "Verificar"}
             </Button>
-            {passkeyAvailable && (
-              <Button
-                type="button"
-                onClick={handlePasskeyRegister}
-                disabled={passkeyLoading}
-                variant="outline"
-                className="w-full border-primary/40 hover:bg-primary/10 hover:border-primary"
-              >
-                <ScanFace className="size-4 mr-2 text-primary" />
-                {passkeyLoading
-                  ? "Cadastrando..."
-                  : "Cadastrar Face ID neste dispositivo"}
-              </Button>
+            {supportsPasskey && (
+              <>
+                <Button
+                  type="button"
+                  onClick={handlePasskeyRegister}
+                  disabled={passkeyLoading || inIframe}
+                  variant="outline"
+                  className="w-full border-primary/40 hover:bg-primary/10 hover:border-primary disabled:opacity-60"
+                  title={inIframe ? "Abra direto em chat.kera.ia.br" : undefined}
+                >
+                  <ScanFace className="size-4 mr-2 text-primary" />
+                  {passkeyLoading
+                    ? "Cadastrando..."
+                    : "Cadastrar Face ID neste dispositivo"}
+                </Button>
+                {inIframe && (
+                  <p className="text-[11px] text-muted-foreground text-center">
+                    Para cadastrar, abra <strong>chat.kera.ia.br</strong> direto no navegador.
+                  </p>
+                )}
+              </>
             )}
             {supportsPasskey && inIframe && (
               <p className="text-xs text-muted-foreground text-center px-2">
@@ -385,7 +410,7 @@ const Auth = () => {
               </Button>
             </form>
 
-            {mode === "signin" && passkeyAvailable && (
+            {mode === "signin" && supportsPasskey && (
               <>
                 <div className="flex items-center gap-3 my-4">
                   <div className="flex-1 h-px bg-border/50" />
@@ -395,14 +420,25 @@ const Auth = () => {
                 <Button
                   type="button"
                   onClick={handlePasskeyLogin}
-                  disabled={passkeyLoading || !email.trim()}
+                  disabled={passkeyLoading || !email.trim() || inIframe}
                   variant="outline"
-                  className="w-full border-primary/40 hover:bg-primary/10 hover:border-primary"
+                  className="w-full border-primary/40 hover:bg-primary/10 hover:border-primary disabled:opacity-60"
+                  title={inIframe ? "Abra direto em chat.kera.ia.br" : undefined}
                 >
                   <ScanFace className="size-4 mr-2 text-primary" />
                   {passkeyLoading ? "Aguarde..." : "Entrar com Face ID / Touch ID"}
                 </Button>
+                {inIframe && (
+                  <p className="text-[11px] text-muted-foreground mt-2 text-center">
+                    Face ID não funciona dentro do preview. Abra <strong>chat.kera.ia.br</strong> direto no navegador.
+                  </p>
+                )}
               </>
+            )}
+            {mode === "signin" && !supportsPasskey && (
+              <p className="text-[11px] text-muted-foreground mt-3 text-center">
+                Este navegador não suporta Face ID/Touch ID via web (WebAuthn).
+              </p>
             )}
 
             {mode === "signin" && (
