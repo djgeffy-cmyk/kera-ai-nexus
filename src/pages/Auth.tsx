@@ -41,6 +41,9 @@ const Auth = () => {
   const [inIframe] = useState(() => isInIframe());
   const [isUnlocked, setIsUnlocked] = useState(false);
   const [demoOpen, setDemoOpen] = useState(false);
+  const [audioMuted, setAudioMuted] = useState(false);
+  const [audioStarted, setAudioStarted] = useState(false);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
   const passkeyAvailable = supportsPasskey && !inIframe;
 
   useEffect(() => {
