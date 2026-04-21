@@ -301,6 +301,26 @@ const Auth = () => {
       <div aria-hidden className="absolute inset-0 bg-background/30" />
       <ParticlesOverlay />
 
+      {/* Áudio ambiente de chuva — começa após primeira interação */}
+      <audio
+        ref={audioRef}
+        src={rainAmbientUrl}
+        loop
+        preload="auto"
+        aria-hidden
+      />
+
+      {/* Toggle mute discreto — canto superior direito */}
+      <button
+        type="button"
+        onClick={() => setAudioMuted((m) => !m)}
+        aria-label={audioMuted ? "Ativar som da chuva" : "Silenciar chuva"}
+        title={audioMuted ? "Ativar som da chuva" : "Silenciar chuva"}
+        className="fixed top-4 right-4 z-40 size-10 rounded-full bg-background/40 backdrop-blur-md border border-white/10 flex items-center justify-center text-primary/80 hover:text-primary hover:bg-background/60 hover:scale-105 active:scale-95 transition-all duration-300 shadow-soft"
+      >
+        {audioMuted ? <VolumeX className="size-4" /> : <Volume2 className="size-4" />}
+      </button>
+
       <div
         aria-hidden
         className="absolute inset-0 pointer-events-none"
