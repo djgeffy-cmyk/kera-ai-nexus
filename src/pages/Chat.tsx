@@ -1285,11 +1285,18 @@ Por favor, analise: há perda de pacote? jitter alto sugere instabilidade de rot
  
                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 w-full max-w-2xl mx-auto mt-12 px-4">
                     {(AGENT_SUGGESTIONS[agentKey] ?? AGENT_SUGGESTIONS.kera).map(({ q, icon: Icon }) => (
-                     <button
-                       key={q}
-                       onClick={() => { setInput(q); setTimeout(() => sendText(q), 50); }}
-                       className="flex items-center gap-4 text-left px-6 py-4.5 rounded-2xl bg-white/5 border border-white/5 hover:border-primary/30 hover:bg-primary/5 transition-all duration-300 group shadow-sm active:scale-95"
-                     >
+                      <button
+                        key={q}
+                        onClick={() => { 
+                          if (q.includes("Kera Security NASA")) {
+                            navigate("/kera-security-nasa");
+                          } else {
+                            setInput(q); 
+                            setTimeout(() => sendText(q), 50); 
+                          }
+                        }}
+                        className="flex items-center gap-4 text-left px-6 py-4.5 rounded-2xl bg-white/5 border border-white/5 hover:border-primary/30 hover:bg-primary/5 transition-all duration-300 group shadow-sm active:scale-95"
+                      >
                        <div className="size-10 rounded-xl bg-white/5 flex items-center justify-center group-hover:bg-primary/20 transition-colors shadow-inner">
                          <Icon className="size-5 text-muted-foreground group-hover:text-primary transition-colors" />
                        </div>
