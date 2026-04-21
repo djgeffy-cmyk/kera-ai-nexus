@@ -1356,30 +1356,30 @@ Por favor, analise: há perda de pacote? jitter alto sugere instabilidade de rot
 
         <div className="relative z-10 border-t border-border panel p-3 md:p-4 pb-28 md:pb-32">
           <div className="max-w-6xl mx-auto space-y-2">
-            {isSentinela && (
-              <div className="flex flex-wrap justify-center gap-2">
-                <Button
-                  onClick={runSentinelaCheck}
-                  disabled={streaming}
-                  variant="outline"
-                  size="sm"
-                  className="border-emerald-500/40 text-emerald-400 hover:bg-emerald-500/10 hover:text-emerald-300 gap-2"
-                >
-                  <ShieldCheck className="size-4" />
-                  Verificar status (HTTP)
-                </Button>
-                <Button
-                  onClick={runNetworkTrace}
-                  disabled={streaming}
-                  variant="outline"
-                  size="sm"
-                  className="border-cyan-500/40 text-cyan-400 hover:bg-cyan-500/10 hover:text-cyan-300 gap-2"
-                >
-                  <Activity className="size-4" />
-                  Análise de rede (ping/jitter/perda)
-                </Button>
-              </div>
-            )}
+             {isSentinela && (
+               <div className="flex flex-wrap justify-center gap-3 animate-in slide-in-from-bottom-2 duration-500">
+                 <Button
+                   onClick={runSentinelaCheck}
+                   disabled={streaming}
+                   variant="outline"
+                   size="sm"
+                   className="h-9 px-4 rounded-xl border-emerald-500/30 text-emerald-400 bg-emerald-500/5 hover:bg-emerald-500/15 hover:border-emerald-500/50 hover:text-emerald-300 gap-2.5 shadow-sm active:scale-95 transition-all"
+                 >
+                   <ShieldCheck className="size-4" />
+                   <span className="text-xs font-bold uppercase tracking-wider">Monitor Sentinela</span>
+                 </Button>
+                 <Button
+                   onClick={runNetworkTrace}
+                   disabled={streaming}
+                   variant="outline"
+                   size="sm"
+                   className="h-9 px-4 rounded-xl border-cyan-500/30 text-cyan-400 bg-cyan-500/5 hover:bg-cyan-500/15 hover:border-cyan-500/50 hover:text-cyan-300 gap-2.5 shadow-sm active:scale-95 transition-all"
+                 >
+                   <Activity className="size-4" />
+                   <span className="text-xs font-bold uppercase tracking-wider">Trace de Rede</span>
+                 </Button>
+               </div>
+             )}
             {attachments.length > 0 && (
               <div className="flex flex-wrap gap-2">
                 {attachments.map((a, i) => (
