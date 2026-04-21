@@ -16,6 +16,33 @@ import { saveVRM, getVRMObjectURL, clearVRM } from "@/lib/vrmStorage";
 type Emotion = "neutral" | "happy" | "sad" | "angry" | "surprised" | "relaxed";
 const EMOTIONS: Emotion[] = ["neutral", "happy", "sad", "angry", "surprised", "relaxed"];
 
+function GLBModel({ url, autoRotate }: { url: string; autoRotate: boolean }) {
+  const gltf = useLoader(GLTFLoader, url);
+  const groupRef = useRef<THREE.Group>(null);
+
+  useEffect(() => {
+    if (!gltf?.scene) return;
+    // Auto-fit: normalize size to ~1.6m height and center on origin
+    const box = new THREE.Box3().setFromObject(gltf.scene);
+    const size = new THREE.Vector3();
+    const center = new THREE.Vector3();
+    box.getSize(size);
+    box.getCenter(center);
+    const targetHeight = 1.6;
+    const scale = size.y > 0 ? targetHeight / size.y : 1;
+    gltf.scene.scale.setScalar(scale);
+    gltf.scene.position.set(-center.x * scale, -box.min.y * scale, -center.z * scale);
+    gltf.scene.traverse((o: any) => { if (o.isMesh) o.frustumCulled = false; });
+  }, [gltf]);
+
+  useFrame((_, delta) => {
+    if (autoRotate && groupRef.current) groupRef.current.rotation.y += delta * 0.3;
+  });
+
+  if (!gltf?.scene) return null;
+  return <group ref={groupRef}><primitive object={gltf.scene} /></group>;
+}
+
 function VRMModel({ url, emotion, intensity, autoRotate }: { url: string; emotion: Emotion; intensity: number; autoRotate: boolean }) {
   const gltf = useLoader(GLTFLoader, url, (loader) => {
     loader.register((parser) => new VRMLoaderPlugin(parser));
