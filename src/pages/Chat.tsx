@@ -7,7 +7,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { toast } from "sonner";
 import {
   Plus, LogOut, Send, MessageSquare, Trash2, Menu, Settings, Calculator,
-  Image as ImageIcon, LayoutGrid, FolderPlus, Mic, MicOff, Volume2, VolumeX, ChevronRight,
+  Image as ImageIcon, LayoutGrid, FolderPlus, Mic, MicOff, Volume2, VolumeX, Bot, ChevronRight,
   Paperclip, X, FileText, ShieldCheck, Activity, Download, Ear, Sun, Moon, Sparkles, Gem,
    PanelLeftClose, PanelLeftOpen, Camera, Pencil, Eraser, Monitor,
   Scale, Heart, ScrollText, UserCheck, Accessibility,
