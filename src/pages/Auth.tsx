@@ -41,6 +41,7 @@ const Auth = () => {
   const [inIframe] = useState(() => isInIframe());
   const [isUnlocked, setIsUnlocked] = useState(false);
   const [isOpening, setIsOpening] = useState(false);
+  const [demoOpen, setDemoOpen] = useState(false);
   const passkeyAvailable = supportsPasskey && !inIframe;
 
   useEffect(() => {
