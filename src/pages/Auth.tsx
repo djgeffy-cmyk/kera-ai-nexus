@@ -332,7 +332,7 @@ const Auth = () => {
               className="w-full bg-gradient-cyber text-primary-foreground font-display tracking-wider hover:opacity-90 shadow-glow">
               {loading ? "Verificando..." : "Verificar"}
             </Button>
-            {supportsPasskey && (
+            {passkeyAvailable && (
               <Button
                 type="button"
                 onClick={handlePasskeyRegister}
@@ -345,6 +345,11 @@ const Auth = () => {
                   ? "Cadastrando..."
                   : "Cadastrar Face ID neste dispositivo"}
               </Button>
+            )}
+            {supportsPasskey && inIframe && (
+              <p className="text-xs text-muted-foreground text-center px-2">
+                Para cadastrar Face ID, abra direto em <strong>chat.kera.ia.br</strong> no Safari (não funciona dentro deste preview).
+              </p>
             )}
             <button
               type="button"
