@@ -163,6 +163,45 @@ async function loadDbTriggers(): Promise<DbTrigger[]> {
   }
 }
 
+// Carrega quais triggers o usuário desligou nas preferências dele.
+// Retorna o Set de trigger_ids DESLIGADOS (default = ligado se não houver registro).
+async function loadUserDisabledTriggers(userId: string): Promise<Set<string>> {
+  try {
+    const supaUrl = Deno.env.get("SUPABASE_URL");
+    const service = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+    if (!supaUrl || !service) return new Set();
+    const r = await fetch(
+      `${supaUrl}/rest/v1/user_trigger_preferences?user_id=eq.${userId}&enabled=eq.false&select=trigger_id`,
+      { headers: { apikey: service, Authorization: `Bearer ${service}` } },
+    );
+    if (!r.ok) return new Set();
+    const rows = (await r.json()) as Array<{ trigger_id: string }>;
+    return new Set(rows.map((x) => x.trigger_id));
+  } catch {
+    return new Set();
+  }
+}
+
+// Resolve user_id pelo JWT (precisa pra cruzar com user_trigger_preferences).
+async function getUserIdFromAuth(req: Request): Promise<string | null> {
+  try {
+    const auth = req.headers.get("Authorization") || req.headers.get("authorization");
+    if (!auth?.startsWith("Bearer ")) return null;
+    const token = auth.slice(7);
+    const supaUrl = Deno.env.get("SUPABASE_URL");
+    const anon = Deno.env.get("SUPABASE_ANON_KEY");
+    if (!supaUrl || !anon) return null;
+    const r = await fetch(`${supaUrl}/auth/v1/user`, {
+      headers: { Authorization: `Bearer ${token}`, apikey: anon },
+    });
+    if (!r.ok) return null;
+    const u = await r.json();
+    return typeof u?.id === "string" ? u.id : null;
+  } catch {
+    return null;
+  }
+}
+
 // Constrói regex a partir do trigger (regex_pattern customizado OU lista de keywords)
 function triggerRegex(t: DbTrigger): RegExp | null {
   try {
