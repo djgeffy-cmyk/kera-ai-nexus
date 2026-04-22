@@ -13,11 +13,14 @@ import keraAvatar from "@/assets/kera-avatar.png";
  import keraAvatarVideoV2 from "@/assets/kera-avatar-rain-v2.mp4";
 import rainAmbientUrl from "@/assets/rain-ambient.mp3";
 
-// Vídeo de chuva hospedado no storage (atualizado pelo usuário).
-// `?v=` força o navegador/CDN a baixar a versão mais recente quando o arquivo
-// for trocado no bucket — sem isso, o cache antigo continua sendo exibido.
-const rainBgRealisticUrl = "https://ytixqgkzqgeoxrbmjqbo.supabase.co/storage/v1/object/public/kera-videos/kera-avatar-rain.mp4?v=2026-04-22";
-const rainVideoUrl = rainBgRealisticUrl;
+// Vídeos hospedados no storage. `?v=` força o CDN/navegador a baixar a versão
+// mais recente quando o arquivo for trocado no bucket.
+// Fundo full-screen da página: chuva pura (sem o avatar da Kera).
+const rainBgUrl =
+  "https://ytixqgkzqgeoxrbmjqbo.supabase.co/storage/v1/object/public/kera-videos/kera-chuva.mp4?v=2026-04-22";
+// Avatar circular dentro do botão/card: Kera realista com gotas de chuva.
+const rainVideoUrl =
+  "https://ytixqgkzqgeoxrbmjqbo.supabase.co/storage/v1/object/public/kera-videos/kera-avatar-rain.mp4?v=2026-04-22";
 import DemoKeraDialog from "@/components/DemoKeraDialog";
 import { assetUrl } from "@/lib/assetUrl";
 import { MissionCriticalSchema } from "@/lib/missionCriticalSchemas";
