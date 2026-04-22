@@ -42,6 +42,8 @@ const ChatPayloadSchema = z.object({
   demoMode: z.boolean().optional(),
 });
 
+type ChatMessage = z.infer<typeof MessageSchema>;
+
 const DEFAULT_SYSTEM_PROMPT = `Você é a Kera — dev sênior mal-humorada, consultora de TI sem paciência pra enrolação. Estilo Linus Torvalds em dia ruim + Grok ácido. Brutalmente honesta, crítica, debatedora.
 
 REGRAS DE PERSONALIDADE (não negociáveis):
@@ -415,7 +417,93 @@ function shouldProbeIpm(messages: Array<{ role: string; content: unknown }>): bo
   return IPM_KEYWORDS.some((k) => text.includes(k));
 }
 
-async function executeTool(name: string, args: Record<string, unknown>): Promise<string> {
+function normalizeTextForMatch(value: string): string {
+  return value
+    .normalize("NFD")
+    .replace(/\p{Diacritic}/gu, "")
+    .toLowerCase();
+}
+
+async function listEngegovMunicipios(): Promise<Array<{ nome: string; uf: string }>> {
+  try {
+    const supaUrl = Deno.env.get("SUPABASE_URL");
+    const service = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+    if (!supaUrl || !service) return [];
+
+    const r = await fetch(
+      `${supaUrl}/rest/v1/engegov_municipios?enabled=eq.true&select=nome,uf&limit=1000`,
+      { headers: { apikey: service, Authorization: `Bearer ${service}` } },
+    );
+    if (!r.ok) return [];
+    const rows = await r.json();
+    return Array.isArray(rows) ? rows : [];
+  } catch {
+    return [];
+  }
+}
+
+async function detectEngegovMunicipio(messages: Array<{ role: string; content: unknown }>): Promise<{ nome: string; uf: string } | null> {
+  const text = normalizeTextForMatch(
+    messages
+      .filter((m) => m.role === "user")
+      .slice(-8)
+      .map((m) => (typeof m.content === "string" ? m.content : JSON.stringify(m.content)))
+      .join(" "),
+  );
+  if (!text) return null;
+
+  const municipios = await listEngegovMunicipios();
+  const matches = municipios.filter((m) => text.includes(normalizeTextForMatch(m.nome)));
+  if (matches.length === 0) return null;
+
+  matches.sort((a, b) => b.nome.length - a.nome.length);
+  return matches[0];
+}
+
+async function maybePrefetchEngegov(
+  agentKey: string | undefined,
+  messages: ChatMessage[],
+): Promise<ChatMessage[]> {
+  if (agentKey !== "kera-engegov") return messages;
+
+  const lastUserText = normalizeTextForMatch(
+    [...messages]
+      .reverse()
+      .find((m) => m.role === "user" && typeof m.content === "string")?.content as string || "",
+  );
+
+  const hasRecentToolResult = messages.some(
+    (m) => m.role === "tool" && typeof m.content === "string" && m.content.includes('"tipo":"lista"'),
+  );
+  if (hasRecentToolResult) return messages;
+
+  const engegovIntentKeywords = [
+    "obra", "obras", "engegov", "gevo", "medicao", "medição", "fiscal", "andamento", "paralisada", "concluida", "concluída", "detalhe", "lista", "buscar", "busca",
+  ];
+  const softFollowUps = ["sim", "quero", "pode", "manda", "vai", "ok", "obra", "obras"];
+  const shouldRun = engegovIntentKeywords.some((k) => lastUserText.includes(normalizeTextForMatch(k)))
+    || softFollowUps.includes(lastUserText.trim());
+  if (!shouldRun) return messages;
+
+  const municipio = await detectEngegovMunicipio(messages);
+  if (!municipio) return messages;
+
+  const args = { tipo: "lista", cidade_nome: municipio.nome, uf: municipio.uf };
+  const toolCallId = `engegov_prefetch_${crypto.randomUUID()}`;
+  const result = await executeTool("engegov_query", args);
+
+  return [
+    ...messages,
+    {
+      role: "assistant",
+      content: "",
+      tool_calls: [{ id: toolCallId, type: "function", function: { name: "engegov_query", arguments: JSON.stringify(args) } }],
+    },
+    { role: "tool", tool_call_id: toolCallId, content: result },
+  ];
+}
+
+async function executeTool(name: string, args: Record<string, unknown>, truncate = true): Promise<string> {
   const fnByName: Record<string, string> = {
     ipm_query: "ipm-query",
     govdigital_query: "govdigital-query",
@@ -431,10 +519,111 @@ async function executeTool(name: string, args: Record<string, unknown>): Promise
     });
     const data = await r.json();
     const str = JSON.stringify(data);
-    return str.length > 12000 ? str.slice(0, 12000) + "\n...[truncado]" : str;
+    return truncate && str.length > 12000 ? str.slice(0, 12000) + "\n...[truncado]" : str;
   } catch (e) {
     return JSON.stringify({ error: e instanceof Error ? e.message : "tool error" });
   }
+}
+
+function cleanInline(value: string): string {
+  return value.replace(/\s+/g, " ").replace(/ui-button/g, "").trim();
+}
+
+function parseEngegovDashboard(content: string) {
+  const extractCount = (label: string) => {
+    const match = content.match(new RegExp(`${label}\\D+(\\d+)`, "i"));
+    return match?.[1] ?? null;
+  };
+
+  const obras = Array.from(
+    content.matchAll(/\| Código([^|]+)\| Secretaria([^|]+)\| Descrição([^|]+)\| Logradouro([^|]+)\| Ano Contrato([^|]+)\| Valor Contrato R\$([^|]+)\| Situação([^|]+)\|/g),
+  )
+    .slice(0, 5)
+    .map((m) => ({
+      codigo: cleanInline(m[1]),
+      secretaria: cleanInline(m[2]),
+      descricao: cleanInline(m[3]),
+      logradouro: cleanInline(m[4]),
+      ano: cleanInline(m[5]),
+      valor: cleanInline(m[6]),
+      situacao: cleanInline(m[7]),
+    }));
+
+  return {
+    andamento: extractCount("Obras em andamento"),
+    concluidas: extractCount("Obras concluídas"),
+    paralisadas: extractCount("Obras paralisadas"),
+    total: extractCount("Mapa das obras"),
+    obras,
+  };
+}
+
+function sseTextResponse(text: string, provider = "Kera EngeGov Direct") {
+  const encoder = new TextEncoder();
+  const stream = new ReadableStream({
+    start(controller) {
+      const chunk = {
+        id: `kera-direct-${Date.now()}`,
+        object: "chat.completion.chunk",
+        created: Math.floor(Date.now() / 1000),
+        model: provider,
+        choices: [{ index: 0, delta: { role: "assistant", content: text }, finish_reason: null }],
+      };
+      controller.enqueue(encoder.encode(`data: ${JSON.stringify(chunk)}\n\n`));
+      controller.enqueue(encoder.encode("data: [DONE]\n\n"));
+      controller.close();
+    },
+  });
+
+  return new Response(stream, {
+    headers: { ...corsHeaders, "Content-Type": "text/event-stream", "X-Provider": provider },
+  });
+}
+
+async function maybeDirectEngegovReply(agentKey: string | undefined, messages: ChatMessage[]): Promise<Response | null> {
+  if (agentKey !== "kera-engegov") return null;
+
+  const lastUserText = normalizeTextForMatch(
+    [...messages].reverse().find((m) => m.role === "user" && typeof m.content === "string")?.content as string || "",
+  );
+  const intentWords = ["obra", "obras", "engegov", "gevo", "medicao", "medição", "fiscal", "andamento", "paralisada", "concluida", "concluída", "buscar", "busca", "lista", "quais"];
+  if (!intentWords.some((word) => lastUserText.includes(normalizeTextForMatch(word)))) return null;
+
+  const municipio = await detectEngegovMunicipio(messages);
+  if (!municipio) return null;
+
+  const raw = await executeTool("engegov_query", { tipo: "lista", cidade_nome: municipio.nome, uf: municipio.uf }, false);
+  let parsed: any;
+  try {
+    parsed = JSON.parse(raw);
+  } catch {
+    return sseTextResponse(`Não consegui ler o retorno do portal de ${municipio.nome} agora.`);
+  }
+
+  if (!parsed?.ok || typeof parsed?.conteudo !== "string") {
+    return sseTextResponse(`Não consegui consultar ${municipio.nome} agora. ${parsed?.error ? `Erro: ${parsed.error}` : ""}`.trim());
+  }
+
+  const resumo = parseEngegovDashboard(parsed.conteudo);
+  const bullets = resumo.obras.length > 0
+    ? resumo.obras.map((obra: any) => `- **${obra.codigo}** · ${obra.secretaria} · ${obra.situacao} · **R$ ${obra.valor}**\n  ${obra.descricao}`).join("\n")
+    : "- O portal respondeu, mas não consegui extrair a grade de obras dessa página.";
+
+  const text = [
+    `## ${municipio.nome}/${municipio.uf}`,
+    "",
+    `- **Em andamento:** ${resumo.andamento ?? "n/d"}`,
+    `- **Concluídas:** ${resumo.concluidas ?? "n/d"}`,
+    `- **Paralisadas:** ${resumo.paralisadas ?? "n/d"}`,
+    `- **Total no portal:** ${resumo.total ?? "n/d"}`,
+    "",
+    "### Primeiras obras encontradas",
+    bullets,
+    "",
+    "Se quiser, agora peça **detalhe de uma obra pelo código** que eu adapto o fluxo seguinte.",
+  ].join("\n");
+
+  return sseTextResponse(text);
 }
 
 Deno.serve(async (req) => {
@@ -580,6 +769,9 @@ ${intensityRules}`;
     }
     } // fim do if (!demoMode) — bloco de triggers
 
+    const directEngegovReply = await maybeDirectEngegovReply(agentKey, messages);
+    if (directEngegovReply) return directEngegovReply;
+
     const chain = getProviderChain(provider as Provider | undefined);
     if (chain.length === 0) {
       return new Response(JSON.stringify({ error: "Nenhuma chave de IA configurada. Adicione no painel admin." }), {
@@ -588,7 +780,7 @@ ${intensityRules}`;
     }
 
     // ===== Etapa 1: pré-detecta se precisa de tool (não-stream, rápido) =====
-    let workingMessages = [...messages];
+    let workingMessages: ChatMessage[] = [...messages];
     const toolCapableProviders = ["openai", "lovable", "groq", "openrouter", "gemini"];
     const firstCfg = chain[0];
     const supportsTools = toolCapableProviders.some((p) => firstCfg.label.toLowerCase().includes(p === "openai" ? "openai" : p));
@@ -597,7 +789,11 @@ ${intensityRules}`;
     const serverTools = shouldProbeIpm(messages) ? TOOLS : [];
     const combinedTools = hasDesktopTools ? [...serverTools, ...desktopTools] : serverTools;
 
-    if (supportsTools && combinedTools.length > 0) {
+    const prefetchedMessages = await maybePrefetchEngegov(agentKey, workingMessages);
+    const engegovPrefetched = prefetchedMessages.length > workingMessages.length;
+    workingMessages = prefetchedMessages;
+
+    if (!engegovPrefetched && supportsTools && combinedTools.length > 0) {
       try {
         const probe = await fetch(firstCfg.url, {
           method: "POST",
@@ -655,7 +851,7 @@ ${intensityRules}`;
             }
 
             // Só tools server — executa e segue pro stream final.
-            const toolResults: Array<{ role: string; tool_call_id: string; content: string }> = [];
+            const toolResults: ChatMessage[] = [];
             for (const tc of serverCalls) {
               const args = JSON.parse(tc.function?.arguments || "{}");
               const result = await executeTool(tc.function?.name, args);
@@ -663,7 +859,7 @@ ${intensityRules}`;
             }
             workingMessages = [
               ...messages,
-              { role: "assistant", content: msg.content || "", tool_calls: toolCalls },
+              { role: "assistant", content: msg.content || "", tool_calls: toolCalls } as ChatMessage,
               ...toolResults,
             ];
           }
