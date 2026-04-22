@@ -50,6 +50,8 @@ const Auth = () => {
   const [audioMuted, setAudioMuted] = useState(false);
   const [audioStarted, setAudioStarted] = useState(false);
   const audioRef = useRef<HTMLAudioElement | null>(null);
+  const audioCtxRef = useRef<AudioContext | null>(null);
+  const gainNodeRef = useRef<GainNode | null>(null);
   const passkeyAvailable = supportsPasskey && !inIframe;
 
   useEffect(() => {
@@ -148,8 +150,81 @@ const Auth = () => {
       const a = audioRef.current;
       if (!a || audioStarted) return;
       try {
-        a.volume = 0.35;
+        // Configura grafo Web Audio para enriquecer o som da chuva:
+        // - LowShelf realça os graves (chuva mais "cheia" e profunda)
+        // - HighShelf reduz agudo metálico (menos "chiado de rádio")
+        // - Peaking adiciona corpo nas médias (gotas e pingos audíveis)
+        // - Delay curto + feedback baixo cria reverb natural de ambiente
+        // - Gain master com fade-in suave (4s) para entrada confortável
+        if (!audioCtxRef.current) {
+          const Ctx =
+            (window as any).AudioContext || (window as any).webkitAudioContext;
+          if (Ctx) {
+            const ctx: AudioContext = new Ctx();
+            const source = ctx.createMediaElementSource(a);
+
+            const lowShelf = ctx.createBiquadFilter();
+            lowShelf.type = "lowshelf";
+            lowShelf.frequency.value = 220;
+            lowShelf.gain.value = 6; // +6dB graves
+
+            const peaking = ctx.createBiquadFilter();
+            peaking.type = "peaking";
+            peaking.frequency.value = 1200;
+            peaking.Q.value = 0.9;
+            peaking.gain.value = 2.5;
+
+            const highShelf = ctx.createBiquadFilter();
+            highShelf.type = "highshelf";
+            highShelf.frequency.value = 6500;
+            highShelf.gain.value = -4; // suaviza agudos sibilantes
+
+            // Reverb leve via delay com feedback baixo
+            const delay = ctx.createDelay(0.5);
+            delay.delayTime.value = 0.18;
+            const feedback = ctx.createGain();
+            feedback.gain.value = 0.22;
+            const wet = ctx.createGain();
+            wet.gain.value = 0.28;
+
+            const master = ctx.createGain();
+            master.gain.value = 0; // arranca em 0 para fade-in
+
+            source.connect(lowShelf);
+            lowShelf.connect(peaking);
+            peaking.connect(highShelf);
+            // dry path
+            highShelf.connect(master);
+            // wet path (reverb)
+            highShelf.connect(delay);
+            delay.connect(feedback);
+            feedback.connect(delay);
+            delay.connect(wet);
+            wet.connect(master);
+
+            master.connect(ctx.destination);
+
+            audioCtxRef.current = ctx;
+            gainNodeRef.current = master;
+          }
+        }
+
+        a.volume = 1; // o controle real fica no GainNode master
         await a.play();
+
+        // Fade-in 4s até 0.55 (volume mais presente que antes, porém confortável)
+        const ctx = audioCtxRef.current;
+        const master = gainNodeRef.current;
+        if (ctx && master) {
+          if (ctx.state === "suspended") {
+            try { await ctx.resume(); } catch { /* ignore */ }
+          }
+          const now = ctx.currentTime;
+          master.gain.cancelScheduledValues(now);
+          master.gain.setValueAtTime(0, now);
+          master.gain.linearRampToValueAtTime(0.55, now + 4);
+        }
+
         setAudioStarted(true);
         cleanup();
       } catch {
@@ -167,9 +242,19 @@ const Auth = () => {
     return cleanup;
   }, [audioStarted]);
 
-  // Sincroniza mute com estado
+  // Sincroniza mute com estado (usa GainNode quando disponível para evitar
+  // cortes bruscos — fade rápido de 250ms entre mute/unmute).
   useEffect(() => {
-    if (audioRef.current) audioRef.current.muted = audioMuted;
+    const ctx = audioCtxRef.current;
+    const master = gainNodeRef.current;
+    if (ctx && master) {
+      const now = ctx.currentTime;
+      master.gain.cancelScheduledValues(now);
+      master.gain.setValueAtTime(master.gain.value, now);
+      master.gain.linearRampToValueAtTime(audioMuted ? 0 : 0.55, now + 0.25);
+    } else if (audioRef.current) {
+      audioRef.current.muted = audioMuted;
+    }
   }, [audioMuted]);
 
   const checkAndChallengeMfa = async (): Promise<boolean> => {
