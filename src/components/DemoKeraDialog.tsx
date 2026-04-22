@@ -9,7 +9,7 @@ import { BUILTIN_AGENTS } from "@/lib/agents";
 import keraAvatarPng from "@/assets/kera-avatar.png";
 import { cn } from "@/lib/utils";
 
-// URL pública direta do storage (mesmo vídeo, sem depender do asset interno)
+// URL pública direta do storage (mesmo vídeo, sem depender do asset interno).
 const KERA_RAIN_VIDEO_URL =
   "https://ytixqgkzqgeoxrbmjqbo.supabase.co/storage/v1/object/public/kera-videos/kera-avatar-rain.mp4";
 
