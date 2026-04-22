@@ -65,10 +65,17 @@ import {
    Video,
    VideoOff,
    ChevronDown,
+   Rocket,
+   Wand2,
+   Check,
+   AlertCircle,
 } from "lucide-react";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import keraLogo from "@/assets/kera-logo.png";
 import spaceInCloudLogo from "@/assets/space-in-cloud-logo.png";
 import keraAvatar from "@/assets/kera-avatar.png";
@@ -201,7 +208,16 @@ const Chat = () => {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const { theme, setTheme } = useTheme();
-  const { canAccess, canSee, consumeTrial, spaceincloudActive } = useUserAccess();
+  const { 
+    canAccess, 
+    canSee, 
+    consumeTrial, 
+    spaceincloudActive,
+    juridicoActive,
+    techActive,
+    municipioActive,
+    planTier,
+  } = useUserAccess();
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [customAgents, setCustomAgents] = useState<CustomAgent[]>([]);
   const [currentId, setCurrentId] = useState<string | null>(null);
@@ -209,6 +225,10 @@ const Chat = () => {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState("");
   const [openAgentGroups, setOpenAgentGroups] = useState<Record<string, boolean>>({});
+  const [creatorOpen, setCreatorOpen] = useState(false);
+  const [isGeneratingPrompt, setIsGeneratingPrompt] = useState(false);
+  const [newAgentForm, setNewAgentForm] = useState({ name: "", description: "", prompt: "" });
+  const [upgradeDialogOpen, setUpgradeDialogOpen] = useState(false);
   const [streaming, setStreaming] = useState(false);
   const [userId, setUserId] = useState<string | null>(null);
   const agentBgVideos = useMemo<Record<string, string>>(() => ({
@@ -255,6 +275,69 @@ const Chat = () => {
   useEffect(() => {
     try { localStorage.setItem(BG_KEY, showBackground ? "1" : "0"); } catch {}
   }, [showBackground]);
+
+  const isPaidUser = useMemo(() => {
+    return isAdmin || planTier !== "free" || spaceincloudActive || juridicoActive || techActive || municipioActive;
+  }, [isAdmin, planTier, spaceincloudActive, juridicoActive, techActive, municipioActive]);
+
+  const handleOpenCreator = () => {
+    if (!isPaidUser) {
+      setUpgradeDialogOpen(true);
+    } else {
+      setNewAgentForm({ name: "", description: "", prompt: "" });
+      setCreatorOpen(true);
+    }
+  };
+
+  const handleGeneratePrompt = async () => {
+    if (!newAgentForm.name && !newAgentForm.description) {
+      return toast.error("Dê um nome ou descrição para a Kera saber o que criar.");
+    }
+    setIsGeneratingPrompt(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("chat-kera", {
+        body: {
+          messages: [
+            { role: "system", content: "Você é um arquiteto de agentes IA. Sua tarefa é criar um SYSTEM PROMPT altamente eficaz, detalhado e profissional com base no nome e descrição fornecidos pelo usuário. O prompt deve definir a personalidade, tom de voz, regras de comportamento e expertise do agente. Responda APENAS com o texto do prompt." },
+            { role: "user", content: `Crie um prompt para um agente chamado "${newAgentForm.name}" que faz o seguinte: ${newAgentForm.description}` }
+          ],
+          agentKey: "kera",
+          provider: "google",
+        }
+      });
+      if (error) throw error;
+      setNewAgentForm(prev => ({ ...prev, prompt: data.choices[0].message.content }));
+      toast.success("Prompt gerado pela Kera!");
+    } catch (err) {
+      toast.error("Erro ao gerar prompt.");
+    } finally {
+      setIsGeneratingPrompt(false);
+    }
+  };
+
+  const handleSaveCustomAgent = async () => {
+    if (!newAgentForm.name || !newAgentForm.prompt) {
+      return toast.error("Nome e prompt são obrigatórios.");
+    }
+    const { data: u } = await supabase.auth.getUser();
+    if (!u.user) return;
+
+    const { error } = await supabase.from("agents").insert({
+      user_id: u.user.id,
+      name: newAgentForm.name,
+      description: newAgentForm.description,
+      system_prompt: newAgentForm.prompt,
+      icon: "bot",
+      color: "cyan",
+    });
+
+    if (error) return toast.error(error.message);
+    
+    toast.success("Especialista criado com sucesso!");
+    setCreatorOpen(false);
+    const { data } = await supabase.from("agents").select("*").order("created_at", { ascending: false });
+    if (data) setCustomAgents(data as any);
+  };
 
   const [sidebarOpen, setSidebarOpen] = useState<boolean>(() => {
     try { return localStorage.getItem("kera:sidebarOpen") !== "0"; } catch { return true; }
@@ -1228,6 +1311,26 @@ Por favor, analise: há perda de pacote? jitter alto sugere instabilidade de rot
                </button>
              </DropdownMenuTrigger>
             <DropdownMenuContent className="w-64 bg-card border-border max-h-[80vh] overflow-y-auto">
+              <div className="p-2 pt-1 border-b border-border/10 mb-1">
+                <Button
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    handleOpenCreator();
+                  }}
+                  className="w-full h-10 gap-2 bg-gradient-cyber text-primary-foreground font-bold shadow-glow text-xs uppercase tracking-wider group relative overflow-hidden"
+                >
+                  <div className="absolute inset-0 bg-white/10 translate-y-full group-hover:translate-y-0 transition-transform duration-300" />
+                  <Rocket className="size-4 animate-bounce shrink-0 relative z-10" />
+                  <span className="relative z-10">+ Novo Especialista</span>
+                  {!isPaidUser && (
+                    <span className="absolute top-1 right-1 px-1 py-0.5 bg-amber-500/90 text-[8px] rounded font-black text-black leading-none uppercase tracking-tighter">
+                      PRO
+                    </span>
+                  )}
+                </Button>
+              </div>
+
               {(() => {
                 const visible = BUILTIN_AGENTS.filter(a => canSee(a.key));
                 const groupOrder: { label: string; keys: readonly string[] }[] = [

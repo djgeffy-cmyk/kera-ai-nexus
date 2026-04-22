@@ -34,6 +34,7 @@ export function useUserAccess() {
     const [municipioActive, setMunicipioActive] = useState<boolean>(false);
    const [mustChangePassword, setMustChangePassword] = useState<boolean>(false);
    const [grantedAgentKeys, setGrantedAgentKeys] = useState<string[]>([]);
+   const [planTier, setPlanTier] = useState<string>("free");
 
   useEffect(() => {
     let cancelled = false;
@@ -54,7 +55,7 @@ export function useUserAccess() {
        const [{ data: profile }, { data: adminFlag }] = await Promise.all([
          supabase
            .from("profiles")
-            .select("selected_agents, onboarding_completed, paywall_trial_count, spaceincloud_active, juridico_active, tech_active, municipio_active, must_change_password, granted_agent_keys")
+            .select("selected_agents, onboarding_completed, paywall_trial_count, spaceincloud_active, juridico_active, tech_active, municipio_active, must_change_password, granted_agent_keys, plan_tier")
            .eq("user_id", u.user.id)
            .maybeSingle(),
         supabase.rpc("has_role", { _user_id: u.user.id, _role: "admin" }),
@@ -71,6 +72,7 @@ export function useUserAccess() {
         setMunicipioActive(!!(profile as any)?.municipio_active);
        setMustChangePassword(!!(profile as any)?.must_change_password);
        setGrantedAgentKeys((profile as any)?.granted_agent_keys || []);
+       setPlanTier((profile as any)?.plan_tier || "free");
       setIsAdmin(!!adminFlag);
       setLoading(false);
     };
@@ -147,11 +149,14 @@ export function useUserAccess() {
     paywallTrialCount,
     trialsRemaining: Math.max(0, PAYWALL_FREE_TRIES - paywallTrialCount),
     spaceincloudActive,
+    juridicoActive,
+    techActive,
     municipioActive,
     canAccess,
     canSee,
     consumeTrial,
     mustChangePassword,
     grantedAgentKeys,
+    planTier,
   };
 }
