@@ -1,6 +1,6 @@
 // ipm-query — consulta endpoints IPM cadastrados pelo admin + fallback scraping
 // Usado como "ferramenta" pela Kera via tool calling no chat-kera.
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
+import { createClient } from "npm:@supabase/supabase-js@2.45.0";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
