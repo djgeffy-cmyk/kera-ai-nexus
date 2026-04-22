@@ -301,7 +301,8 @@ const Auth = () => {
         // o topo E o chão. Alinhar pelo bottom garante que o solo com as gotas
         // batendo SEMPRE fique visível.
         className="absolute inset-0 w-full h-full object-cover object-bottom"
-        src={rainVideoUrl}
+        key={bgVideoUrl}
+        src={bgVideoUrl}
         // Sem filtros: mostra o vídeo de chuva original, com as gotas no chão visíveis
       />
 
@@ -376,7 +377,8 @@ const Auth = () => {
                     loop
                     muted
                     playsInline
-                    src={rainVideoUrl}
+                    key={avatarVideoUrl}
+                    src={avatarVideoUrl}
                     poster={keraAvatar}
                     className="w-full h-full object-cover"
                   />
