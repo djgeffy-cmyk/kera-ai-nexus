@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import AcessoRestrito from "@/pages/AcessoRestrito";
+import { Navigate, useLocation } from "react-router-dom";
 
 type GeoState =
   | { status: "checking" }
@@ -12,6 +12,7 @@ const CACHE_KEY = "kera:geo:v1";
 const CACHE_TTL_MS = 1000 * 60 * 60 * 6; // 6h
 
 export const GeoBlockGate = ({ children }: { children: React.ReactNode }) => {
+  const location = useLocation();
   const [state, setState] = useState<GeoState>(() => {
     try {
       const raw = localStorage.getItem(CACHE_KEY);
@@ -74,11 +75,15 @@ export const GeoBlockGate = ({ children }: { children: React.ReactNode }) => {
   }
 
   if (state.status === "blocked") {
-    // Atualiza a URL pra refletir o estado de bloqueio (sem recarregar)
-    if (typeof window !== "undefined" && !window.location.hash.startsWith("#/acesso-restrito")) {
-      window.location.hash = "#/acesso-restrito";
-    }
-    return <AcessoRestrito />;
+    // Já está na página? Deixa renderizar normalmente.
+    if (location.pathname === "/acesso-restrito") return <>{children}</>;
+    return (
+      <Navigate
+        to="/acesso-restrito"
+        replace
+        state={{ country: state.country, source: state.source }}
+      />
+    );
   }
 
   return <>{children}</>;
