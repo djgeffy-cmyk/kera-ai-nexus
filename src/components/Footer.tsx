@@ -9,11 +9,20 @@ const Footer = () => {
         style={{ left: "var(--chat-sidebar-w, 0px)" }}
       >
         <div className="mx-auto w-fit max-w-[95vw] mb-2 px-4 py-1.5 rounded-full bg-background/80 backdrop-blur-md border border-border/60 pointer-events-auto flex items-center gap-3 shadow-lg shadow-background/40">
-          <p className="text-[11px] text-muted-foreground whitespace-nowrap leading-none flex items-center gap-1.5">
+          <p className="text-[12px] text-muted-foreground whitespace-nowrap leading-none flex items-center gap-1.5">
             <span className="font-display text-glow text-primary">Kera AI</span>
             <span className="opacity-70">·</span>
             <span className="font-medium text-foreground/90">Space in Cloud</span>
-            <sup className="text-primary ml-0.5 text-[8px] font-semibold tracking-wide">®</sup>
+            <span
+              className="ml-1 inline-flex items-center justify-center text-primary font-bold text-[15px] leading-none drop-shadow-[0_0_6px_hsl(var(--primary)/0.6)]"
+              title="Marca registrada no INPI"
+              aria-label="Marca registrada no INPI"
+            >
+              ®
+            </span>
+            <span className="ml-1 text-[9px] uppercase tracking-[0.15em] text-primary/80 font-semibold">
+              INPI
+            </span>
           </p>
 
           <div className="h-5 w-px bg-border/60" aria-hidden="true" />
