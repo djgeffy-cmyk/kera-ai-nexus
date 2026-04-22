@@ -37,6 +37,7 @@ import { MissionCriticalSchema } from "@/lib/missionCriticalSchemas";
 import { PasswordStrengthMeter } from "@/components/PasswordStrengthMeter";
 import {
   loginWithPasskey,
+  loginWithPasskeyDiscoverable,
   registerPasskey,
   webauthnSupported,
   isInIframe,
@@ -239,6 +240,32 @@ const Auth = () => {
       navigate("/", { replace: true });
     } catch (err: any) {
       toast.error(err.message || "Falha no Face ID");
+    } finally {
+      setPasskeyLoading(false);
+    }
+  };
+
+  /**
+   * Login Face ID sem precisar digitar email — usa passkeys descobríveis.
+   * O navegador mostra a lista de passkeys salvas e o usuário escolhe.
+   */
+  const handlePasskeyDiscoverableLogin = async () => {
+    setPasskeyLoading(true);
+    try {
+      const { email: loggedEmail } = await loginWithPasskeyDiscoverable();
+      toast.success(`Bem-vinda${loggedEmail ? `, ${loggedEmail}` : ""}!`);
+      navigate("/", { replace: true });
+    } catch (err: any) {
+      // Usuário cancelou prompt do Face ID — silencia
+      const msg = err?.message || "";
+      if (
+        msg.includes("NotAllowed") ||
+        msg.includes("cancel") ||
+        msg.toLowerCase().includes("aborted")
+      ) {
+        return;
+      }
+      toast.error(msg || "Falha no Face ID");
     } finally {
       setPasskeyLoading(false);
     }
