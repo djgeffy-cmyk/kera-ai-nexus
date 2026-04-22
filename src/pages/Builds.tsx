@@ -3,6 +3,13 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Download, ExternalLink, RefreshCw, Terminal } from "lucide-react";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 const GH_OWNER = "djgeffy-cmyk";
 const GH_REPO = "kera-ai-nexus";
@@ -52,10 +59,35 @@ function formatDate(iso: string) {
 const isLinuxAsset = (name: string) =>
   /\.AppImage$|\.deb$|\.rpm$|linux/i.test(name);
 
+type SortMode = "date" | "version";
+
+// Parse semver-ish tag (v1.2.3, 1.2.3-beta.1, etc.) into comparable tuple
+function parseVersion(tag: string): [number, number, number, number, string] {
+  const clean = tag.replace(/^v/i, "").trim();
+  const match = clean.match(/^(\d+)\.(\d+)\.(\d+)(?:[-+](.+))?/);
+  if (!match) return [-1, -1, -1, 1, clean];
+  const [, maj, min, pat, pre] = match;
+  // pre-release sorts BEFORE final (1 = stable, 0 = pre)
+  return [Number(maj), Number(min), Number(pat), pre ? 0 : 1, pre || ""];
+}
+
+function compareVersions(a: string, b: string) {
+  const va = parseVersion(a);
+  const vb = parseVersion(b);
+  for (let i = 0; i < 4; i++) {
+    if ((va[i] as number) !== (vb[i] as number)) {
+      return (vb[i] as number) - (va[i] as number);
+    }
+  }
+  // Both pre-releases: compare pre tags lexicographically (desc)
+  return (vb[4] as string).localeCompare(va[4] as string);
+}
+
 export default function Builds() {
   const [releases, setReleases] = useState<GhRelease[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [sortMode, setSortMode] = useState<SortMode>("date");
 
   const load = async () => {
     setLoading(true);
@@ -78,6 +110,13 @@ export default function Builds() {
     load();
   }, []);
 
+  const sortedReleases = [...releases].sort((a, b) => {
+    if (sortMode === "version") return compareVersions(a.tag_name, b.tag_name);
+    return (
+      new Date(b.published_at).getTime() - new Date(a.published_at).getTime()
+    );
+  });
+
   return (
     <main className="min-h-screen bg-background text-foreground">
       <div className="container mx-auto max-w-4xl px-4 py-10">
@@ -93,10 +132,29 @@ export default function Builds() {
               entrar na aba Actions.
             </p>
           </div>
-          <Button variant="outline" size="sm" onClick={load} disabled={loading}>
-            <RefreshCw className={loading ? "animate-spin" : ""} />
-            Atualizar
-          </Button>
+          <div className="flex items-center gap-2">
+            <Select
+              value={sortMode}
+              onValueChange={(v) => setSortMode(v as SortMode)}
+            >
+              <SelectTrigger className="w-[180px]" size="sm">
+                <SelectValue placeholder="Ordenar por" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="date">Data de publicação</SelectItem>
+                <SelectItem value="version">Versão (semântica)</SelectItem>
+              </SelectContent>
+            </Select>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={load}
+              disabled={loading}
+            >
+              <RefreshCw className={loading ? "animate-spin" : ""} />
+              Atualizar
+            </Button>
+          </div>
         </header>
 
         {error && (
@@ -122,7 +180,7 @@ export default function Builds() {
         )}
 
         <div className="space-y-4">
-          {releases.map((release) => {
+          {sortedReleases.map((release) => {
             const linuxAssets = release.assets.filter((a) =>
               isLinuxAsset(a.name),
             );
