@@ -141,8 +141,6 @@ const Auth = () => {
   const [resetEmail, setResetEmail] = useState("");
   const [resetNote, setResetNote] = useState("");
   const [resetLoading, setResetLoading] = useState(false);
-    // Vídeo de chuva realista enviado pelo usuário (local, alta definição)
-    const rainBgUrl = rainBgRealisticUrl;
 
   useEffect(() => {
     document.title = "Kera AI — Entrar";
