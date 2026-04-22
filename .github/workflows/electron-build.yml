@@ -84,6 +84,7 @@ jobs:
             release-builds/*.deb
             release-builds/*.AppImage
             release-builds/latest*.yml
+            release-builds/SHA256SUMS.txt
           if-no-files-found: warn
           retention-days: 7
 
@@ -103,5 +104,6 @@ jobs:
             release-builds/*.AppImage
             release-builds/*.blockmap
             release-builds/latest*.yml
+            release-builds/SHA256SUMS.txt
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
