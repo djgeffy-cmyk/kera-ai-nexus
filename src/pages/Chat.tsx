@@ -1475,14 +1475,6 @@ Por favor, analise: há perda de pacote? jitter alto sugere instabilidade de rot
                  <h2 className="font-display text-3xl md:text-5xl mt-10 font-black tracking-tighter uppercase leading-tight">
                    Olá, eu sou a <span className="kera-gradient-text">{currentAgentName}</span>
                  </h2>
-                 {agentKey === "kera-security-nasa" && (
-                   <div className="mt-4 flex justify-center">
-                     <span className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-[11px] font-bold tracking-[0.25em] uppercase bg-blue-500/10 text-blue-300 border border-blue-400/40 shadow-[0_0_14px_rgba(59,130,246,0.35)]">
-                       <span className="size-1.5 rounded-full bg-blue-400 animate-pulse" />
-                       NASA-Grade · Mission Critical
-                     </span>
-                   </div>
-                 )}
                  <p className="text-sm md:text-lg text-muted-foreground mt-4 max-w-lg mx-auto font-medium opacity-80 leading-relaxed">
                    {currentAgent && "description" in currentAgent ? currentAgent.description : "Sua assistente de inteligência avançada. Em que posso ser útil hoje?"}
                  </p>
