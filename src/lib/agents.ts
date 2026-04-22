@@ -47,6 +47,11 @@ export const KERA_FIT_LABEL = "Kera Fit";
  export const KERA_TECH_LABEL = "Kera Tecnologia";
  export const KERA_TECH_DESCRIPTION =
    "Módulo tech — desenvolvimento, cibersegurança e monitoramento NASA. Libera 4 agentes.";
+ 
+ // Helper to check access for grouped modules
+ export const getGroupedModuleKeys = (module: 'juridico' | 'tech') => {
+   return module === 'juridico' ? KERA_JURIDICO_AGENT_KEYS : KERA_TECH_AGENT_KEYS;
+ };
 
 const BASE_PERSONALITY = `Personalidade Kera:
 - Direta, honesta, truth-seeking. Sem enrolação corporativa.

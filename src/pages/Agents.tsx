@@ -163,9 +163,9 @@ const AgentsPage = () => {
              const techUnlocked = KERA_TECH_AGENT_KEYS.some((k) => canAccess(k));
  
              const groupedKeys = new Set([...KERA_FIT_AGENT_KEYS, ...KERA_JURIDICO_AGENT_KEYS, ...KERA_TECH_AGENT_KEYS]);
-             const others = BUILTIN_AGENTS.filter((a) => canSee(a.key) && !groupedKeys.has(a.key));
+             const others = BUILTIN_AGENTS.filter((a) => canSee(a.key) && !groupedKeys.has(a.key as any));
 
-            const renderAgentCard = (a: typeof BUILTIN_AGENTS[number]) => {
+             const renderAgentCard = (a: (typeof BUILTIN_AGENTS)[number]) => {
               const Icon = a.icon;
               const allowed = canAccess(a.key);
               return (
@@ -224,7 +224,8 @@ const AgentsPage = () => {
                        const a = BUILTIN_AGENTS.find((x) => x.key === key);
                        return a ? renderAgentCard(a) : null;
                      }}
-                     customKeys={KERA_JURIDICO_AGENT_KEYS as any}
+                     customKeys={KERA_JURIDICO_AGENT_KEYS as unknown as string[]}
+                     icon={Scale}
                    />
                  )}
  
@@ -236,7 +237,8 @@ const AgentsPage = () => {
                        const a = BUILTIN_AGENTS.find((x) => x.key === key);
                        return a ? renderAgentCard(a) : null;
                      }}
-                     customKeys={KERA_TECH_AGENT_KEYS as any}
+                     customKeys={KERA_TECH_AGENT_KEYS as unknown as string[]}
+                     icon={Code2}
                    />
                  )}
                 <div className="grid sm:grid-cols-2 gap-3">

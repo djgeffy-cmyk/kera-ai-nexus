@@ -91,15 +91,12 @@ export function useUserAccess() {
      if (spaceincloudActive && FIT_AGENT_KEYS.has(agentKey)) return true;
  
      // Módulo Jurídico
-     if (juridicoActive && (KERA_FIT_AGENT_KEYS as any).includes && (window as any).KERA_JURIDICO_KEYS_SET?.has(agentKey)) return true;
-     // Workaround: as chaves são estáticas, vamos usar o Set local se possível ou checar manual
      const juridicoKeys = ["kera-juridica", "kera-familia", "kera-sucessoes", "kera-personalidade", "kera-curatela"];
      if (juridicoActive && juridicoKeys.includes(agentKey)) return true;
  
      // Módulo Tecnologia
      const techKeys = ["kera-dev", "kera-sec", "kera-security-nasa", "kera-sentinela"];
      if (techActive && techKeys.includes(agentKey)) return true;
- 
     return selectedAgents.includes(agentKey);
   };
 
