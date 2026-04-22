@@ -69,6 +69,7 @@ import {
    Wand2,
    Check,
    AlertCircle,
+   Smartphone,
 } from "lucide-react";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -92,6 +93,7 @@ import keraGamerBgVideo from "@/assets/kera-gamer-bg.mp4.asset.json";
 import keraSpaceLogo from "@/assets/kera-spaceincloud-logo.png";
 
 import { assetUrl } from "@/lib/assetUrl";
+import { isIOS, isStandalonePWA } from "@/lib/platform";
 import { MessageBubble, type ChatMessage } from "@/components/chat/MessageBubble";
 import { PROVIDERS, getPreferredProvider, setPreferredProvider, type ProviderId } from "@/lib/providers";
 import {
@@ -1219,6 +1221,15 @@ Por favor, analise: há perda de pacote? jitter alto sugere instabilidade de rot
         {typeof window !== "undefined" && (window as unknown as { kera?: { isDesktop: boolean } }).kera?.isDesktop && (
           <Button variant="ghost" onClick={() => navigate("/desktop")} className="w-full justify-start text-primary hover:text-primary">
             <Monitor className="size-4 mr-2" /> Kera Desktop (PC)
+          </Button>
+        )}
+        {isIOS() && !isStandalonePWA() && (
+          <Button
+            variant="ghost"
+            onClick={() => navigate("/install-ios")}
+            className="w-full justify-start text-primary hover:text-primary"
+          >
+            <Smartphone className="size-4 mr-2" /> Instalar no iPhone
           </Button>
         )}
         {spaceincloudActive && (
