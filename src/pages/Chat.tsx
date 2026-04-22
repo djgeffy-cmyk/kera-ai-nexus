@@ -65,10 +65,17 @@ import {
    Video,
    VideoOff,
    ChevronDown,
+   Rocket,
+   Wand2,
+   Check,
+   AlertCircle,
 } from "lucide-react";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import keraLogo from "@/assets/kera-logo.png";
 import spaceInCloudLogo from "@/assets/space-in-cloud-logo.png";
 import keraAvatar from "@/assets/kera-avatar.png";
