@@ -80,24 +80,17 @@ interface DemoKeraDialogProps {
   onWantToSignUp: () => void;
 }
 
-// Agentes que aparecem no demo (subset curado, em ordem)
-const DEMO_AGENT_KEYS = [
-  "kera",
-  "kera-dev",
-  "kera-sec",
-  "kera-security-nasa",
-  "kera-juridica",
-  "kera-familia",
-  "kera-sucessoes",
-  "kera-personalidade",
-  "kera-curatela",
-  "kera-sentinela",
-  "kera-nutri",
-  "kera-treinador",
-  "kera-iron",
-  "kera-gamer",
-  "kera-tradutora",
-] as const;
+// Agentes do demo agrupados por pacote (espelha os grupos da tela principal:
+// Kera principal, Tecnologia, Jurídica, Kera Fit e Outros).
+const DEMO_GROUPS: { label: string; keys: readonly string[] }[] = [
+  { label: "Kera", keys: ["kera"] },
+  { label: KERA_TECH_LABEL, keys: KERA_TECH_AGENT_KEYS },
+  { label: KERA_JURIDICO_LABEL, keys: KERA_JURIDICO_AGENT_KEYS },
+  { label: KERA_FIT_LABEL, keys: KERA_FIT_AGENT_KEYS },
+  { label: "Outros", keys: ["kera-gamer", "kera-tradutora"] },
+];
+
+const DEMO_AGENT_KEYS = DEMO_GROUPS.flatMap((g) => g.keys);
 
 const DEMO_AGENTS = DEMO_AGENT_KEYS
   .map((k) => BUILTIN_AGENTS.find((a) => a.key === k))
