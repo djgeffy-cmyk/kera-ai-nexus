@@ -693,6 +693,41 @@ export type Database = {
         }
         Relationships: []
       }
+      user_trigger_preferences: {
+        Row: {
+          created_at: string
+          enabled: boolean
+          id: string
+          trigger_id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          enabled?: boolean
+          id?: string
+          trigger_id: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          enabled?: boolean
+          id?: string
+          trigger_id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_trigger_preferences_trigger_id_fkey"
+            columns: ["trigger_id"]
+            isOneToOne: false
+            referencedRelation: "kera_triggers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       webauthn_challenges: {
         Row: {
           challenge: string
