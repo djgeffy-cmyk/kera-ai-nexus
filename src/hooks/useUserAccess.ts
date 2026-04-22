@@ -149,6 +149,8 @@ export function useUserAccess() {
     paywallTrialCount,
     trialsRemaining: Math.max(0, PAYWALL_FREE_TRIES - paywallTrialCount),
     spaceincloudActive,
+    juridicoActive,
+    techActive,
     municipioActive,
     canAccess,
     canSee,
