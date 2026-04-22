@@ -35,8 +35,8 @@ const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
       <Sonner />
-      <GeoBlockGate>
       <HashRouter>
+        <GeoBlockGate>
         <LicitacoesAlertsListener />
         <Routes>
           <Route path="/welcome" element={<Welcome />} />
@@ -63,8 +63,8 @@ const App = () => (
         <Footer />
         <AskKeraFab />
         <IconUpdateBanner />
+        </GeoBlockGate>
       </HashRouter>
-      </GeoBlockGate>
     </TooltipProvider>
   </QueryClientProvider>
 );
