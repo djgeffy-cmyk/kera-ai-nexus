@@ -76,49 +76,12 @@ const Auth = () => {
     const el = mainRef.current;
     const video = bgVideoRef.current;
     if (!el || !video) return;
-    const prefersReduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    if (prefersReduced) return;
-
-    const MAX = 14;
-    let targetX = 0, targetY = 0, currX = 0, currY = 0;
-
-    const onMove = (e: PointerEvent) => {
-      const rect = el.getBoundingClientRect();
-      const nx = (e.clientX - rect.left) / rect.width - 0.5;
-      const ny = (e.clientY - rect.top) / rect.height - 0.5;
-      targetX = -nx * MAX * 2;
-      targetY = -ny * MAX * 2;
-      if (rafRef.current == null) tick();
-    };
-
-    const onLeave = () => {
-      targetX = 0;
-      targetY = 0;
-      if (rafRef.current == null) tick();
-    };
-
-    const tick = () => {
-      currX += (targetX - currX) * 0.12;
-      currY += (targetY - currY) * 0.12;
-      video.style.transform = `scale(1.08) translate3d(${currX.toFixed(2)}px, ${currY.toFixed(2)}px, 0)`;
-      if (Math.abs(targetX - currX) > 0.1 || Math.abs(targetY - currY) > 0.1) {
-        rafRef.current = requestAnimationFrame(tick);
-      } else {
-        rafRef.current = null;
-      }
-    };
-
-    video.style.transform = "scale(1.08) translate3d(0,0,0)";
-    video.style.transition = "transform 120ms linear";
-    video.style.willChange = "transform";
-
-    el.addEventListener("pointermove", onMove);
-    el.addEventListener("pointerleave", onLeave);
-    return () => {
-      el.removeEventListener("pointermove", onMove);
-      el.removeEventListener("pointerleave", onLeave);
-      if (rafRef.current != null) cancelAnimationFrame(rafRef.current);
-    };
+    // Parallax desligado: o vídeo de chuva é vertical e qualquer scale/translate
+    // empurra o chão (com as gotas batendo) para fora da tela. Mantemos o vídeo
+    // alinhado pelo bottom para garantir que o solo molhado sempre apareça.
+    video.style.transform = "none";
+    video.style.willChange = "auto";
+    return;
   }, []);
 
   // Garante autoplay/loop do vídeo de chuva mesmo quando o navegador bloqueia
