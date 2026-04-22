@@ -8,7 +8,8 @@ import { Card } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog";
 import { ArrowLeft, Plus, Sparkles, Trash2, Pencil } from "lucide-react";
 import { toast } from "sonner";
-import { BUILTIN_AGENTS } from "@/lib/agents";
+import { BUILTIN_AGENTS, KERA_FIT_AGENT_KEYS } from "@/lib/agents";
+import { KeraFitGroup } from "@/components/KeraFitGroup";
 import { useUserAccess } from "@/hooks/useUserAccess";
 import keraLogo from "@/assets/kera-logo.png";
 import { MissionCriticalSchema } from "@/lib/missionCriticalSchemas";
@@ -140,14 +141,19 @@ const AgentsPage = () => {
               </button>
             </p>
           )}
-          <div className="grid sm:grid-cols-2 gap-3">
-            {BUILTIN_AGENTS.filter(a => canSee(a.key)).map(a => {
+          {(() => {
+            const fitKeys = new Set<string>(KERA_FIT_AGENT_KEYS);
+            const fitVisible = KERA_FIT_AGENT_KEYS.some((k) => canSee(k));
+            const fitUnlocked = KERA_FIT_AGENT_KEYS.some((k) => canAccess(k));
+            const others = BUILTIN_AGENTS.filter((a) => canSee(a.key) && !fitKeys.has(a.key));
+
+            const renderAgentCard = (a: typeof BUILTIN_AGENTS[number]) => {
               const Icon = a.icon;
               const allowed = canAccess(a.key);
               return (
-                <Card 
-                  key={a.key} 
-                  className={`p-4 panel border-border transition-colors ${
+                <Card
+                  key={a.key}
+                  className={`p-4 panel border-border transition-colors h-full ${
                     allowed
                       ? "cursor-pointer hover:border-primary/50"
                       : "opacity-50 grayscale cursor-not-allowed"
@@ -178,8 +184,25 @@ const AgentsPage = () => {
                   </div>
                 </Card>
               );
-            })}
-          </div>
+            };
+
+            return (
+              <div className="space-y-4">
+                {fitVisible && (
+                  <KeraFitGroup
+                    unlocked={fitUnlocked}
+                    renderAgent={(key) => {
+                      const a = BUILTIN_AGENTS.find((x) => x.key === key);
+                      return a ? renderAgentCard(a) : null;
+                    }}
+                  />
+                )}
+                <div className="grid sm:grid-cols-2 gap-3">
+                  {others.map((a) => renderAgentCard(a))}
+                </div>
+              </div>
+            );
+          })()}
         </section>
 
         <section>

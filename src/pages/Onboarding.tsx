@@ -7,6 +7,8 @@ import { ArrowLeft, Check, Sparkles } from "lucide-react";
 import { toast } from "sonner";
 import { BUILTIN_AGENTS } from "@/lib/agents";
 import { useUserAccess } from "@/hooks/useUserAccess";
+import { KERA_FIT_AGENT_KEYS } from "@/lib/agents";
+import { KeraFitGroup } from "@/components/KeraFitGroup";
 import keraWaterHero from "@/assets/kera-water-hero.jpg";
 
 // Vídeo animado da Kera (mesmo usado na tela de login). `?v=` invalida cache do CDN.
@@ -91,12 +93,58 @@ const Onboarding = () => {
     navigate("/", { replace: true });
   };
 
-  // ordena: Kera principal primeiro, depois o resto
-  const ordered = [...BUILTIN_AGENTS].filter(a => canSee(a.key)).sort((a, b) => {
-    if (a.key === "kera") return -1;
-    if (b.key === "kera") return 1;
-    return a.name.localeCompare(b.name);
-  });
+  // Os agentes do pacote Kera Fit são renderizados separadamente (no grupo).
+  const fitKeys = new Set<string>(KERA_FIT_AGENT_KEYS);
+
+  // ordena: Kera principal primeiro, depois o resto. Remove os do pacote Fit.
+  const ordered = [...BUILTIN_AGENTS]
+    .filter((a) => canSee(a.key) && !fitKeys.has(a.key))
+    .sort((a, b) => {
+      if (a.key === "kera") return -1;
+      if (b.key === "kera") return 1;
+      return a.name.localeCompare(b.name);
+    });
+
+  // Verifica se algum agente Fit é visível pro usuário (pra decidir mostrar o grupo)
+  const fitVisible = KERA_FIT_AGENT_KEYS.some((k) => canSee(k));
+  const anyFitSelected = KERA_FIT_AGENT_KEYS.some((k) => selected.has(k));
+
+  // Renderiza um card de agente Fit dentro do grupo (mesmo visual dos demais cards)
+  const renderFitAgent = (agentKey: string) => {
+    const a = BUILTIN_AGENTS.find((x) => x.key === agentKey);
+    if (!a) return null;
+    const Icon = a.icon;
+    const isSelected = selected.has(a.key);
+    return (
+      <Card
+        onClick={() => toggle(a.key)}
+        className={`p-3 panel cursor-pointer transition-all relative h-full ${
+          isSelected
+            ? "border-primary shadow-glow bg-primary/5"
+            : "border-border hover:border-primary/40"
+        }`}
+      >
+        {isSelected && (
+          <div className="absolute top-2 right-2 size-5 rounded-full bg-primary text-primary-foreground flex items-center justify-center">
+            <Check className="size-3" />
+          </div>
+        )}
+        <div className="flex items-start gap-2">
+          <div
+            className={`size-9 rounded-lg bg-secondary flex items-center justify-center shrink-0 ${a.iconColor}`}
+          >
+            <Icon className="size-5" />
+          </div>
+          <div className="min-w-0 flex-1 pr-5">
+            <h4 className="font-medium text-sm">{a.name}</h4>
+            <p className="text-xs text-muted-foreground mt-0.5 line-clamp-2">
+              {a.description}
+            </p>
+          </div>
+        </div>
+      </Card>
+    );
+  };
 
   return (
     <div className="min-h-screen bg-background relative overflow-hidden">
@@ -142,6 +190,16 @@ const Onboarding = () => {
             A <span className="text-primary font-medium">Kera generalista</span> já vem ativa por padrão.
           </p>
         </header>
+
+        {fitVisible && (
+          <div className="mb-4">
+            <KeraFitGroup
+              renderAgent={renderFitAgent}
+              unlocked={anyFitSelected}
+              badgeLabel={anyFitSelected ? `${KERA_FIT_AGENT_KEYS.filter((k) => selected.has(k)).length}/3 selecionados` : "Marque qualquer um pra incluir"}
+            />
+          </div>
+        )}
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-4 mb-8">
           {ordered.map(a => {
