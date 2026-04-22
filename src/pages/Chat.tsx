@@ -208,6 +208,7 @@ const Chat = () => {
   const [agentKey, setAgentKey] = useState<string>(DEFAULT_AGENT_KEY);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState("");
+  const [openAgentGroups, setOpenAgentGroups] = useState<Record<string, boolean>>({});
   const [streaming, setStreaming] = useState(false);
   const [userId, setUserId] = useState<string | null>(null);
   const agentBgVideos = useMemo<Record<string, string>>(() => ({
