@@ -84,7 +84,7 @@ const Welcome = () => {
         preload="auto"
         poster={keraAvatar}
         className="absolute inset-0 w-full h-full object-cover object-bottom"
-        src={rainBgUrl}
+        src={bgUrl}
       />
 
       <audio ref={audioRef} src={rainAmbientUrl} loop preload="auto" muted={audioMuted} aria-hidden />
@@ -123,11 +123,12 @@ const Welcome = () => {
           />
           <div className="relative size-48 sm:size-56 rounded-full overflow-hidden border-2 border-primary/70 shadow-glow bg-background">
             <video
+              key={avatarUrl}
               autoPlay
               loop
               muted
               playsInline
-              src={rainVideoUrl}
+              src={avatarUrl}
               className="w-full h-full object-cover"
             />
           </div>
