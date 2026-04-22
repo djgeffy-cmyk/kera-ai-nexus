@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Card } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog";
-import { ArrowLeft, Plus, Sparkles, Trash2, Pencil } from "lucide-react";
+ import { ArrowLeft, Plus, Sparkles, Trash2, Pencil, Scale, Code2 } from "lucide-react";
 import { toast } from "sonner";
  import { 
    BUILTIN_AGENTS, 
