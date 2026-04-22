@@ -3,7 +3,7 @@
 // habilitados, mede latência/perda/jitter via HTTPS HEAD e persiste em
 // network_metrics usando service role (bypass RLS).
 
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2.103.3";
+import { createClient } from "npm:@supabase/supabase-js@2.103.3";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
