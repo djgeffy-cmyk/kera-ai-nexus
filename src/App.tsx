@@ -20,6 +20,7 @@ import Manual from "./pages/Manual.tsx";
 import Uso from "./pages/Uso.tsx";
 import Builds from "./pages/Builds.tsx";
 import Processos from "./pages/Processos.tsx";
+import InstallIOS from "./pages/InstallIOS.tsx";
 import { ProtectedRoute } from "./components/ProtectedRoute";
 import Footer from "./components/Footer";
 import { LicitacoesAlertsListener } from "./components/LicitacoesAlertsListener";
@@ -52,6 +53,7 @@ const App = () => (
           <Route path="/uso" element={<ProtectedRoute><Uso /></ProtectedRoute>} />
           <Route path="/builds" element={<ProtectedRoute><Builds /></ProtectedRoute>} />
           <Route path="/processos" element={<ProtectedRoute><Processos /></ProtectedRoute>} />
+          <Route path="/install-ios" element={<InstallIOS />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
         <Footer />
