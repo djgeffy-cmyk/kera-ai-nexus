@@ -1,0 +1,46 @@
+name: Build Kera Desktop (Linux via Docker)
+
+# Build Linux usando Docker multi-stage + cache do BuildKit no GHA.
+# Vantagem: enquanto package-lock.json não muda, o stage `deps`
+# (npm ci) é reaproveitado entre runs, cortando vários minutos.
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build-linux-docker:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build image (multi-stage, cached)
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: Dockerfile.linux-build
+          target: artifacts
+          load: false
+          outputs: type=local,dest=./release-builds
+          cache-from: type=gha,scope=kera-linux-build
+          cache-to: type=gha,scope=kera-linux-build,mode=max
+
+      - name: List generated artifacts
+        run: ls -lah release-builds || true
+
+      - name: Upload AppImage
+        uses: actions/upload-artifact@v4
+        with:
+          name: KeraDesktop-linux-docker
+          path: |
+            release-builds/*.AppImage
+            release-builds/latest*.yml
+          if-no-files-found: warn
+          retention-days: 7
