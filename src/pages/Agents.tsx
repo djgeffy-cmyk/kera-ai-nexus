@@ -40,6 +40,11 @@ const AgentsPage = () => {
   const [editing, setEditing] = useState<Agent | null>(null);
   const [open, setOpen] = useState(false);
   const [form, setForm] = useState({ name: "", description: "", system_prompt: "" });
+  // Accordion: apenas um pacote expandido por vez. null = todos fechados.
+  const [openGroup, setOpenGroup] = useState<string | null>(null);
+  const groupOpen = (id: string) => openGroup === id;
+  const handleGroupToggle = (id: string) => (next: boolean) =>
+    setOpenGroup(next ? id : (cur) => (cur === id ? null : cur) as any);
 
   useEffect(() => {
     document.title = "Kera AI — Agentes";
