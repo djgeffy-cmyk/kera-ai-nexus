@@ -1070,6 +1070,9 @@ Por favor, analise: há perda de pacote? jitter alto sugere instabilidade de rot
         <Button variant="ghost" onClick={() => navigate("/security")} className="w-full justify-start text-muted-foreground hover:text-foreground">
           <ShieldCheck className="size-4 mr-2" /> Segurança (2FA)
         </Button>
+        <Button variant="ghost" onClick={() => navigate("/humor")} className="w-full justify-start text-muted-foreground hover:text-foreground">
+          <Sparkles className="size-4 mr-2" /> Humor da Kera
+        </Button>
         <Button variant="ghost" onClick={() => navigate("/onboarding?edit=1")} className="w-full justify-start text-muted-foreground hover:text-foreground">
           <Sparkles className="size-4 mr-2" /> Minhas áreas
         </Button>

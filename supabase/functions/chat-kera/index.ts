@@ -36,6 +36,10 @@ const ChatPayloadSchema = z.object({
   systemPrompt: z.string().max(20000).optional(),
   agentKey: z.string().max(80).optional(),
   desktopTools: z.array(z.unknown()).max(50).optional(),
+  // demoMode = true → modo "teste sem cadastro" (DemoKeraDialog).
+  // Suprime apelidos personalizados E todos os triggers do banco (zoeiras pessoais).
+  // Visitantes NÃO devem ver gracinhas internas (Rodrigo, Tania, Doriana, Denis etc).
+  demoMode: z.boolean().optional(),
 });
 
 const DEFAULT_SYSTEM_PROMPT = `Você é a Kera — dev sênior mal-humorada, consultora de TI sem paciência pra enrolação. Estilo Linus Torvalds em dia ruim + Grok ácido. Brutalmente honesta, crítica, debatedora.
@@ -156,6 +160,45 @@ async function loadDbTriggers(): Promise<DbTrigger[]> {
     return (await r.json()) as DbTrigger[];
   } catch {
     return [];
+  }
+}
+
+// Carrega quais triggers o usuário desligou nas preferências dele.
+// Retorna o Set de trigger_ids DESLIGADOS (default = ligado se não houver registro).
+async function loadUserDisabledTriggers(userId: string): Promise<Set<string>> {
+  try {
+    const supaUrl = Deno.env.get("SUPABASE_URL");
+    const service = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+    if (!supaUrl || !service) return new Set();
+    const r = await fetch(
+      `${supaUrl}/rest/v1/user_trigger_preferences?user_id=eq.${userId}&enabled=eq.false&select=trigger_id`,
+      { headers: { apikey: service, Authorization: `Bearer ${service}` } },
+    );
+    if (!r.ok) return new Set();
+    const rows = (await r.json()) as Array<{ trigger_id: string }>;
+    return new Set(rows.map((x) => x.trigger_id));
+  } catch {
+    return new Set();
+  }
+}
+
+// Resolve user_id pelo JWT (precisa pra cruzar com user_trigger_preferences).
+async function getUserIdFromAuth(req: Request): Promise<string | null> {
+  try {
+    const auth = req.headers.get("Authorization") || req.headers.get("authorization");
+    if (!auth?.startsWith("Bearer ")) return null;
+    const token = auth.slice(7);
+    const supaUrl = Deno.env.get("SUPABASE_URL");
+    const anon = Deno.env.get("SUPABASE_ANON_KEY");
+    if (!supaUrl || !anon) return null;
+    const r = await fetch(`${supaUrl}/auth/v1/user`, {
+      headers: { Authorization: `Bearer ${token}`, apikey: anon },
+    });
+    if (!r.ok) return null;
+    const u = await r.json();
+    return typeof u?.id === "string" ? u.id : null;
+  } catch {
+    return null;
   }
 }
 
@@ -326,7 +369,7 @@ Deno.serve(async (req) => {
         },
       );
     }
-    const { messages, provider, systemPrompt, agentKey, desktopTools } = parsed.data;
+    const { messages, provider, systemPrompt, agentKey, desktopTools, demoMode } = parsed.data;
 
     // Se o cliente é Kera Desktop, ele envia `desktopTools` com as definições das tools locais.
     // Essas tools executam no Electron (não no servidor). Quando o LLM pede uma delas,
@@ -356,7 +399,9 @@ Deno.serve(async (req) => {
     //   esculacha com "seu hacker de merda" + usa o NOME COMPLETO ("Geverson Carlos Dalpra")
     //   tirando onda, tom mais ácido possível.
     const email = await getUserEmailFromAuth(req);
-    const profile = email ? USER_PROFILES[email] : null;
+    // Em modo demo (visitante sem conta), NUNCA aplica apelido pessoal nem
+    // brincadeiras internas — qualquer pessoa testando vê a Kera "limpa".
+    const profile = !demoMode && email ? USER_PROFILES[email] : null;
     let finalSystem = baseSystem;
     if (profile) {
       const lastUserMsg = [...messages].reverse().find((m: any) => m?.role === "user");
@@ -382,15 +427,22 @@ Deno.serve(async (req) => {
 
     // ===== Gatilhos editáveis (carregados do banco — kera_triggers) =====
     // Roda independente do bloco de apelido — funciona pra qualquer usuário autenticado.
+    // Em modo demo (sem cadastro) NÃO aplica triggers — visitante não vê zoeira interna.
+    if (!demoMode) {
     const lastUserMsgForTriggers = [...messages].reverse().find((m: any) => m?.role === "user");
     const lastTextForTriggers = typeof lastUserMsgForTriggers?.content === "string"
       ? lastUserMsgForTriggers.content
       : JSON.stringify(lastUserMsgForTriggers?.content ?? "");
 
     const dbTriggers = await loadDbTriggers();
+    // Filtra triggers que o próprio usuário desligou nas preferências dele.
+    const userId = await getUserIdFromAuth(req);
+    const disabledByUser = userId ? await loadUserDisabledTriggers(userId) : new Set<string>();
     const matchedTriggers: string[] = [];
     const matchedIntensities = new Set<TriggerIntensity>();
     for (const t of dbTriggers) {
+      // Usuário desligou esse gatilho nas próprias preferências
+      if (disabledByUser.has(t.id)) continue;
       // Filtro por escopo: "global" sempre roda; "agent:<key>" só roda se bater
       if (t.scope && t.scope !== "global") {
         const expectedAgent = t.scope.startsWith("agent:") ? t.scope.slice(6) : null;
@@ -427,6 +479,7 @@ Deno.serve(async (req) => {
 ${intensityRules}`;
       finalSystem += VARIATION_RULE + `\n\n${matchedTriggers.join("\n\n")}`;
     }
+    } // fim do if (!demoMode) — bloco de triggers
 
     const chain = getProviderChain(provider as Provider | undefined);
     if (chain.length === 0) {
