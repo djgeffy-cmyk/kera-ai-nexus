@@ -69,6 +69,7 @@ import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import keraLogo from "@/assets/kera-logo.png";
+import spaceInCloudLogo from "@/assets/space-in-cloud-logo.png";
 import keraAvatar from "@/assets/kera-avatar.png";
 import keraAvatarVideo from "@/assets/kera-avatar.mp4.asset.json";
 import keraAvatarNasaVideo from "@/assets/kera-avatar-nasa.mp4.asset.json";
@@ -985,18 +986,16 @@ Por favor, analise: há perda de pacote? jitter alto sugere instabilidade de rot
    const Sidebar = () => (
      <aside className="h-full w-full md:w-80 bg-background/95 backdrop-blur-2xl border-r border-white/5 flex flex-col shadow-2xl">
        {/* Topo: avatar minimalista */}
-       <div className="px-6 pt-8 pb-6 flex items-center gap-3">
-         <div className="relative group">
-           <div className="absolute inset-0 bg-primary/20 rounded-xl blur-lg opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-           <div className="relative w-10 h-10 rounded-xl overflow-hidden ring-1 ring-white/10 bg-black/20 flex items-center justify-center">
-             <img src={keraLogo} alt="Kera AI" className="w-8 h-8 object-contain transition-transform duration-500 group-hover:scale-110" />
-           </div>
-         </div>
-         <div>
-           <span className="font-display text-base font-black tracking-widest text-white/90">KERA</span>
-           <p className="text-[10px] text-muted-foreground uppercase tracking-[0.2em] -mt-1 font-semibold opacity-60">Intelligence</p>
-         </div>
-       </div>
+        <div className="px-4 pt-6 pb-4 flex items-center justify-center">
+          <div className="relative group w-full">
+            <div className="absolute inset-0 bg-primary/20 rounded-2xl blur-2xl opacity-50 group-hover:opacity-80 transition-opacity duration-500" />
+            <img
+              src={spaceInCloudLogo}
+              alt="Kera AI — Space In Cloud"
+              className="relative w-full h-auto max-h-28 object-contain drop-shadow-[0_0_20px_rgba(59,130,246,0.4)] transition-transform duration-500 group-hover:scale-105"
+            />
+          </div>
+        </div>
  
        {/* Ações principais — estilo moderno */}
        <nav className="px-4 space-y-1">
