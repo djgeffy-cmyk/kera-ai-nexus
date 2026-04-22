@@ -8,7 +8,8 @@ import { Card } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog";
 import { ArrowLeft, Plus, Sparkles, Trash2, Pencil } from "lucide-react";
 import { toast } from "sonner";
-import { BUILTIN_AGENTS } from "@/lib/agents";
+import { BUILTIN_AGENTS, KERA_FIT_AGENT_KEYS } from "@/lib/agents";
+import { KeraFitGroup } from "@/components/KeraFitGroup";
 import { useUserAccess } from "@/hooks/useUserAccess";
 import keraLogo from "@/assets/kera-logo.png";
 import { MissionCriticalSchema } from "@/lib/missionCriticalSchemas";
@@ -140,6 +141,70 @@ const AgentsPage = () => {
               </button>
             </p>
           )}
+          {(() => {
+            const fitKeys = new Set<string>(KERA_FIT_AGENT_KEYS);
+            const fitVisible = KERA_FIT_AGENT_KEYS.some((k) => canSee(k));
+            const fitUnlocked = KERA_FIT_AGENT_KEYS.some((k) => canAccess(k));
+            const others = BUILTIN_AGENTS.filter((a) => canSee(a.key) && !fitKeys.has(a.key));
+
+            const renderAgentCard = (a: typeof BUILTIN_AGENTS[number]) => {
+              const Icon = a.icon;
+              const allowed = canAccess(a.key);
+              return (
+                <Card
+                  key={a.key}
+                  className={`p-4 panel border-border transition-colors h-full ${
+                    allowed
+                      ? "cursor-pointer hover:border-primary/50"
+                      : "opacity-50 grayscale cursor-not-allowed"
+                  }`}
+                  onClick={() => {
+                    if (!allowed) {
+                      toast.info("Essa área não está liberada. Toque em 'Liberar mais áreas' acima.");
+                      return;
+                    }
+                    a.link ? navigate(a.link) : navigate(`/?agent=${a.key}`);
+                  }}
+                >
+                  <div className="flex items-start gap-3">
+                    <div className={`size-10 rounded-xl bg-secondary flex items-center justify-center ${a.iconColor}`}>
+                      <Icon className="size-5" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <h3 className="font-medium flex items-center gap-2">
+                        {a.name}
+                        {!allowed && (
+                          <span className="text-[9px] px-1.5 py-0.5 rounded bg-muted text-muted-foreground border border-border font-bold tracking-wider">
+                            🔒 BLOQUEADO
+                          </span>
+                        )}
+                      </h3>
+                      <p className="text-xs text-muted-foreground">{a.description}</p>
+                    </div>
+                  </div>
+                </Card>
+              );
+            };
+
+            return (
+              <div className="space-y-4">
+                {fitVisible && (
+                  <KeraFitGroup
+                    unlocked={fitUnlocked}
+                    renderAgent={(key) => {
+                      const a = BUILTIN_AGENTS.find((x) => x.key === key);
+                      return a ? renderAgentCard(a) : null;
+                    }}
+                  />
+                )}
+                <div className="grid sm:grid-cols-2 gap-3">
+                  {others.map((a) => renderAgentCard(a))}
+                </div>
+              </div>
+            );
+          })()}
+          {/* legacy rendering removed (replaced by IIFE above) */}
+          {false && (
           <div className="grid sm:grid-cols-2 gap-3">
             {BUILTIN_AGENTS.filter(a => canSee(a.key)).map(a => {
               const Icon = a.icon;
@@ -180,6 +245,7 @@ const AgentsPage = () => {
               );
             })}
           </div>
+          )}
         </section>
 
         <section>
