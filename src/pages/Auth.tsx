@@ -10,11 +10,10 @@ import { toast } from "sonner";
 import { ShieldCheck, KeyRound, Mail, ScanFace, Eye, EyeOff, Sparkles, MousePointerClick, Volume2, VolumeX } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import keraAvatar from "@/assets/kera-avatar.png";
-import keraAvatarVideo from "@/assets/kera-avatar-rain.mp4.asset.json";
+ import keraAvatarVideo from "@/assets/kera-avatar-rain.mp4.asset.json";
+ import rainBgRealistic from "@/assets/rain-bg-realistic.mp4.asset.json";
 import rainAmbientUrl from "@/assets/rain-ambient.mp3";
 
-// URL de vídeo de chuva realista (Mixkit - Royalty Free)
-const REALISTIC_RAIN_VIDEO_URL = "https://assets.mixkit.co/videos/preview/mixkit-rain-falling-on-a-window-pane-1557-large.mp4";
 import ParticlesOverlay from "@/components/ParticlesOverlay";
 import DemoKeraDialog from "@/components/DemoKeraDialog";
 import { assetUrl } from "@/lib/assetUrl";
@@ -122,8 +121,8 @@ const Auth = () => {
   const [resetEmail, setResetEmail] = useState("");
   const [resetNote, setResetNote] = useState("");
   const [resetLoading, setResetLoading] = useState(false);
-  const rainVideoUrl = assetUrl(keraAvatarVideo);
-  const rainBgUrl = REALISTIC_RAIN_VIDEO_URL;
+   const rainVideoUrl = assetUrl(keraAvatarVideo);
+   const rainBgUrl = assetUrl(rainBgRealistic);
 
   useEffect(() => {
     document.title = "Kera AI — Entrar";
