@@ -27,6 +27,11 @@ import {
   Lock,
   Zap,
   CheckCircle2,
+  MonitorDown,
+  Globe,
+  Terminal,
+  Apple as AppleIcon,
+  Download,
 } from "lucide-react";
 
 type AgentInfo = {
