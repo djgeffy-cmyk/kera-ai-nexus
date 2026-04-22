@@ -373,6 +373,45 @@ const KeraDesktopPage = () => {
                 Baixar instalador
               </h2>
             </div>
+            {/* Última versão publicada no GitHub */}
+            <div className="rounded-lg border border-primary/30 bg-primary/5 p-3 flex items-center justify-between gap-3 flex-wrap">
+              <div className="flex items-center gap-3 flex-wrap">
+                <div className="flex items-center gap-1.5 text-sm font-mono">
+                  <Tag className="size-4 text-primary" />
+                  <span className="text-muted-foreground">Última versão:</span>
+                  {loadingRelease ? (
+                    <span className="text-foreground/60 italic">carregando…</span>
+                  ) : releaseError ? (
+                    <span className="text-destructive">indisponível</span>
+                  ) : latestRelease ? (
+                    <span className="text-foreground font-semibold">{latestRelease.version}</span>
+                  ) : (
+                    <span className="text-muted-foreground">—</span>
+                  )}
+                </div>
+                {latestRelease?.publishedAt && (
+                  <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                    <Calendar className="size-3.5" />
+                    <span>
+                      Publicada em{" "}
+                      {new Date(latestRelease.publishedAt).toLocaleDateString("pt-BR", {
+                        day: "2-digit", month: "long", year: "numeric",
+                      })}
+                    </span>
+                  </div>
+                )}
+              </div>
+              {latestRelease?.htmlUrl && (
+                <a
+                  href={latestRelease.htmlUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-xs text-primary hover:underline font-medium"
+                >
+                  Ver notas do release →
+                </a>
+              )}
+            </div>
             <p className="text-xs text-muted-foreground">
               Escolha seu sistema. Você será levado à página da última versão publicada no GitHub —
               baixe o arquivo correspondente e abra para instalar.
