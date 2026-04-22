@@ -31,6 +31,8 @@ export function useUserAccess() {
    const [spaceincloudActive, setSpaceincloudActive] = useState<boolean>(false);
    const [juridicoActive, setJuridicoActive] = useState<boolean>(false);
    const [techActive, setTechActive] = useState<boolean>(false);
+   const [mustChangePassword, setMustChangePassword] = useState<boolean>(false);
+   const [grantedAgentKeys, setGrantedAgentKeys] = useState<string[]>([]);
 
   useEffect(() => {
     let cancelled = false;
@@ -51,7 +53,7 @@ export function useUserAccess() {
        const [{ data: profile }, { data: adminFlag }] = await Promise.all([
          supabase
            .from("profiles")
-           .select("selected_agents, onboarding_completed, paywall_trial_count, spaceincloud_active, juridico_active, tech_active")
+           .select("selected_agents, onboarding_completed, paywall_trial_count, spaceincloud_active, juridico_active, tech_active, must_change_password, granted_agent_keys")
            .eq("user_id", u.user.id)
            .maybeSingle(),
         supabase.rpc("has_role", { _user_id: u.user.id, _role: "admin" }),
@@ -65,6 +67,8 @@ export function useUserAccess() {
        setSpaceincloudActive(!!(profile as any)?.spaceincloud_active);
        setJuridicoActive(!!(profile as any)?.juridico_active);
        setTechActive(!!(profile as any)?.tech_active);
+       setMustChangePassword(!!(profile as any)?.must_change_password);
+       setGrantedAgentKeys((profile as any)?.granted_agent_keys || []);
       setIsAdmin(!!adminFlag);
       setLoading(false);
     };
@@ -97,6 +101,10 @@ export function useUserAccess() {
      // Módulo Tecnologia
      const techKeys = ["kera-dev", "kera-sec", "kera-security-nasa", "kera-sentinela"];
      if (techActive && techKeys.includes(agentKey)) return true;
+
+     // Agentes liberados manualmente (Admin concedeu acesso)
+     if (grantedAgentKeys.includes(agentKey)) return true;
+
     return selectedAgents.includes(agentKey);
   };
 
@@ -140,5 +148,7 @@ export function useUserAccess() {
     canAccess,
     canSee,
     consumeTrial,
+    mustChangePassword,
+    grantedAgentKeys,
   };
 }
