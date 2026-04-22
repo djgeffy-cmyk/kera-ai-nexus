@@ -520,27 +520,6 @@ const Auth = () => {
                     </Button>
                   </form>
 
-                  {mode === "signin" && supportsPasskey && (
-                    <>
-                      <div className="flex items-center gap-3 my-4">
-                        <div className="flex-1 h-px bg-border/50" />
-                        <span className="text-xs text-muted-foreground">ou</span>
-                        <div className="flex-1 h-px bg-border/50" />
-                      </div>
-                      <Button
-                        type="button"
-                        onClick={handlePasskeyLogin}
-                        disabled={passkeyLoading || !email.trim() || inIframe}
-                        variant="outline"
-                        className="w-full border-primary/40 hover:bg-primary/10 hover:border-primary disabled:opacity-60"
-                        title={inIframe ? "Abra direto em chat.kera.ia.br" : undefined}
-                      >
-                        <ScanFace className="size-4 mr-2 text-primary" />
-                        {passkeyLoading ? "Aguarde..." : "Entrar com Face ID / Touch ID"}
-                      </Button>
-                    </>
-                  )}
-
                   {mode === "signin" && (
                     <button
                       type="button"
