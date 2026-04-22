@@ -46,7 +46,8 @@ export const AskKeraFab = () => {
     setText("");
     const isDesktopPrompt = QUICK_PROMPTS.find(p => p.label === q)?.desktop;
     const agentParam = isDesktopPrompt ? "&agent=kera" : "";
-    navigate(`/chat?ask=${encodeURIComponent(q)}${agentParam}`);
+    // O chat é a rota raiz ("/"), não "/chat" — navegar para /chat dava 404.
+    navigate(`/?ask=${encodeURIComponent(q)}${agentParam}`);
   };
 
   return (
