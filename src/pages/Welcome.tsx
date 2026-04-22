@@ -7,13 +7,26 @@ import { motion } from "framer-motion";
 import keraAvatar from "@/assets/kera-avatar.png";
 import rainAmbientUrl from "@/assets/rain-ambient.mp3";
 import DemoKeraDialog from "@/components/DemoKeraDialog";
+import DevVideoSwitcher from "@/components/DevVideoSwitcher";
 
-const rainBgUrl = "https://ytixqgkzqgeoxrbmjqbo.supabase.co/storage/v1/object/public/kera-videos/kera-chuva.mp4?v=2026-04-22";
-const rainVideoUrl = "https://ytixqgkzqgeoxrbmjqbo.supabase.co/storage/v1/object/public/kera-videos/kera-avatar-rain.mp4?v=2026-04-22";
+const STORAGE_BASE = "https://ytixqgkzqgeoxrbmjqbo.supabase.co/storage/v1/object/public/kera-videos";
+const VERSION = "2026-04-22";
+
+const bgVideoOptions = [
+  { id: "rain", label: "Chuva pura (full bg)", url: `${STORAGE_BASE}/kera-chuva.mp4?v=${VERSION}` },
+  { id: "kera-rain", label: "Kera com chuva", url: `${STORAGE_BASE}/kera-avatar-rain.mp4?v=${VERSION}` },
+];
+
+const avatarVideoOptions = [
+  { id: "kera-rain", label: "Kera com chuva", url: `${STORAGE_BASE}/kera-avatar-rain.mp4?v=${VERSION}` },
+  { id: "rain", label: "Chuva pura", url: `${STORAGE_BASE}/kera-chuva.mp4?v=${VERSION}` },
+];
 
 const Welcome = () => {
   const navigate = useNavigate();
   const [demoOpen, setDemoOpen] = useState(false);
+  const [bgUrl, setBgUrl] = useState(bgVideoOptions[0].url);
+  const [avatarUrl, setAvatarUrl] = useState(avatarVideoOptions[0].url);
   const RAIN_MUTE_KEY = "kera:auth:rain-muted";
   const [audioMuted, setAudioMuted] = useState<boolean>(() => {
     if (typeof window === "undefined") return false;
