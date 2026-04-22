@@ -1235,6 +1235,26 @@ Por favor, analise: há perda de pacote? jitter alto sugere instabilidade de rot
                </button>
              </DropdownMenuTrigger>
             <DropdownMenuContent className="w-64 bg-card border-border max-h-[80vh] overflow-y-auto">
+              <div className="p-2 pt-1 border-b border-border/10 mb-1">
+                <Button
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    handleOpenCreator();
+                  }}
+                  className="w-full h-10 gap-2 bg-gradient-cyber text-primary-foreground font-bold shadow-glow text-xs uppercase tracking-wider group relative overflow-hidden"
+                >
+                  <div className="absolute inset-0 bg-white/10 translate-y-full group-hover:translate-y-0 transition-transform duration-300" />
+                  <Rocket className="size-4 animate-bounce shrink-0 relative z-10" />
+                  <span className="relative z-10">+ Novo Especialista</span>
+                  {!isPaidUser && (
+                    <span className="absolute top-1 right-1 px-1 py-0.5 bg-amber-500/90 text-[8px] rounded font-black text-black leading-none uppercase tracking-tighter">
+                      PRO
+                    </span>
+                  )}
+                </Button>
+              </div>
+
               {(() => {
                 const visible = BUILTIN_AGENTS.filter(a => canSee(a.key));
                 const groupOrder: { label: string; keys: readonly string[] }[] = [
