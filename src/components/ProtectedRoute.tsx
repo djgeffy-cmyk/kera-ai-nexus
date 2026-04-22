@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Navigate, useLocation } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import type { Session } from "@supabase/supabase-js";
+import { useStripeAccess } from "@/hooks/useStripeAccess";
 
 interface Props {
   children: React.ReactNode;
@@ -16,6 +17,7 @@ export const ProtectedRoute = ({ children, requireAdmin = false }: Props) => {
   const [needsOnboarding, setNeedsOnboarding] = useState(false);
   const [mustChangePassword, setMustChangePassword] = useState(false);
   const location = useLocation();
+  const stripeAccess = useStripeAccess(session, authReady);
 
   useEffect(() => {
     // 1) Set up listener FIRST (sync only — no awaits)
@@ -81,6 +83,25 @@ export const ProtectedRoute = ({ children, requireAdmin = false }: Props) => {
   if (needsOnboarding && !ONBOARDING_BYPASS.includes(location.pathname)) {
     return <Navigate to="/onboarding" replace />;
   }
+
+  // Gate de assinatura Stripe — qualquer plano ativo libera o space.kera.
+  // Admins passam direto (decidido na edge function).
+  // Rotas neutras continuam acessíveis pra ele conseguir ver os planos / suporte.
+  const SUBSCRIPTION_BYPASS = ["/planos", "/manual", "/security", "/uso"];
+  const onBypassRoute = SUBSCRIPTION_BYPASS.includes(location.pathname);
+  if (!onBypassRoute) {
+    if (stripeAccess.loading) {
+      return (
+        <div className="min-h-screen flex items-center justify-center">
+          <div className="font-display text-primary text-glow animate-pulse">Verificando assinatura…</div>
+        </div>
+      );
+    }
+    if (stripeAccess.allowed === false) {
+      return <Navigate to="/planos" replace state={{ reason: stripeAccess.reason, message: stripeAccess.message }} />;
+    }
+  }
+
   if (requireAdmin && !isAdmin) {
     return (
       <main className="min-h-screen flex items-center justify-center p-6">

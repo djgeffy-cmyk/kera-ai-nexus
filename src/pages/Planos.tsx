@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useNavigate, useSearchParams } from "react-router-dom";
+import { useNavigate, useSearchParams, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -82,6 +82,10 @@ export default function Planos() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const reason = searchParams.get("reason");
+  const location = useLocation();
+  // Razão vinda do gate de assinatura (ProtectedRoute → useStripeAccess).
+  const accessReason = (location.state as { reason?: string; message?: string } | null)?.reason ?? null;
+  const accessMessage = (location.state as { reason?: string; message?: string } | null)?.message ?? null;
 
   // Estado de vinculação Kera FIT
   const [sicEmail, setSicEmail] = useState("");
@@ -152,6 +156,26 @@ export default function Planos() {
               <h2 className="font-semibold text-amber-200">Cota diária de imagens atingida</h2>
               <p className="text-sm text-amber-100/80">
                 Você usou todas as imagens do seu plano hoje. Escolha um plano abaixo pra liberar mais — a cota renova todo dia à meia-noite.
+              </p>
+            </div>
+          </div>
+        )}
+
+        {accessReason && accessReason !== "active_subscription" && accessReason !== "admin" && (
+          <div className="mb-8 rounded-xl border border-fuchsia-500/30 bg-fuchsia-500/10 p-4 md:p-5 flex items-start gap-3">
+            <Crown className="h-5 w-5 text-fuchsia-300 mt-0.5 shrink-0" />
+            <div>
+              <h2 className="font-semibold text-fuchsia-100">
+                {accessReason === "no_active_subscription" || accessReason === "no_customer"
+                  ? "Sua assinatura ainda não está ativa"
+                  : accessReason === "stripe_not_configured"
+                    ? "Validação de assinatura indisponível"
+                    : "Acesso ainda não liberado"}
+              </h2>
+              <p className="text-sm text-fuchsia-100/80">
+                {accessReason === "no_active_subscription" || accessReason === "no_customer"
+                  ? "Pra entrar no Space.kera, é só ter qualquer plano ativo no app.kera.ia.br. Assine abaixo ou complete sua assinatura — o login é o mesmo."
+                  : accessMessage || "Tente novamente em alguns instantes ou entre em contato."}
               </p>
             </div>
           </div>
