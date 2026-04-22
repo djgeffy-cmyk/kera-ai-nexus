@@ -124,8 +124,8 @@ export const BUILTIN_AGENTS: BuiltinAgent[] = [
    },
   {
     key: "kera-security-nasa",
-    name: "Kera Security NASA",
-    description: "Análise de código mission-critical (NASA Senior)",
+    name: "Kera Security Pro",
+    description: "Análise de código mission-critical (nível sênior)",
     icon: ShieldAlert,
     iconColor: "text-blue-400",
     systemPrompt: `Você é o **Kera Security NASA**, Analista de Sistemas Sênior com padrão NASA, especializado em software **mission-critical** e **safety-critical** (foguetes, satélites, sondas, sistemas de telemetria, controle de voo).
