@@ -235,6 +235,116 @@ async function handleAuthOptions(req: Request) {
   return json({ options });
 }
 
+/**
+ * Discoverable / Resident Key flow — não exige email.
+ * O navegador mostra todas as passkeys disponíveis pra esse RP e o usuário escolhe.
+ * Usado pra "Entrar com Face ID" sem digitar nada.
+ */
+async function handleAuthOptionsDiscoverable(req: Request) {
+  const rpID = getRpId(req);
+  const options = await generateAuthenticationOptions({
+    rpID,
+    userVerification: "preferred",
+    // Sem allowCredentials → browser usa passkeys descobríveis (resident keys).
+  });
+
+  // Salva challenge sem email/user_id; lookup será pelo credential_id.
+  await admin.from("webauthn_challenges").insert({
+    challenge: options.challenge,
+    type: "authentication",
+    user_id: null,
+    email: null,
+  });
+
+  return json({ options });
+}
+
+async function handleAuthVerifyDiscoverable(req: Request) {
+  const body = await req.json();
+  const response = body?.response;
+  if (!response) return json({ error: "Dados incompletos" }, 400);
+
+  const credentialId: string = response?.id;
+  if (!credentialId) return json({ error: "credential id ausente" }, 400);
+
+  // Busca a credential pra descobrir o user_id
+  const { data: cred } = await admin
+    .from("webauthn_credentials")
+    .select("id, user_id, public_key, counter, transports")
+    .eq("credential_id", credentialId)
+    .maybeSingle();
+  if (!cred) return json({ error: "Passkey não encontrado" }, 404);
+
+  // Pega challenge mais recente sem email/user_id (discoverable)
+  const { data: chal } = await admin
+    .from("webauthn_challenges")
+    .select("id, challenge, expires_at")
+    .eq("type", "authentication")
+    .is("user_id", null)
+    .is("email", null)
+    .order("created_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
+  if (!chal) return json({ error: "Desafio expirado" }, 400);
+  if (new Date(chal.expires_at).getTime() < Date.now()) {
+    await admin.from("webauthn_challenges").delete().eq("id", chal.id);
+    return json({ error: "Desafio expirado" }, 400);
+  }
+  await admin.from("webauthn_challenges").delete().eq("id", chal.id);
+
+  const rpID = getRpId(req);
+  const origin = getOrigin(req);
+
+  let verification;
+  try {
+    verification = await verifyAuthenticationResponse({
+      response,
+      expectedChallenge: chal.challenge,
+      expectedOrigin: origin,
+      expectedRPID: rpID,
+      authenticator: {
+        credentialID: credentialId,
+        credentialPublicKey: isoBase64URL.toBuffer(cred.public_key),
+        counter: Number(cred.counter ?? 0),
+        transports: (cred.transports as AuthenticatorTransport[] | null) ?? undefined,
+      },
+      requireUserVerification: false,
+    });
+  } catch (e) {
+    return json({ error: (e as Error).message }, 400);
+  }
+
+  if (!verification.verified) return json({ error: "Verificação falhou" }, 400);
+
+  const { data: userInfo } = await admin.auth.admin.getUserById(cred.user_id);
+  if (!userInfo?.user?.email) return json({ error: "Usuário não encontrado" }, 400);
+  const email = userInfo.user.email;
+
+  await admin
+    .from("webauthn_credentials")
+    .update({
+      counter: verification.authenticationInfo.newCounter,
+      last_used_at: new Date().toISOString(),
+    })
+    .eq("id", cred.id);
+
+  const { data: linkData, error: linkErr } = await admin.auth.admin.generateLink({
+    type: "magiclink",
+    email,
+  });
+  if (linkErr || !linkData?.properties?.hashed_token) {
+    return json({ error: linkErr?.message || "Falha ao gerar sessão" }, 500);
+  }
+
+  return json({
+    ok: true,
+    user_id: cred.user_id,
+    email,
+    token_hash: linkData.properties.hashed_token,
+  });
+}
+
 async function handleAuthVerify(req: Request) {
   const body = await req.json();
   const email = (body?.email as string | undefined)?.trim().toLowerCase();
@@ -337,6 +447,10 @@ Deno.serve(async (req) => {
         return await handleAuthOptions(req);
       case "auth-verify":
         return await handleAuthVerify(req);
+      case "auth-options-discoverable":
+        return await handleAuthOptionsDiscoverable(req);
+      case "auth-verify-discoverable":
+        return await handleAuthVerifyDiscoverable(req);
       default:
         return json({ error: "Ação inválida" }, 404);
     }
