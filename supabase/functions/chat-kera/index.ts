@@ -525,6 +525,107 @@ async function executeTool(name: string, args: Record<string, unknown>): Promise
   }
 }
 
+function cleanInline(value: string): string {
+  return value.replace(/\s+/g, " ").replace(/ui-button/g, "").trim();
+}
+
+function parseEngegovDashboard(content: string) {
+  const extractCount = (label: string) => {
+    const match = content.match(new RegExp(`${label}\\D+(\\d+)`, "i"));
+    return match?.[1] ?? null;
+  };
+
+  const obras = Array.from(
+    content.matchAll(/\| Código([^|]+)\| Secretaria([^|]+)\| Descrição([^|]+)\| Logradouro([^|]+)\| Ano Contrato([^|]+)\| Valor Contrato R\$([^|]+)\| Situação([^|]+)\|/g),
+  )
+    .slice(0, 5)
+    .map((m) => ({
+      codigo: cleanInline(m[1]),
+      secretaria: cleanInline(m[2]),
+      descricao: cleanInline(m[3]),
+      logradouro: cleanInline(m[4]),
+      ano: cleanInline(m[5]),
+      valor: cleanInline(m[6]),
+      situacao: cleanInline(m[7]),
+    }));
+
+  return {
+    andamento: extractCount("Obras em andamento"),
+    concluidas: extractCount("Obras concluídas"),
+    paralisadas: extractCount("Obras paralisadas"),
+    total: extractCount("Mapa das obras"),
+    obras,
+  };
+}
+
+function sseTextResponse(text: string, provider = "Kera EngeGov Direct") {
+  const encoder = new TextEncoder();
+  const stream = new ReadableStream({
+    start(controller) {
+      const chunk = {
+        id: `kera-direct-${Date.now()}`,
+        object: "chat.completion.chunk",
+        created: Math.floor(Date.now() / 1000),
+        model: provider,
+        choices: [{ index: 0, delta: { role: "assistant", content: text }, finish_reason: null }],
+      };
+      controller.enqueue(encoder.encode(`data: ${JSON.stringify(chunk)}\n\n`));
+      controller.enqueue(encoder.encode("data: [DONE]\n\n"));
+      controller.close();
+    },
+  });
+
+  return new Response(stream, {
+    headers: { ...corsHeaders, "Content-Type": "text/event-stream", "X-Provider": provider },
+  });
+}
+
+async function maybeDirectEngegovReply(agentKey: string | undefined, messages: ChatMessage[]): Promise<Response | null> {
+  if (agentKey !== "kera-engegov") return null;
+
+  const lastUserText = normalizeTextForMatch(
+    [...messages].reverse().find((m) => m.role === "user" && typeof m.content === "string")?.content as string || "",
+  );
+  const intentWords = ["obra", "obras", "engegov", "gevo", "medicao", "medição", "fiscal", "andamento", "paralisada", "concluida", "concluída", "buscar", "busca", "lista", "quais"];
+  if (!intentWords.some((word) => lastUserText.includes(normalizeTextForMatch(word)))) return null;
+
+  const municipio = await detectEngegovMunicipio(messages);
+  if (!municipio) return null;
+
+  const raw = await executeTool("engegov_query", { tipo: "lista", cidade_nome: municipio.nome, uf: municipio.uf });
+  let parsed: any;
+  try {
+    parsed = JSON.parse(raw);
+  } catch {
+    return sseTextResponse(`Não consegui ler o retorno do portal de ${municipio.nome} agora.`);
+  }
+
+  if (!parsed?.ok || typeof parsed?.conteudo !== "string") {
+    return sseTextResponse(`Não consegui consultar ${municipio.nome} agora. ${parsed?.error ? `Erro: ${parsed.error}` : ""}`.trim());
+  }
+
+  const resumo = parseEngegovDashboard(parsed.conteudo);
+  const bullets = resumo.obras.length > 0
+    ? resumo.obras.map((obra: any) => `- **${obra.codigo}** · ${obra.secretaria} · ${obra.situacao} · **R$ ${obra.valor}**\n  ${obra.descricao}`).join("\n")
+    : "- O portal respondeu, mas não consegui extrair a grade de obras dessa página.";
+
+  const text = [
+    `## ${municipio.nome}/${municipio.uf}`,
+    "",
+    `- **Em andamento:** ${resumo.andamento ?? "n/d"}`,
+    `- **Concluídas:** ${resumo.concluidas ?? "n/d"}`,
+    `- **Paralisadas:** ${resumo.paralisadas ?? "n/d"}`,
+    `- **Total no portal:** ${resumo.total ?? "n/d"}`,
+    "",
+    "### Primeiras obras encontradas",
+    bullets,
+    "",
+    "Se quiser, agora peça **detalhe de uma obra pelo código** que eu adapto o fluxo seguinte.",
+  ].join("\n");
+
+  return sseTextResponse(text);
+}
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
@@ -667,6 +768,9 @@ ${intensityRules}`;
       finalSystem += VARIATION_RULE + `\n\n${matchedTriggers.join("\n\n")}`;
     }
     } // fim do if (!demoMode) — bloco de triggers
+
+    const directEngegovReply = await maybeDirectEngegovReply(agentKey, messages);
+    if (directEngegovReply) return directEngegovReply;
 
     const chain = getProviderChain(provider as Provider | undefined);
     if (chain.length === 0) {
