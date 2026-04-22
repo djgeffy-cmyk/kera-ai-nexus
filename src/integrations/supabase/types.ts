@@ -617,6 +617,7 @@ export type Database = {
           granted_agent_keys: string[] | null
           id: string
           juridico_active: boolean
+          municipio_active: boolean | null
           must_change_password: boolean | null
           onboarding_completed: boolean
           paywall_trial_count: number
@@ -636,6 +637,7 @@ export type Database = {
           granted_agent_keys?: string[] | null
           id?: string
           juridico_active?: boolean
+          municipio_active?: boolean | null
           must_change_password?: boolean | null
           onboarding_completed?: boolean
           paywall_trial_count?: number
@@ -655,6 +657,7 @@ export type Database = {
           granted_agent_keys?: string[] | null
           id?: string
           juridico_active?: boolean
+          municipio_active?: boolean | null
           must_change_password?: boolean | null
           onboarding_completed?: boolean
           paywall_trial_count?: number
@@ -885,6 +888,10 @@ export type Database = {
         }[]
       }
       admin_set_juridico_active: {
+        Args: { _active: boolean; _target_user: string }
+        Returns: undefined
+      }
+      admin_set_municipio_active: {
         Args: { _active: boolean; _target_user: string }
         Returns: undefined
       }
