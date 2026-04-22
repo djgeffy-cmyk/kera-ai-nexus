@@ -81,6 +81,7 @@ jobs:
             release-builds/*.exe
             release-builds/*.dmg
             release-builds/*.zip
+            release-builds/*.deb
             release-builds/*.AppImage
             release-builds/latest*.yml
           if-no-files-found: warn
@@ -98,6 +99,7 @@ jobs:
             release-builds/*.exe
             release-builds/*.dmg
             release-builds/*-mac.zip
+            release-builds/*.deb
             release-builds/*.AppImage
             release-builds/*.blockmap
             release-builds/latest*.yml
