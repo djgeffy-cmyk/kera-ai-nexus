@@ -136,10 +136,21 @@ export const DemoKeraDialog = ({ open, onOpenChange, onWantToSignUp }: DemoKeraD
           <DialogTitle className="font-display text-glow flex items-center gap-2">
             <UmbrellaCorpLogo size={28} />
             Teste a Kera ao vivo
-            <span className="ml-auto text-xs font-normal text-muted-foreground flex items-center gap-1">
-              <Sparkles className="size-3 text-primary" />
-              {remaining}/{DEMO_LIMIT} perguntas grátis
-            </span>
+             <div className="ml-auto flex flex-col items-end gap-1">
+               <span className="text-xs font-normal text-muted-foreground flex items-center gap-1">
+                 <Sparkles className="size-3 text-primary" />
+                 {remaining}/{DEMO_LIMIT} perguntas grátis
+               </span>
+               <button
+                 onClick={() => {
+                   onOpenChange(false);
+                   onWantToSignUp();
+                 }}
+                 className="text-[10px] text-primary/60 hover:text-primary underline transition-colors"
+               >
+                 Já tem conta? Entrar
+               </button>
+             </div>
           </DialogTitle>
           <DialogDescription>
             Modo demo — sem conta, sem cadastro. Pergunta o que quiser.

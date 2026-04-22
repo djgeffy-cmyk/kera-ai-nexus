@@ -10,11 +10,10 @@ import { toast } from "sonner";
 import { ShieldCheck, KeyRound, Mail, ScanFace, Eye, EyeOff, Sparkles, MousePointerClick, Volume2, VolumeX } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import keraAvatar from "@/assets/kera-avatar.png";
-import keraAvatarVideo from "@/assets/kera-avatar-rain.mp4.asset.json";
+ import keraAvatarVideo from "@/assets/kera-avatar-rain.mp4.asset.json";
+ import rainBgRealistic from "@/assets/rain-bg-realistic.mp4.asset.json";
 import rainAmbientUrl from "@/assets/rain-ambient.mp3";
 
-// URL de vídeo de chuva realista (Mixkit - Royalty Free)
-const REALISTIC_RAIN_VIDEO_URL = "https://assets.mixkit.co/videos/preview/mixkit-rain-falling-on-a-window-pane-1557-large.mp4";
 import ParticlesOverlay from "@/components/ParticlesOverlay";
 import DemoKeraDialog from "@/components/DemoKeraDialog";
 import { assetUrl } from "@/lib/assetUrl";
@@ -122,8 +121,9 @@ const Auth = () => {
   const [resetEmail, setResetEmail] = useState("");
   const [resetNote, setResetNote] = useState("");
   const [resetLoading, setResetLoading] = useState(false);
-  const rainVideoUrl = assetUrl(keraAvatarVideo);
-  const rainBgUrl = REALISTIC_RAIN_VIDEO_URL;
+   const rainVideoUrl = assetUrl(keraAvatarVideo);
+    // URL de vídeo de chuva realista (Pexels - Alta Definição)
+    const rainBgUrl = "https://videos.pexels.com/video-files/854748/854748-hd_1920_1080_30fps.mp4";
 
   useEffect(() => {
     document.title = "Kera AI — Entrar";
@@ -421,16 +421,23 @@ const Auth = () => {
               Clique sobre mim para conversar — depois você decide se cria conta
             </motion.p>
 
-            <motion.button
-              type="button"
-              onClick={() => setIsUnlocked(true)}
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ delay: 1 }}
-              className="mt-6 text-xs text-muted-foreground/70 hover:text-primary tracking-wider underline-offset-4 hover:underline transition"
-            >
-              já tenho conta — entrar direto
-            </motion.button>
+             <motion.div
+               initial={{ opacity: 0 }}
+               animate={{ opacity: 1 }}
+               transition={{ delay: 1 }}
+               className="mt-6 flex flex-col items-center gap-3"
+             >
+               <Button
+                 variant="ghost"
+                 onClick={() => setIsUnlocked(true)}
+                 className="text-xs text-primary/80 hover:text-primary hover:bg-primary/10 tracking-wider underline-offset-4 underline transition-all"
+               >
+                 Já tenho conta — Entrar direto
+               </Button>
+               <p className="text-[10px] text-muted-foreground/50 italic">
+                 Após entrar, as configurações de humor ficam na barra lateral.
+               </p>
+             </motion.div>
           </motion.div>
         ) : (
           <motion.div
