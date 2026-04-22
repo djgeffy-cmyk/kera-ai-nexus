@@ -39,9 +39,36 @@ export const isInIframe = () => {
   }
 };
 
+/**
+ * Detecta navegadores no iOS que NÃO são Safari.
+ * No iOS, Chrome (CriOS), Firefox (FxiOS), Edge (EdgiOS) e Opera (OPiOS)
+ * são forçados pela Apple a usar o engine do Safari (WebKit), MAS o WebAuthn
+ * com Face ID/Touch ID só funciona no Safari "puro" — os outros navegadores
+ * não têm acesso à API de Passkeys.
+ */
+export const isIOSNonSafari = () => {
+  if (typeof navigator === "undefined") return false;
+  const ua = navigator.userAgent;
+  const isIOS = /iPhone|iPad|iPod/.test(ua) ||
+    // iPad no iPadOS 13+ se identifica como Mac, mas tem touch
+    (navigator.platform === "MacIntel" && (navigator as Navigator & { maxTouchPoints?: number }).maxTouchPoints! > 1);
+  if (!isIOS) return false;
+  return /CriOS|FxiOS|EdgiOS|OPiOS|YaBrowser|DuckDuckGo/i.test(ua);
+};
+
 function ensureUsable() {
   if (!webauthnSupported()) {
+    if (isIOSNonSafari()) {
+      throw new Error(
+        "Face ID no iPhone só funciona no Safari. Abra chat.kera.ia.br no Safari e tente novamente.",
+      );
+    }
     throw new Error("Seu dispositivo não suporta Face ID/Touch ID via web.");
+  }
+  if (isIOSNonSafari()) {
+    throw new Error(
+      "Face ID no iPhone só funciona no Safari. Abra chat.kera.ia.br no Safari e tente novamente.",
+    );
   }
   if (isInIframe()) {
     throw new Error(
