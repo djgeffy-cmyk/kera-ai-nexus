@@ -2,9 +2,20 @@ import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
+import { Checkbox } from "@/components/ui/checkbox";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from "@/components/ui/dialog";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
-import { UserPlus, Users, Loader2, ShieldCheck, Mail, Key, Wand2, Copy } from "lucide-react";
+import { UserPlus, Users, Loader2, ShieldCheck, Mail, Key, Wand2, Copy, RotateCcw, Sparkles } from "lucide-react";
+import { BUILTIN_AGENTS } from "@/lib/agents";
 
 // Gera senha forte no padrão Kera: 14 caracteres, com maiúscula, minúscula, número e símbolo.
 const generateKeraPassword = (length = 14): string => {
@@ -27,6 +38,14 @@ export const UserManager = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [displayName, setDisplayName] = useState("");
+  // Reset de senha
+  const [resetDialogUser, setResetDialogUser] = useState<any | null>(null);
+  const [resetPwd, setResetPwd] = useState("");
+  const [resetting, setResetting] = useState(false);
+  // Liberar agentes
+  const [agentsDialogUser, setAgentsDialogUser] = useState<any | null>(null);
+  const [grantedKeys, setGrantedKeys] = useState<string[]>([]);
+  const [savingAgents, setSavingAgents] = useState(false);
 
   const fetchUsers = async () => {
     try {
@@ -44,6 +63,71 @@ export const UserManager = () => {
   useEffect(() => {
     fetchUsers();
   }, []);
+
+  const openResetDialog = (u: any) => {
+    setResetPwd(generateKeraPassword());
+    setResetDialogUser(u);
+  };
+
+  const handleResetPassword = async () => {
+    if (!resetDialogUser || resetPwd.length < 8) {
+      toast.error("Senha precisa de 8+ caracteres");
+      return;
+    }
+    setResetting(true);
+    try {
+      const { error } = await supabase.functions.invoke("admin-user-management", {
+        body: {
+          action: "reset_password",
+          targetUserId: resetDialogUser.id,
+          password: resetPwd,
+        },
+      });
+      if (error) throw error;
+      await navigator.clipboard.writeText(resetPwd).catch(() => {});
+      toast.success("Senha resetada e copiada. Repasse ao usuário.");
+      setResetDialogUser(null);
+      setResetPwd("");
+      fetchUsers();
+    } catch (err: any) {
+      toast.error(err.message || "Erro ao resetar senha");
+    } finally {
+      setResetting(false);
+    }
+  };
+
+  const openAgentsDialog = (u: any) => {
+    setGrantedKeys(u.profile?.granted_agent_keys || []);
+    setAgentsDialogUser(u);
+  };
+
+  const toggleAgent = (key: string) => {
+    setGrantedKeys((prev) =>
+      prev.includes(key) ? prev.filter((k) => k !== key) : [...prev, key],
+    );
+  };
+
+  const handleSaveAgents = async () => {
+    if (!agentsDialogUser) return;
+    setSavingAgents(true);
+    try {
+      const { error } = await supabase.functions.invoke("admin-user-management", {
+        body: {
+          action: "set_granted_agents",
+          targetUserId: agentsDialogUser.id,
+          agentKeys: grantedKeys,
+        },
+      });
+      if (error) throw error;
+      toast.success("Agentes atualizados");
+      setAgentsDialogUser(null);
+      fetchUsers();
+    } catch (err: any) {
+      toast.error(err.message || "Erro ao salvar agentes");
+    } finally {
+      setSavingAgents(false);
+    }
+  };
 
   const handleCreateUser = async (e: React.FormEvent) => {
     e.preventDefault();
