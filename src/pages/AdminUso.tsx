@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { ArrowLeft, ImageIcon, Users, TrendingUp, DollarSign, RefreshCw, Dumbbell } from "lucide-react";
+ import { ArrowLeft, ImageIcon, Users, TrendingUp, DollarSign, RefreshCw, Dumbbell, Scale, Code2 } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 import { toast } from "sonner";
 import {
@@ -23,12 +23,14 @@ type UsageRow = {
   display_name: string | null;
   plan_tier: "free" | "essencial" | "pro" | "master";
   selected_agents: string[];
-  onboarding_completed: boolean;
-  images_today: number;
-  images_month: number;
-  created_at: string;
-  spaceincloud_active?: boolean;
-};
+   onboarding_completed: boolean;
+   images_today: number;
+   images_month: number;
+   created_at: string;
+   spaceincloud_active?: boolean;
+   juridico_active?: boolean;
+   tech_active?: boolean;
+ };
 
 type DailyRow = {
   usage_date: string;
@@ -63,11 +65,11 @@ export default function AdminUso() {
 
   const load = async () => {
     setLoading(true);
-    const [usageRes, dailyRes, fitRes] = await Promise.all([
-      supabase.rpc("admin_list_users_usage"),
-      supabase.rpc("admin_image_usage_daily", { _days: 30 }),
-      supabase.from("profiles").select("user_id, spaceincloud_active"),
-    ]);
+     const [usageRes, dailyRes, fitRes] = await Promise.all([
+       supabase.rpc("admin_list_users_usage"),
+       supabase.rpc("admin_image_usage_daily", { _days: 30 }),
+       supabase.from("profiles").select("user_id, spaceincloud_active, juridico_active, tech_active"),
+     ]);
     if (usageRes.error) {
       toast.error(usageRes.error.message);
       setLoading(false);
@@ -76,13 +78,18 @@ export default function AdminUso() {
     if (dailyRes.error) {
       toast.error(dailyRes.error.message);
     }
-    const fitMap = new Map<string, boolean>();
-    ((fitRes.data || []) as Array<{ user_id: string; spaceincloud_active: boolean }>)
-      .forEach((r) => fitMap.set(r.user_id, !!r.spaceincloud_active));
-    setRows(((usageRes.data || []) as UsageRow[]).map((r) => ({
-      ...r,
-      spaceincloud_active: fitMap.get(r.user_id) ?? false,
-    })));
+     const profileMap = new Map<string, any>();
+     ((fitRes.data || []) as any[]).forEach((r) => profileMap.set(r.user_id, r));
+     
+     setRows(((usageRes.data || []) as UsageRow[]).map((r) => {
+       const p = profileMap.get(r.user_id);
+       return {
+         ...r,
+         spaceincloud_active: !!p?.spaceincloud_active,
+         juridico_active: !!p?.juridico_active,
+         tech_active: !!p?.tech_active,
+       };
+     }));
     setDaily(((dailyRes.data || []) as any[]).map((d) => ({
       usage_date: d.usage_date,
       total_images: Number(d.total_images) || 0,
@@ -122,20 +129,27 @@ export default function AdminUso() {
     );
   };
 
-  const toggleFit = async (user_id: string, active: boolean) => {
-    const prev = rows;
-    setRows((p) => p.map((r) => (r.user_id === user_id ? { ...r, spaceincloud_active: active } : r)));
-    const { error } = await supabase.rpc("admin_set_spaceincloud_active", {
-      _target_user: user_id,
-      _active: active,
-    });
-    if (error) {
-      toast.error(error.message);
-      setRows(prev);
-      return;
-    }
-    toast.success(active ? "Growth FIT liberado." : "Growth FIT removido.");
-  };
+   const toggleModule = async (user_id: string, module: 'fit' | 'juridico' | 'tech', active: boolean) => {
+     const prev = rows;
+     const field = module === 'fit' ? 'spaceincloud_active' : module === 'juridico' ? 'juridico_active' : 'tech_active';
+     const rpc = module === 'fit' ? 'admin_set_spaceincloud_active' : module === 'juridico' ? 'admin_set_juridico_active' : 'admin_set_tech_active';
+     
+     setRows((p) => p.map((r) => (r.user_id === user_id ? { ...r, [field]: active } : r)));
+     
+     const { error } = await supabase.rpc(rpc, {
+       _target_user: user_id,
+       _active: active,
+     });
+     
+     if (error) {
+       toast.error(error.message);
+       setRows(prev);
+       return;
+     }
+     
+     const labels = { fit: "Growth FIT", juridico: "Módulo Jurídico", tech: "Módulo Tecnologia" };
+     toast.success(active ? `${labels[module]} liberado.` : `${labels[module]} removido.`);
+   };
 
   return (
     <main className="min-h-screen bg-background px-4 py-8 md:py-12">
@@ -309,7 +323,9 @@ export default function AdminUso() {
                       <th className="px-3 py-2 text-right">Hoje</th>
                       <th className="px-3 py-2 text-right">Mês</th>
                       <th className="px-3 py-2 text-right">Custo</th>
-                      <th className="px-3 py-2 text-center w-32" title="Pacote Kera Fit (Nutricionista + Treinador + Iron)">Kera Fit</th>
+                       <th className="px-3 py-2 text-center w-20" title="Pacote Kera Fit">Fit</th>
+                       <th className="px-3 py-2 text-center w-20" title="Módulo Jurídico">Jurídico</th>
+                       <th className="px-3 py-2 text-center w-20" title="Módulo Tecnologia">Tech</th>
                       <th className="px-3 py-2 w-44">Mudar plano</th>
                     </tr>
                   </thead>
@@ -331,31 +347,24 @@ export default function AdminUso() {
                           <td className="px-3 py-3 text-right tabular-nums">{r.images_today}</td>
                           <td className="px-3 py-3 text-right tabular-nums font-semibold">{r.images_month}</td>
                           <td className="px-3 py-3 text-right tabular-nums text-muted-foreground">R$ {cost}</td>
-                          <td className="px-3 py-3">
-                            <div
-                              className="flex items-center justify-center gap-2"
-                              title={
-                                r.spaceincloud_active
-                                  ? "Pacote Kera Fit ATIVO — Nutricionista, Treinador e Iron liberados. Clique pra desativar."
-                                  : "Liberar Kera Fit — ativa Nutricionista, Treinador e Iron de uma vez."
-                              }
-                            >
-                              <Dumbbell
-                                className={`h-3.5 w-3.5 ${
-                                  r.spaceincloud_active ? "text-fuchsia-300" : "text-muted-foreground/40"
-                                }`}
-                              />
-                              <Switch
-                                checked={!!r.spaceincloud_active}
-                                onCheckedChange={(v) => toggleFit(r.user_id, v)}
-                                aria-label={
-                                  r.spaceincloud_active
-                                    ? `Desativar pacote Kera Fit de ${r.email ?? r.user_id}`
-                                    : `Liberar pacote Kera Fit para ${r.email ?? r.user_id}`
-                                }
-                              />
-                            </div>
-                          </td>
+                           <td className="px-3 py-3">
+                             <div className="flex items-center justify-center gap-2">
+                               <Dumbbell className={`h-3.5 w-3.5 ${r.spaceincloud_active ? "text-fuchsia-300" : "text-muted-foreground/40"}`} />
+                               <Switch checked={!!r.spaceincloud_active} onCheckedChange={(v) => toggleModule(r.user_id, 'fit', v)} />
+                             </div>
+                           </td>
+                           <td className="px-3 py-3">
+                             <div className="flex items-center justify-center gap-2">
+                               <Scale className={`h-3.5 w-3.5 ${r.juridico_active ? "text-purple-300" : "text-muted-foreground/40"}`} />
+                               <Switch checked={!!r.juridico_active} onCheckedChange={(v) => toggleModule(r.user_id, 'juridico', v)} />
+                             </div>
+                           </td>
+                           <td className="px-3 py-3">
+                             <div className="flex items-center justify-center gap-2">
+                               <Code2 className={`h-3.5 w-3.5 ${r.tech_active ? "text-blue-300" : "text-muted-foreground/40"}`} />
+                               <Switch checked={!!r.tech_active} onCheckedChange={(v) => toggleModule(r.user_id, 'tech', v)} />
+                             </div>
+                           </td>
                           <td className="px-3 py-3">
                             <Select
                               value={r.plan_tier}

@@ -7,8 +7,17 @@ import { ArrowLeft, Check, Sparkles } from "lucide-react";
 import { toast } from "sonner";
 import { BUILTIN_AGENTS } from "@/lib/agents";
 import { useUserAccess } from "@/hooks/useUserAccess";
-import { KERA_FIT_AGENT_KEYS } from "@/lib/agents";
-import { KeraFitGroup } from "@/components/KeraFitGroup";
+ import { 
+   KERA_FIT_AGENT_KEYS, 
+   KERA_JURIDICO_AGENT_KEYS, 
+   KERA_TECH_AGENT_KEYS,
+   KERA_JURIDICO_LABEL,
+   KERA_TECH_LABEL,
+   KERA_JURIDICO_DESCRIPTION,
+   KERA_TECH_DESCRIPTION
+ } from "@/lib/agents";
+ import { KeraFitGroup } from "@/components/KeraFitGroup";
+ import { Scale, Code2 } from "lucide-react";
 import keraWaterHero from "@/assets/kera-water-hero.jpg";
 
 // Vídeo animado da Kera (mesmo usado na tela de login). `?v=` invalida cache do CDN.
@@ -93,26 +102,35 @@ const Onboarding = () => {
     navigate("/", { replace: true });
   };
 
-  // Os agentes do pacote Kera Fit são renderizados separadamente (no grupo).
-  const fitKeys = new Set<string>(KERA_FIT_AGENT_KEYS);
-
-  // ordena: Kera principal primeiro, depois o resto. Remove os do pacote Fit.
-  const ordered = [...BUILTIN_AGENTS]
-    .filter((a) => canSee(a.key) && !fitKeys.has(a.key))
+   // Agentes agrupados são renderizados separadamente.
+   const fitKeys = new Set<string>(KERA_FIT_AGENT_KEYS);
+   const juridicoKeys = new Set<string>(KERA_JURIDICO_AGENT_KEYS);
+   const techKeys = new Set<string>(KERA_TECH_AGENT_KEYS);
+   const groupedKeys = new Set([...KERA_FIT_AGENT_KEYS, ...KERA_JURIDICO_AGENT_KEYS, ...KERA_TECH_AGENT_KEYS]);
+ 
+    // ordena: Kera principal primeiro, depois o resto. Remove os agrupados.
+    const ordered = [...BUILTIN_AGENTS]
+      .filter((a) => canSee(a.key) && !groupedKeys.has(a.key as any))
     .sort((a, b) => {
       if (a.key === "kera") return -1;
       if (b.key === "kera") return 1;
       return a.name.localeCompare(b.name);
     });
 
-  // Verifica se algum agente Fit é visível pro usuário (pra decidir mostrar o grupo)
-  const fitVisible = KERA_FIT_AGENT_KEYS.some((k) => canSee(k));
-  const anyFitSelected = KERA_FIT_AGENT_KEYS.some((k) => selected.has(k));
+   // Verifica visibilidade e seleção dos grupos
+   const fitVisible = KERA_FIT_AGENT_KEYS.some((k) => canSee(k));
+   const anyFitSelected = KERA_FIT_AGENT_KEYS.some((k) => selected.has(k));
+ 
+   const juridicoVisible = KERA_JURIDICO_AGENT_KEYS.some((k) => canSee(k));
+   const anyJuridicoSelected = KERA_JURIDICO_AGENT_KEYS.some((k) => selected.has(k));
+ 
+   const techVisible = KERA_TECH_AGENT_KEYS.some((k) => canSee(k));
+   const anyTechSelected = KERA_TECH_AGENT_KEYS.some((k) => selected.has(k));
 
-  // Renderiza um card de agente Fit dentro do grupo (mesmo visual dos demais cards)
-  const renderFitAgent = (agentKey: string) => {
-    const a = BUILTIN_AGENTS.find((x) => x.key === agentKey);
-    if (!a) return null;
+   // Renderiza um card de agente dentro de um grupo (mesmo visual dos demais cards)
+   const renderGroupedAgent = (agentKey: string) => {
+     const a = BUILTIN_AGENTS.find((x) => x.key === agentKey as any);
+     if (!a) return null;
     const Icon = a.icon;
     const isSelected = selected.has(a.key);
     return (
@@ -191,15 +209,43 @@ const Onboarding = () => {
           </p>
         </header>
 
-        {fitVisible && (
-          <div className="mb-4">
-            <KeraFitGroup
-              renderAgent={renderFitAgent}
-              unlocked={anyFitSelected}
-              badgeLabel={anyFitSelected ? `${KERA_FIT_AGENT_KEYS.filter((k) => selected.has(k)).length}/3 selecionados` : "Marque qualquer um pra incluir"}
-            />
-          </div>
-        )}
+         {fitVisible && (
+           <div className="mb-4">
+             <KeraFitGroup
+               renderAgent={renderGroupedAgent}
+               unlocked={anyFitSelected}
+               badgeLabel={anyFitSelected ? `${KERA_FIT_AGENT_KEYS.filter((k) => selected.has(k)).length}/3 selecionados` : "Marque qualquer um pra incluir"}
+             />
+           </div>
+         )}
+ 
+         {juridicoVisible && (
+           <div className="mb-4">
+             <KeraFitGroup
+               renderAgent={renderGroupedAgent}
+               unlocked={anyJuridicoSelected}
+               label={KERA_JURIDICO_LABEL}
+               description={KERA_JURIDICO_DESCRIPTION}
+               customKeys={KERA_JURIDICO_AGENT_KEYS as unknown as string[]}
+               icon={Scale}
+               badgeLabel={anyJuridicoSelected ? `${KERA_JURIDICO_AGENT_KEYS.filter((k) => selected.has(k)).length}/5 selecionados` : "Marque qualquer um pra incluir"}
+             />
+           </div>
+         )}
+ 
+         {techVisible && (
+           <div className="mb-4">
+             <KeraFitGroup
+               renderAgent={renderGroupedAgent}
+               unlocked={anyTechSelected}
+               label={KERA_TECH_LABEL}
+               description={KERA_TECH_DESCRIPTION}
+               customKeys={KERA_TECH_AGENT_KEYS as unknown as string[]}
+               icon={Code2}
+               badgeLabel={anyTechSelected ? `${KERA_TECH_AGENT_KEYS.filter((k) => selected.has(k)).length}/4 selecionados` : "Marque qualquer um pra incluir"}
+             />
+           </div>
+         )}
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-4 mb-8">
           {ordered.map(a => {
