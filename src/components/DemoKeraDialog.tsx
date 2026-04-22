@@ -534,7 +534,23 @@ export const DemoKeraDialog = ({ open, onOpenChange, onWantToSignUp }: DemoKeraD
                       : "bg-foreground/5 border border-white/10 text-foreground backdrop-blur-md rounded-bl-md"
                   }`}
                 >
-                  {m.content || (loading && i === messages.length - 1 ? "…" : "")}
+                  {(() => {
+                    // Auto-typing apenas para a primeira mensagem assistant antes do user mandar algo.
+                    if (
+                      i === 0 &&
+                      m.role === "assistant" &&
+                      isFirstAssistantOnly &&
+                      !greetingDone
+                    ) {
+                      return (
+                        <>
+                          {typedGreeting}
+                          <span className="inline-block w-[2px] h-[1em] align-middle ml-0.5 bg-primary/80 animate-pulse" />
+                        </>
+                      );
+                    }
+                    return m.content || (loading && i === messages.length - 1 ? "…" : "");
+                  })()}
                 </div>
               </motion.div>
             ))}
