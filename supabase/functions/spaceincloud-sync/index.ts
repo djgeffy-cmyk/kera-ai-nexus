@@ -12,7 +12,7 @@ const SIC_URL = "https://eaaxuixnugocazqzhthz.supabase.co";
 const SIC_ANON =
   "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVhYXh1aXhudWdvY2F6cXpodGh6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzIyODI2MTQsImV4cCI6MjA4Nzg1ODYxNH0.ns1DBunwAmc9RW8N_S5yWmbGMyAvQPBuqdkS3l5i7u0";
 
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
+import { createClient } from "npm:@supabase/supabase-js@2.45.0";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
