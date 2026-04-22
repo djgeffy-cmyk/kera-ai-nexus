@@ -1,4 +1,7 @@
-import { useState, useRef, useEffect } from "react";
+import { isImageRequest } from "@/lib/imageDetect";
+import { useState, useRef, useEffect, memo } from "react";
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -103,6 +106,62 @@ const greetingFor = (agentKey: string, name: string) => {
   }
   return `Aqui é a ${name}. Modo demo: 3 perguntas grátis. Manda a primeira que eu já resolvo.`;
 };
+
+const MD_PLUGINS = [remarkGfm];
+
+const DemoMessage = memo(({ m, loading, isFirstAssistantOnly, greetingDone, typedGreeting }: { 
+  m: Msg; 
+  loading: boolean; 
+  isFirstAssistantOnly: boolean; 
+  greetingDone: boolean; 
+  typedGreeting: string; 
+}) => {
+  const isAssistant = m.role === "assistant";
+  
+  return (
+    <div
+      className={`max-w-[85%] rounded-2xl px-4 py-2.5 text-sm leading-relaxed transition-shadow ${
+        !isAssistant
+          ? "bg-gradient-to-br from-primary to-primary/80 text-primary-foreground shadow-[0_4px_18px_-4px_hsl(var(--primary)/0.55)] rounded-br-md"
+          : "bg-foreground/5 border border-white/10 text-foreground backdrop-blur-md rounded-bl-md"
+      }`}
+    >
+      {(() => {
+        if (isAssistant && isFirstAssistantOnly && !greetingDone) {
+          return (
+            <>
+              {typedGreeting}
+              <span className="inline-block w-[2px] h-[1em] align-middle ml-0.5 bg-primary/80 animate-pulse" />
+            </>
+          );
+        }
+        
+        if (isAssistant) {
+          return (
+            <div className="prose-kera-demo">
+              <ReactMarkdown 
+                remarkPlugins={MD_PLUGINS}
+                components={{
+                  img: ({ node, ...props }) => (
+                    <img 
+                      {...props} 
+                      className="rounded-lg border border-white/10 shadow-lg my-2 max-h-60 object-contain bg-black/20" 
+                      loading="lazy"
+                    />
+                  )
+                }}
+              >
+                {m.content || (loading ? "…" : "")}
+              </ReactMarkdown>
+            </div>
+          );
+        }
+
+        return <div className="whitespace-pre-wrap">{m.content}</div>;
+      })()}
+    </div>
+  );
+});
 
 export const DemoKeraDialog = ({ open, onOpenChange, onWantToSignUp }: DemoKeraDialogProps) => {
   const [agentKey, setAgentKey] = useState<string>("kera");
@@ -230,9 +289,80 @@ export const DemoKeraDialog = ({ open, onOpenChange, onWantToSignUp }: DemoKeraD
     setMessages([{ role: "assistant", content: greetingFor(key, ag.name) }]);
   };
 
+  const generateImage = async (rawText: string) => {
+    const userMsg: Msg = { role: "user", content: rawText };
+    setMessages(prev => [...prev, userMsg]);
+    setInput("");
+    setLoading(true);
+
+    // Placeholder
+    setMessages(prev => [...prev, { role: "assistant", content: "🎨 Gerando imagem..." }]);
+
+    try {
+      // Consome quota demo
+      const quotaRes = await fetch(`${SUPABASE_URL}/functions/v1/check-demo-quota`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          apikey: SUPABASE_KEY,
+          Authorization: `Bearer ${SUPABASE_KEY}`,
+        },
+        body: JSON.stringify({
+          action: "consume",
+          clientFingerprint: getStableFingerprint(),
+        }),
+      });
+      const quota = await quotaRes.json().catch(() => ({} as any));
+      if (quotaRes.status === 429 || quota?.blocked === true) {
+        setUsed(DEMO_LIMIT);
+        setMessages(prev => prev.slice(0, -2));
+        setInput(rawText);
+        return;
+      }
+
+      const { extractImagePrompt } = await import("@/lib/imageDetect");
+      const imgPrompt = extractImagePrompt(rawText);
+      const resp = await fetch(`${SUPABASE_URL}/functions/v1/generate-image`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          apikey: SUPABASE_KEY,
+          Authorization: `Bearer ${SUPABASE_KEY}`,
+        },
+        body: JSON.stringify({ prompt: imgPrompt }),
+      });
+      const j = await resp.json();
+      if (!resp.ok) throw new Error(j.error || "Falha ao gerar");
+
+      const imageUrl: string = j.imageUrl;
+      // No demo mostramos como markdown pois Msg só aceita string
+      const assistantText = `Aqui está sua imagem: **${imgPrompt}**\n\n![Geração](${imageUrl})`;
+
+      setMessages(prev => {
+        const copy = [...prev];
+        copy[copy.length - 1] = { role: "assistant", content: assistantText };
+        return copy;
+      });
+
+      const serverUsed = typeof quota.used === "number" ? quota.used : used + 1;
+      setUsed(serverUsed);
+      localStorage.setItem(DEMO_KEY, String(serverUsed));
+    } catch (e: any) {
+      toast.error(e.message || "Erro ao gerar imagem.");
+      setMessages(prev => prev.slice(0, -1));
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const send = async () => {
     const text = input.trim();
     if (!text || loading || exhausted) return;
+
+    if (isImageRequest(text)) {
+      await generateImage(text);
+      return;
+    }
 
     const newMessages: Msg[] = [...messages, { role: "user", content: text }];
     setMessages(newMessages);
@@ -537,31 +667,13 @@ export const DemoKeraDialog = ({ open, onOpenChange, onWantToSignUp }: DemoKeraD
                 transition={{ duration: 0.25, ease: "easeOut" }}
                 className={`flex ${m.role === "user" ? "justify-end" : "justify-start"}`}
               >
-                <div
-                  className={`max-w-[85%] rounded-2xl px-4 py-2.5 text-sm whitespace-pre-wrap leading-relaxed transition-shadow ${
-                    m.role === "user"
-                      ? "bg-gradient-to-br from-primary to-primary/80 text-primary-foreground shadow-[0_4px_18px_-4px_hsl(var(--primary)/0.55)] rounded-br-md"
-                      : "bg-foreground/5 border border-white/10 text-foreground backdrop-blur-md rounded-bl-md"
-                  }`}
-                >
-                  {(() => {
-                    // Auto-typing apenas para a primeira mensagem assistant antes do user mandar algo.
-                    if (
-                      i === 0 &&
-                      m.role === "assistant" &&
-                      isFirstAssistantOnly &&
-                      !greetingDone
-                    ) {
-                      return (
-                        <>
-                          {typedGreeting}
-                          <span className="inline-block w-[2px] h-[1em] align-middle ml-0.5 bg-primary/80 animate-pulse" />
-                        </>
-                      );
-                    }
-                    return m.content || (loading && i === messages.length - 1 ? "…" : "");
-                  })()}
-                </div>
+                <DemoMessage 
+                  m={m} 
+                  loading={loading && i === messages.length - 1}
+                  isFirstAssistantOnly={i === 0 && isFirstAssistantOnly}
+                  greetingDone={greetingDone}
+                  typedGreeting={typedGreeting}
+                />
               </motion.div>
             ))}
           </AnimatePresence>
