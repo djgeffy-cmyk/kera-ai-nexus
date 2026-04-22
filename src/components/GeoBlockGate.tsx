@@ -5,7 +5,7 @@ import { Mail, MessageCircle, ShieldAlert } from "lucide-react";
 type GeoState =
   | { status: "checking" }
   | { status: "allowed" }
-  | { status: "blocked"; country: string };
+  | { status: "blocked"; country: string; source: string };
 
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL as string;
 const SUPABASE_KEY = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY as string;
@@ -17,11 +17,16 @@ export const GeoBlockGate = ({ children }: { children: React.ReactNode }) => {
     try {
       const raw = localStorage.getItem(CACHE_KEY);
       if (raw) {
-        const parsed = JSON.parse(raw) as { allowed: boolean; country: string; ts: number };
+        const parsed = JSON.parse(raw) as {
+          allowed: boolean;
+          country: string;
+          source?: string;
+          ts: number;
+        };
         if (Date.now() - parsed.ts < CACHE_TTL_MS) {
           return parsed.allowed
             ? { status: "allowed" }
-            : { status: "blocked", country: parsed.country };
+            : { status: "blocked", country: parsed.country, source: parsed.source || "cache" };
         }
       }
     } catch {}
@@ -38,11 +43,19 @@ export const GeoBlockGate = ({ children }: { children: React.ReactNode }) => {
         const data = await r.json();
         if (cancelled) return;
         const allowed = !!data.allowed;
+        const detected = !!data.detected;
         const country = String(data.country || "UNKNOWN");
-        try {
-          localStorage.setItem(CACHE_KEY, JSON.stringify({ allowed, country, ts: Date.now() }));
-        } catch {}
-        setState(allowed ? { status: "allowed" } : { status: "blocked", country });
+        const source = String(data.source || "none");
+        // só cacheia quando detectou de verdade — evita "lembrar" de um fail-open
+        if (detected) {
+          try {
+            localStorage.setItem(
+              CACHE_KEY,
+              JSON.stringify({ allowed, country, source, ts: Date.now() }),
+            );
+          } catch {}
+        }
+        setState(allowed ? { status: "allowed" } : { status: "blocked", country, source });
       } catch {
         // fail-open: não trava o usuário se a checagem falhar
         if (!cancelled) setState({ status: "allowed" });
