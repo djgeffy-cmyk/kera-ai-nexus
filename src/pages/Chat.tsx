@@ -276,6 +276,69 @@ const Chat = () => {
     try { localStorage.setItem(BG_KEY, showBackground ? "1" : "0"); } catch {}
   }, [showBackground]);
 
+  const isPaidUser = useMemo(() => {
+    return isAdmin || planTier !== "free" || spaceincloudActive || juridicoActive || techActive || municipioActive;
+  }, [isAdmin, planTier, spaceincloudActive, juridicoActive, techActive, municipioActive]);
+
+  const handleOpenCreator = () => {
+    if (!isPaidUser) {
+      setUpgradeDialogOpen(true);
+    } else {
+      setNewAgentForm({ name: "", description: "", prompt: "" });
+      setCreatorOpen(true);
+    }
+  };
+
+  const handleGeneratePrompt = async () => {
+    if (!newAgentForm.name && !newAgentForm.description) {
+      return toast.error("Dê um nome ou descrição para a Kera saber o que criar.");
+    }
+    setIsGeneratingPrompt(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("chat-kera", {
+        body: {
+          messages: [
+            { role: "system", content: "Você é um arquiteto de agentes IA. Sua tarefa é criar um SYSTEM PROMPT altamente eficaz, detalhado e profissional com base no nome e descrição fornecidos pelo usuário. O prompt deve definir a personalidade, tom de voz, regras de comportamento e expertise do agente. Responda APENAS com o texto do prompt." },
+            { role: "user", content: `Crie um prompt para um agente chamado "${newAgentForm.name}" que faz o seguinte: ${newAgentForm.description}` }
+          ],
+          agentKey: "kera",
+          provider: "google",
+        }
+      });
+      if (error) throw error;
+      setNewAgentForm(prev => ({ ...prev, prompt: data.choices[0].message.content }));
+      toast.success("Prompt gerado pela Kera!");
+    } catch (err) {
+      toast.error("Erro ao gerar prompt.");
+    } finally {
+      setIsGeneratingPrompt(false);
+    }
+  };
+
+  const handleSaveCustomAgent = async () => {
+    if (!newAgentForm.name || !newAgentForm.prompt) {
+      return toast.error("Nome e prompt são obrigatórios.");
+    }
+    const { data: u } = await supabase.auth.getUser();
+    if (!u.user) return;
+
+    const { error } = await supabase.from("agents").insert({
+      user_id: u.user.id,
+      name: newAgentForm.name,
+      description: newAgentForm.description,
+      system_prompt: newAgentForm.prompt,
+      icon: "bot",
+      color: "cyan",
+    });
+
+    if (error) return toast.error(error.message);
+    
+    toast.success("Especialista criado com sucesso!");
+    setCreatorOpen(false);
+    const { data } = await supabase.from("agents").select("*").order("created_at", { ascending: false });
+    if (data) setCustomAgents(data as any);
+  };
+
   const [sidebarOpen, setSidebarOpen] = useState<boolean>(() => {
     try { return localStorage.getItem("kera:sidebarOpen") !== "0"; } catch { return true; }
   });
