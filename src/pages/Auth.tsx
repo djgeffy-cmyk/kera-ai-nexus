@@ -463,6 +463,25 @@ const Auth = () => {
                 </form>
               ) : (
                 <>
+                  {mode === "signin" && passkeyAvailable && (
+                    <>
+                      <Button
+                        type="button"
+                        onClick={handlePasskeyDiscoverableLogin}
+                        disabled={passkeyLoading}
+                        className="w-full bg-primary/15 hover:bg-primary/25 border border-primary/40 text-primary font-medium shadow-glow group"
+                      >
+                        <ScanFace className="size-5 mr-2 group-hover:scale-110 transition-transform" />
+                        {passkeyLoading ? "Aguardando biometria..." : "Entrar com Face ID / Touch ID"}
+                      </Button>
+                      <div className="flex items-center gap-3 my-4">
+                        <div className="flex-1 h-px bg-border/50" />
+                        <span className="text-xs text-muted-foreground uppercase tracking-widest">ou com senha</span>
+                        <div className="flex-1 h-px bg-border/50" />
+                      </div>
+                    </>
+                  )}
+
                   <form onSubmit={handleAuth} className="space-y-4">
                     <div>
                       <Label htmlFor="email">E-mail</Label>
