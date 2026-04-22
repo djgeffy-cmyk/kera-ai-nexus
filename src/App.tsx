@@ -26,6 +26,7 @@ import Footer from "./components/Footer";
 import { LicitacoesAlertsListener } from "./components/LicitacoesAlertsListener";
 import { AskKeraFab } from "./components/AskKeraFab";
 import { IconUpdateBanner } from "./components/IconUpdateBanner";
+import { GeoBlockGate } from "./components/GeoBlockGate";
 
 const queryClient = new QueryClient();
 
@@ -33,6 +34,7 @@ const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
       <Sonner />
+      <GeoBlockGate>
       <HashRouter>
         <LicitacoesAlertsListener />
         <Routes>
@@ -60,6 +62,7 @@ const App = () => (
         <AskKeraFab />
         <IconUpdateBanner />
       </HashRouter>
+      </GeoBlockGate>
     </TooltipProvider>
   </QueryClientProvider>
 );
