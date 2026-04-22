@@ -55,11 +55,10 @@ export const AskKeraFab = () => {
       <Button
         onClick={() => setOpen(true)}
         size="lg"
-        variant="glass-primary"
-        className="fixed bottom-6 right-6 z-40 rounded-full h-14 px-5 shadow-lg gap-2"
+        className="fixed bottom-6 right-6 z-40 rounded-full h-14 px-6 gap-2 bg-primary text-primary-foreground hover:bg-primary/90 font-semibold text-base shadow-[0_8px_30px_-4px_hsl(var(--primary)/0.6)] ring-2 ring-primary-foreground/20 hover:ring-primary-foreground/40 transition-all"
         aria-label="Pedir pra Kera"
       >
-        <Sparkles className="h-5 w-5" />
+        <Sparkles className="h-5 w-5 shrink-0" />
         <span className="hidden sm:inline">Pedir pra Kera</span>
       </Button>
 
