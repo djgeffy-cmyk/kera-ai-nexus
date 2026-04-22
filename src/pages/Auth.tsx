@@ -156,7 +156,7 @@ const Auth = () => {
    const checkAndChallengeMfa = async (): Promise<boolean> => {
      const { data: factors, error } = await supabase.auth.mfa.listFactors();
      if (error) return false;
-    const totp = factors?.totp?.find((f) => f.status === "verified");
+     const totp = factors?.totp?.find((f) => f.status === "verified");
     if (!totp) return false;
     const ch = await supabase.auth.mfa.challenge({ factorId: totp.id });
     if (ch.error) {
