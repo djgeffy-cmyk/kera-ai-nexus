@@ -17,6 +17,7 @@ import TransparenciaHistorico from "./pages/TransparenciaHistorico.tsx";
 import NotFound from "./pages/NotFound.tsx";
 import KeraDesktopPage from "./pages/KeraDesktop.tsx";
 import Manual from "./pages/Manual.tsx";
+import Uso from "./pages/Uso.tsx";
 import { ProtectedRoute } from "./components/ProtectedRoute";
 import Footer from "./components/Footer";
 import { LicitacoesAlertsListener } from "./components/LicitacoesAlertsListener";
@@ -46,6 +47,7 @@ const App = () => (
           <Route path="/transparencia/historico" element={<ProtectedRoute><TransparenciaHistorico /></ProtectedRoute>} />
           <Route path="/desktop" element={<ProtectedRoute><KeraDesktopPage /></ProtectedRoute>} />
           <Route path="/manual" element={<ProtectedRoute><Manual /></ProtectedRoute>} />
+          <Route path="/uso" element={<ProtectedRoute><Uso /></ProtectedRoute>} />
           <Route path="*" element={<NotFound />} />
         </Routes>
         <Footer />
