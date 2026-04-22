@@ -7,7 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Card } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { toast } from "sonner";
-import { ShieldCheck, KeyRound, Mail, ScanFace, Eye, EyeOff, Sparkles, MousePointerClick, Volume2, VolumeX } from "lucide-react";
+import { ShieldCheck, KeyRound, Mail, ScanFace, Eye, EyeOff, Sparkles, Volume2, VolumeX } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import keraAvatar from "@/assets/kera-avatar.png";
  import keraAvatarVideoV2 from "@/assets/kera-avatar-rain-v2.mp4";
@@ -47,7 +47,6 @@ const Auth = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [supportsPasskey] = useState(() => webauthnSupported());
   const [inIframe] = useState(() => isInIframe());
-  const [isUnlocked, setIsUnlocked] = useState(false);
   const [demoOpen, setDemoOpen] = useState(false);
   // Lembra a preferência do usuário entre visitas (localStorage).
   const RAIN_MUTE_KEY = "kera:auth:rain-muted";
