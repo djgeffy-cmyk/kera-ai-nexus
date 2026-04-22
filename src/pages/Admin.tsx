@@ -18,6 +18,7 @@ import { KeraTriggersManager } from "@/components/admin/KeraTriggersManager";
 import { PronunciationFixesManager } from "@/components/admin/PronunciationFixesManager";
 import { ElevenLabsQuotaCard } from "@/components/admin/ElevenLabsQuotaCard";
 import { UserManager } from "@/components/admin/UserManager";
+import { WebserviceCredentialsManager } from "@/components/admin/WebserviceCredentialsManager";
 
 type Status = Record<string, boolean>;
 
@@ -235,6 +236,8 @@ const Admin = () => {
         <KeraVoiceSelector />
 
         <ElevenLabsQuotaCard />
+
+        <WebserviceCredentialsManager />
 
         <PronunciationFixesManager />
 

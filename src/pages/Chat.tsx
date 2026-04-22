@@ -686,6 +686,20 @@ const Chat = () => {
       rawText = parsed.data.message;
     }
 
+    // 🔒 Guarda de credenciais — nunca deixa senha/token chegar no LLM nem ser salvo no DB.
+    if (rawText) {
+      const { scanForCredentials, redactCredentials } = await import("@/lib/credentialGuard");
+      const hits = scanForCredentials(rawText);
+      if (hits.length > 0) {
+        const tipo = hits.map((h) => h.type).join(", ");
+        toast.error("Credencial detectada — não envie aqui", {
+          description: `Padrão: ${tipo}. Cadastre em Admin → Credenciais de Webservice. A mensagem foi mascarada antes de prosseguir.`,
+          duration: 8000,
+        });
+        rawText = redactCredentials(rawText);
+      }
+    }
+
     // 🔒 Paywall: se o agente está bloqueado pra esse usuário, libera no máx 3 perguntas
     // como "palhinha". Depois disso, manda pra /planos.
     const trial = await consumeTrial(agentKey);
