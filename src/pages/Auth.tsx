@@ -122,7 +122,8 @@ const Auth = () => {
   const [resetNote, setResetNote] = useState("");
   const [resetLoading, setResetLoading] = useState(false);
    const rainVideoUrl = assetUrl(keraAvatarVideo);
-   const rainBgUrl = assetUrl(rainBgRealistic);
+    // URL de vídeo de chuva realista (Pexels - Alta Definição)
+    const rainBgUrl = "https://videos.pexels.com/video-files/854748/854748-hd_1920_1080_30fps.mp4";
 
   useEffect(() => {
     document.title = "Kera AI — Entrar";
@@ -420,16 +421,23 @@ const Auth = () => {
               Clique sobre mim para conversar — depois você decide se cria conta
             </motion.p>
 
-            <motion.button
-              type="button"
-              onClick={() => setIsUnlocked(true)}
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ delay: 1 }}
-              className="mt-6 text-xs text-muted-foreground/70 hover:text-primary tracking-wider underline-offset-4 hover:underline transition"
-            >
-              já tenho conta — entrar direto
-            </motion.button>
+             <motion.div
+               initial={{ opacity: 0 }}
+               animate={{ opacity: 1 }}
+               transition={{ delay: 1 }}
+               className="mt-6 flex flex-col items-center gap-3"
+             >
+               <Button
+                 variant="ghost"
+                 onClick={() => setIsUnlocked(true)}
+                 className="text-xs text-primary/80 hover:text-primary hover:bg-primary/10 tracking-wider underline-offset-4 underline transition-all"
+               >
+                 Já tenho conta — Entrar direto
+               </Button>
+               <p className="text-[10px] text-muted-foreground/50 italic">
+                 Após entrar, as configurações de humor ficam na barra lateral.
+               </p>
+             </motion.div>
           </motion.div>
         ) : (
           <motion.div
