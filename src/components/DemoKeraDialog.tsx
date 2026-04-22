@@ -117,6 +117,8 @@ export const DemoKeraDialog = ({ open, onOpenChange, onWantToSignUp }: DemoKeraD
   });
   const scrollRef = useRef<HTMLDivElement>(null);
   const rainVideoUrl = KERA_RAIN_VIDEO_URL;
+  // Grupo expandido no seletor (só um por vez). null = nenhum aberto.
+  const [openGroup, setOpenGroup] = useState<string | null>(null);
 
   const remaining = Math.max(0, DEMO_LIMIT - used);
   const exhausted = remaining === 0;
