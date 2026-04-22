@@ -91,7 +91,7 @@ const DEMO_GROUPS: { label: string; keys: readonly string[] }[] = [
   { label: KERA_TECH_LABEL, keys: KERA_TECH_AGENT_KEYS },
   { label: KERA_JURIDICO_LABEL, keys: KERA_JURIDICO_AGENT_KEYS },
   { label: KERA_FIT_LABEL, keys: KERA_FIT_AGENT_KEYS },
-  { label: "Outros", keys: ["kera-gamer", "kera-tradutora"] },
+  { label: "Kera Diversão", keys: ["kera-gamer"] },
 ];
 
 const DEMO_AGENT_KEYS = DEMO_GROUPS.flatMap((g) => g.keys);
