@@ -85,7 +85,15 @@ import keraSpaceLogo from "@/assets/kera-spaceincloud-logo.png";
 import { assetUrl } from "@/lib/assetUrl";
 import { MessageBubble, type ChatMessage } from "@/components/chat/MessageBubble";
 import { PROVIDERS, getPreferredProvider, setPreferredProvider, type ProviderId } from "@/lib/providers";
-import { BUILTIN_AGENTS, getBuiltinAgent, DEFAULT_AGENT_KEY } from "@/lib/agents";
+import {
+  BUILTIN_AGENTS,
+  getBuiltinAgent,
+  DEFAULT_AGENT_KEY,
+  KERA_FIT_AGENT_KEYS,
+  KERA_JURIDICO_AGENT_KEYS,
+  KERA_TECH_AGENT_KEYS,
+  KERA_MUNICIPIO_AGENT_KEYS,
+} from "@/lib/agents";
 import { useUserAccess } from "@/hooks/useUserAccess";
 import { useVoice } from "@/hooks/useVoice";
 import { useAlwaysListening } from "@/hooks/useAlwaysListening";
@@ -1223,28 +1231,56 @@ Por favor, analise: há perda de pacote? jitter alto sugere instabilidade de rot
                  <ChevronRight className="size-4 rotate-90 text-muted-foreground opacity-50 group-hover:opacity-100 transition-all shrink-0" />
                </button>
              </DropdownMenuTrigger>
-            <DropdownMenuContent className="w-64 bg-card border-border">
-              <DropdownMenuLabel className="text-xs text-muted-foreground">Agentes prontos</DropdownMenuLabel>
-              {BUILTIN_AGENTS.filter(a => canSee(a.key)).map(a => {
-                const Icon = a.icon;
-                const locked = !canAccess(a.key);
+            <DropdownMenuContent className="w-64 bg-card border-border max-h-[80vh] overflow-y-auto">
+              {(() => {
+                const visible = BUILTIN_AGENTS.filter(a => canSee(a.key));
+                const groupOrder: { label: string; keys: readonly string[] }[] = [
+                  { label: "Kera Municipal", keys: KERA_MUNICIPIO_AGENT_KEYS },
+                  { label: "Kera Tecnologia", keys: KERA_TECH_AGENT_KEYS },
+                  { label: "Kera Jurídica", keys: KERA_JURIDICO_AGENT_KEYS },
+                  { label: "Kera Fit", keys: KERA_FIT_AGENT_KEYS },
+                ];
+                const groupedKeys = new Set<string>(groupOrder.flatMap(g => [...g.keys] as string[]));
+                const others = visible.filter(a => !groupedKeys.has(a.key));
+
+                const renderItem = (a: typeof visible[number]) => {
+                  const Icon = a.icon;
+                  const locked = !canAccess(a.key);
+                  return (
+                    <DropdownMenuItem key={a.key} onClick={() => { setAgentKey(a.key); newConversation(a.key); }}>
+                      <Icon className={`size-4 mr-2 ${a.iconColor} ${locked ? "opacity-50" : ""}`} />
+                      <span className={`flex-1 ${locked ? "opacity-60" : ""}`}>{a.name}</span>
+                      {locked && (
+                        <span className="ml-2 px-1.5 py-0.5 rounded text-[9px] font-bold tracking-widest uppercase bg-amber-500/15 text-amber-300 border border-amber-400/30 inline-flex items-center gap-1">
+                          <Lock className="size-2.5" /> Trial
+                        </span>
+                      )}
+                    </DropdownMenuItem>
+                  );
+                };
+
                 return (
-                  <DropdownMenuItem key={a.key} onClick={() => { setAgentKey(a.key); newConversation(a.key); }}>
-                    <Icon className={`size-4 mr-2 ${a.iconColor} ${locked ? "opacity-50" : ""}`} />
-                    <span className={`flex-1 ${locked ? "opacity-60" : ""}`}>{a.name}</span>
-                    {locked && (
-                      <span className="ml-2 px-1.5 py-0.5 rounded text-[9px] font-bold tracking-widest uppercase bg-amber-500/15 text-amber-300 border border-amber-400/30 inline-flex items-center gap-1">
-                        <Lock className="size-2.5" /> Trial
-                      </span>
+                  <>
+                    {others.length > 0 && (
+                      <>
+                        <DropdownMenuLabel className="text-xs text-muted-foreground">Geral</DropdownMenuLabel>
+                        {others.map(renderItem)}
+                      </>
                     )}
-                    {a.key === "kera-security-nasa" && (
-                      <span className="ml-2 px-1.5 py-0.5 rounded text-[9px] font-bold tracking-widest uppercase bg-blue-500/15 text-blue-300 border border-blue-400/30">
-                        NASA
-                      </span>
-                    )}
-                  </DropdownMenuItem>
+                    {groupOrder.map((group, idx) => {
+                      const items = visible.filter(a => (group.keys as readonly string[]).includes(a.key));
+                      if (items.length === 0) return null;
+                      return (
+                        <div key={group.label}>
+                          {(idx > 0 || others.length > 0) && <DropdownMenuSeparator />}
+                          <DropdownMenuLabel className="text-[10px] text-primary/70 uppercase tracking-[0.15em] font-bold">{group.label}</DropdownMenuLabel>
+                          {items.map(renderItem)}
+                        </div>
+                      );
+                    })}
+                  </>
                 );
-              })}
+              })()}
               {customAgents.length > 0 && (
                 <>
                   <DropdownMenuSeparator />
