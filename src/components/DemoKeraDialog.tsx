@@ -6,6 +6,14 @@ import { toast } from "sonner";
 import { Sparkles, Send, Lock, Loader2 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { BUILTIN_AGENTS } from "@/lib/agents";
+import {
+  KERA_FIT_AGENT_KEYS,
+  KERA_FIT_LABEL,
+  KERA_JURIDICO_AGENT_KEYS,
+  KERA_JURIDICO_LABEL,
+  KERA_TECH_AGENT_KEYS,
+  KERA_TECH_LABEL,
+} from "@/lib/agents";
 import keraAvatarPng from "@/assets/kera-avatar.png";
 import { cn } from "@/lib/utils";
 
@@ -72,24 +80,17 @@ interface DemoKeraDialogProps {
   onWantToSignUp: () => void;
 }
 
-// Agentes que aparecem no demo (subset curado, em ordem)
-const DEMO_AGENT_KEYS = [
-  "kera",
-  "kera-dev",
-  "kera-sec",
-  "kera-security-nasa",
-  "kera-juridica",
-  "kera-familia",
-  "kera-sucessoes",
-  "kera-personalidade",
-  "kera-curatela",
-  "kera-sentinela",
-  "kera-nutri",
-  "kera-treinador",
-  "kera-iron",
-  "kera-gamer",
-  "kera-tradutora",
-] as const;
+// Agentes do demo agrupados por pacote (espelha os grupos da tela principal:
+// Kera principal, Tecnologia, Jurídica, Kera Fit e Outros).
+const DEMO_GROUPS: { label: string; keys: readonly string[] }[] = [
+  { label: "Kera", keys: ["kera"] },
+  { label: KERA_TECH_LABEL, keys: KERA_TECH_AGENT_KEYS },
+  { label: KERA_JURIDICO_LABEL, keys: KERA_JURIDICO_AGENT_KEYS },
+  { label: KERA_FIT_LABEL, keys: KERA_FIT_AGENT_KEYS },
+  { label: "Outros", keys: ["kera-gamer", "kera-tradutora"] },
+];
+
+const DEMO_AGENT_KEYS = DEMO_GROUPS.flatMap((g) => g.keys);
 
 const DEMO_AGENTS = DEMO_AGENT_KEYS
   .map((k) => BUILTIN_AGENTS.find((a) => a.key === k))
@@ -352,30 +353,45 @@ export const DemoKeraDialog = ({ open, onOpenChange, onWantToSignUp }: DemoKeraD
             </div>
           </div>
 
-          {/* Seletor de agentes — chips horizontais */}
+          {/* Seletor de agentes — agrupado por pacote (Kera Fit, Tecnologia, Jurídica…) */}
           <div className="mt-5 -mx-1 px-1 overflow-x-auto scrollbar-thin">
-            <div className="flex gap-2 pb-1 min-w-max">
-              {DEMO_AGENTS.map((ag) => {
-                const Icon = ag.icon;
-                const active = ag.key === agentKey;
+            <div className="flex items-end gap-4 pb-1 min-w-max">
+              {DEMO_GROUPS.map((group) => {
+                const groupAgents = group.keys
+                  .map((k) => BUILTIN_AGENTS.find((a) => a.key === k))
+                  .filter((a): a is NonNullable<typeof a> => Boolean(a));
+                if (groupAgents.length === 0) return null;
                 return (
-                  <button
-                    key={ag.key}
-                    type="button"
-                    onClick={() => switchAgent(ag.key)}
-                    disabled={loading}
-                    title={ag.description}
-                    className={cn(
-                      "flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs whitespace-nowrap border transition-all duration-300 backdrop-blur-md",
-                      active
-                        ? "bg-primary/15 border-primary/60 text-primary shadow-[0_0_18px_-2px_hsl(var(--primary)/0.45)] scale-[1.02]"
-                        : "bg-foreground/5 border-white/10 text-muted-foreground hover:border-primary/40 hover:text-foreground hover:bg-foreground/10",
-                      loading && "opacity-50 cursor-not-allowed",
-                    )}
-                  >
-                    <Icon className={cn("size-3.5", active ? "text-primary" : ag.iconColor)} />
-                    {ag.name}
-                  </button>
+                  <div key={group.label} className="flex flex-col gap-1.5">
+                    <span className="text-[9px] uppercase tracking-[0.14em] text-primary/60 font-semibold pl-1">
+                      {group.label}
+                    </span>
+                    <div className="flex gap-2">
+                      {groupAgents.map((ag) => {
+                        const Icon = ag.icon;
+                        const active = ag.key === agentKey;
+                        return (
+                          <button
+                            key={ag.key}
+                            type="button"
+                            onClick={() => switchAgent(ag.key)}
+                            disabled={loading}
+                            title={ag.description}
+                            className={cn(
+                              "flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs whitespace-nowrap border transition-all duration-300 backdrop-blur-md",
+                              active
+                                ? "bg-primary/15 border-primary/60 text-primary shadow-[0_0_18px_-2px_hsl(var(--primary)/0.45)] scale-[1.02]"
+                                : "bg-foreground/5 border-white/10 text-muted-foreground hover:border-primary/40 hover:text-foreground hover:bg-foreground/10",
+                              loading && "opacity-50 cursor-not-allowed",
+                            )}
+                          >
+                            <Icon className={cn("size-3.5", active ? "text-primary" : ag.iconColor)} />
+                            {ag.name}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
                 );
               })}
             </div>
