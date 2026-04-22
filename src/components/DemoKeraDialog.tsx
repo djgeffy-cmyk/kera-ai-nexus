@@ -64,6 +64,9 @@ export const DemoKeraDialog = ({ open, onOpenChange, onWantToSignUp }: DemoKeraD
         },
         body: JSON.stringify({
           messages: newMessages.map((m) => ({ role: m.role, content: m.content })),
+          // Modo demo: backend suprime apelidos pessoais e zoeiras internas (Rodrigo,
+          // Tania, Doriana, Denis, etc). Visitante sem cadastro vê a Kera "limpa".
+          demoMode: true,
         }),
       });
 
