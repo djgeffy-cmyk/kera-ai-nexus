@@ -3,6 +3,7 @@ import { HashRouter, Route, Routes } from "react-router-dom";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import Index from "./pages/Index.tsx";
+import Welcome from "./pages/Welcome.tsx";
 import Auth from "./pages/Auth.tsx";
 import Admin from "./pages/Admin.tsx";
 import Agents from "./pages/Agents.tsx";
@@ -30,6 +31,7 @@ const App = () => (
       <HashRouter>
         <LicitacoesAlertsListener />
         <Routes>
+          <Route path="/welcome" element={<Welcome />} />
           <Route path="/auth" element={<Auth />} />
           <Route path="/onboarding" element={<ProtectedRoute><Onboarding /></ProtectedRoute>} />
           <Route path="/planos" element={<ProtectedRoute><Planos /></ProtectedRoute>} />

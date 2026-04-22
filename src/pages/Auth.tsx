@@ -7,7 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Card } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { toast } from "sonner";
-import { ShieldCheck, KeyRound, Mail, ScanFace, Eye, EyeOff, Sparkles, MousePointerClick, Volume2, VolumeX } from "lucide-react";
+import { ShieldCheck, KeyRound, Mail, ScanFace, Eye, EyeOff, Sparkles, Volume2, VolumeX } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import keraAvatar from "@/assets/kera-avatar.png";
  import keraAvatarVideoV2 from "@/assets/kera-avatar-rain-v2.mp4";
@@ -47,7 +47,6 @@ const Auth = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [supportsPasskey] = useState(() => webauthnSupported());
   const [inIframe] = useState(() => isInIframe());
-  const [isUnlocked, setIsUnlocked] = useState(false);
   const [demoOpen, setDemoOpen] = useState(false);
   // Lembra a preferência do usuário entre visitas (localStorage).
   const RAIN_MUTE_KEY = "kera:auth:rain-muted";
@@ -290,11 +289,7 @@ const Auth = () => {
         // o topo E o chão. Alinhar pelo bottom garante que o solo com as gotas
         // batendo SEMPRE fique visível.
         className="absolute inset-0 w-full h-full object-cover object-bottom"
-        // Tela inicial (locked) = chuva pura. Após "Já tenho conta" (unlocked) =
-        // Kera realista com gotas. Trocamos o `key` pra forçar o <video> a
-        // recarregar o novo `src` em vez de continuar tocando o anterior.
-        key={isUnlocked ? "bg-kera" : "bg-rain"}
-        src={isUnlocked ? rainVideoUrl : rainBgUrl}
+        src={rainVideoUrl}
         // Sem filtros: mostra o vídeo de chuva original, com as gotas no chão visíveis
       />
 
@@ -329,120 +324,8 @@ const Auth = () => {
       />
 
       <AnimatePresence mode="wait">
-        {!isUnlocked ? (
-          <motion.div
-            key="kera-trigger"
-            initial={{ opacity: 0, scale: 0.9, y: 20 }}
-            animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{
-              opacity: 0,
-              scale: 1.1,
-              filter: "blur(12px)",
-              transition: { duration: 0.5, ease: [0.4, 0, 0.2, 1] },
-            }}
-            transition={{ duration: 0.6, ease: "easeOut" }}
-            className="relative z-20 flex flex-col items-center px-6 py-7 rounded-[2rem]"
-            style={{
-              background: "linear-gradient(180deg, hsl(var(--background) / 0.34), hsl(var(--background) / 0.18))",
-              boxShadow: "0 18px 60px hsl(0 0% 0% / 0.28)",
-            }}
-          >
-            {/* Trigger: avatar grande da Kera. Hover = pulse + chamada. Click = abre demo. */}
-            <motion.button
-              type="button"
-              onClick={() => setDemoOpen(true)}
-              aria-label="Conversar com a Kera"
-              whileHover={{ scale: 1.04 }}
-              whileTap={{ scale: 0.97 }}
-              className="group relative cursor-pointer outline-none focus-visible:ring-4 focus-visible:ring-primary/40 rounded-full"
-              style={{ WebkitTapHighlightColor: "transparent" }}
-            >
-              {/* Halos pulsantes ao redor */}
-              <motion.span
-                aria-hidden
-                className="absolute inset-0 rounded-full border-2 border-primary/40"
-                animate={{ scale: [1, 1.35, 1.6], opacity: [0.6, 0.2, 0] }}
-                transition={{ duration: 2.4, repeat: Infinity, ease: "easeOut" }}
-              />
-              <motion.span
-                aria-hidden
-                className="absolute inset-0 rounded-full border-2 border-primary/30"
-                animate={{ scale: [1, 1.35, 1.6], opacity: [0.4, 0.15, 0] }}
-                transition={{ duration: 2.4, repeat: Infinity, ease: "easeOut", delay: 0.8 }}
-              />
-
-              {/* Avatar de vídeo da Kera */}
-              <motion.div
-                animate={{ y: [0, -8, 0] }}
-                transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
-                className="relative size-48 sm:size-56 rounded-full overflow-hidden border-2 border-primary/70 shadow-glow ring-4 ring-primary/20 group-hover:ring-primary/50 group-hover:shadow-[0_0_60px_hsl(var(--primary)/0.6)] transition-all duration-500 bg-background"
-              >
-                <video
-                  aria-hidden
-                  autoPlay
-                  loop
-                  muted
-                  playsInline
-                  src={rainVideoUrl}
-                  poster={keraAvatar}
-                  className="w-full h-full object-cover"
-                />
-                {/* Overlay sutil que reage ao hover */}
-                <div className="absolute inset-0 bg-primary/0 group-hover:bg-primary/10 transition-colors duration-500" />
-              </motion.div>
-
-              {/* Badge de "click" no canto */}
-              <motion.div
-                aria-hidden
-                animate={{ y: [0, -4, 0] }}
-                transition={{ duration: 1.6, repeat: Infinity, ease: "easeInOut" }}
-                className="absolute bottom-2 right-2 bg-primary text-primary-foreground rounded-full p-2.5 shadow-glow border-2 border-background"
-              >
-                <MousePointerClick className="size-5" />
-              </motion.div>
-            </motion.button>
-
-            <motion.h2
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.4 }}
-              className="mt-8 text-primary font-display tracking-widest text-3xl uppercase text-center text-glow"
-              style={{ textShadow: "0 0 12px hsl(var(--primary) / 0.9), 0 4px 24px hsl(0 0% 0% / 0.7)" }}
-            >
-              Kera
-            </motion.h2>
-            <motion.p
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.6 }}
-              className="mt-3 text-base text-foreground/90 tracking-wide text-center max-w-sm leading-relaxed"
-              style={{ textShadow: "0 2px 18px hsl(0 0% 0% / 0.72)" }}
-            >
-              Clique sobre mim para conversar — depois você decide se cria conta
-            </motion.p>
-
-             <motion.div
-               initial={{ opacity: 0 }}
-               animate={{ opacity: 1 }}
-               transition={{ delay: 1 }}
-               className="mt-6 flex flex-col items-center gap-3"
-             >
-               <Button
-                 variant="ghost"
-                 onClick={() => setIsUnlocked(true)}
-                  className="text-sm text-primary hover:text-primary hover:bg-background/25 tracking-wide underline-offset-4 underline transition-all"
-                  style={{ textShadow: "0 2px 16px hsl(0 0% 0% / 0.65)" }}
-               >
-                 Já tenho conta — Entrar direto
-               </Button>
-                <p className="text-xs text-foreground/70 italic text-center" style={{ textShadow: "0 2px 16px hsl(0 0% 0% / 0.72)" }}>
-                 Após entrar, as configurações de humor ficam na barra lateral.
-               </p>
-             </motion.div>
-          </motion.div>
-        ) : (
-          <motion.div
-            key="auth-card"
+           <motion.div
+             key="auth-card"
             initial={{ opacity: 0, y: 40, scale: 0.85, filter: "blur(12px)" }}
             animate={{ opacity: 1, y: 0, scale: 1, filter: "blur(0px)" }}
             transition={{
@@ -623,7 +506,6 @@ const Auth = () => {
               )}
             </Card>
           </motion.div>
-        )}
       </AnimatePresence>
 
       <Dialog open={resetOpen} onOpenChange={setResetOpen}>
@@ -676,10 +558,7 @@ const Auth = () => {
       <DemoKeraDialog
         open={demoOpen}
         onOpenChange={setDemoOpen}
-        onWantToSignUp={() => {
-          setIsUnlocked(true);
-          setMode("signup");
-        }}
+        onWantToSignUp={() => setMode("signup")}
       />
     </main>
   );

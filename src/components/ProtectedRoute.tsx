@@ -65,7 +65,7 @@ export const ProtectedRoute = ({ children, requireAdmin = false }: Props) => {
       </div>
     );
   }
-  if (!session) return <Navigate to="/auth" replace />;
+  if (!session) return <Navigate to="/welcome" replace />;
   // Se ainda não escolheu áreas, manda pro onboarding (exceto se já está nele)
   if (needsOnboarding && location.pathname !== "/onboarding") {
     return <Navigate to="/onboarding" replace />;
