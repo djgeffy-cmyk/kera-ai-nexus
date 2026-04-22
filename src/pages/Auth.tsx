@@ -59,6 +59,7 @@ const Auth = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [supportsPasskey] = useState(() => webauthnSupported());
   const [inIframe] = useState(() => isInIframe());
+  const [iosNonSafari] = useState(() => isIOSNonSafari());
   const [demoOpen, setDemoOpen] = useState(false);
   const [bgVideoUrl, setBgVideoUrl] = useState(authBgOptions[0].url);
   const [avatarVideoUrl, setAvatarVideoUrl] = useState(authAvatarOptions[0].url);
