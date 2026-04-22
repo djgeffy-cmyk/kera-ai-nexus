@@ -9,9 +9,9 @@ import { BUILTIN_AGENTS } from "@/lib/agents";
 import keraAvatarPng from "@/assets/kera-avatar.png";
 import { cn } from "@/lib/utils";
 
-// URL pública direta do storage (mesmo vídeo, sem depender do asset interno).
+// Fundo da tela de testes: vídeo de chuva realista (sem o avatar da Kera).
 const KERA_RAIN_VIDEO_URL =
-  "https://ytixqgkzqgeoxrbmjqbo.supabase.co/storage/v1/object/public/kera-videos/kera-avatar-rain.mp4?v=2026-04-22";
+  "https://ytixqgkzqgeoxrbmjqbo.supabase.co/storage/v1/object/public/kera-videos/rain-bg-realistic.mp4?v=2026-04-22";
 
 const DEMO_LIMIT = 3;
 const DEMO_KEY = "kera-demo-questions-used";
