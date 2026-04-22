@@ -5,12 +5,13 @@ import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 import { Sparkles, Send, Lock, Loader2 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
-import UmbrellaCorpLogo from "./UmbrellaCorpLogo";
 import { BUILTIN_AGENTS } from "@/lib/agents";
-import keraAvatarVideo from "@/assets/kera-avatar-rain.mp4.asset.json";
 import keraAvatarPng from "@/assets/kera-avatar.png";
-import { assetUrl } from "@/lib/assetUrl";
 import { cn } from "@/lib/utils";
+
+// URL pública direta do storage (mesmo vídeo, sem depender do asset interno)
+const KERA_RAIN_VIDEO_URL =
+  "https://ytixqgkzqgeoxrbmjqbo.supabase.co/storage/v1/object/public/kera-videos/kera-avatar-rain.mp4";
 
 const DEMO_LIMIT = 3;
 const DEMO_KEY = "kera-demo-questions-used";
