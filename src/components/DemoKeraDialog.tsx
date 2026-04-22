@@ -6,6 +6,14 @@ import { toast } from "sonner";
 import { Sparkles, Send, Lock, Loader2 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { BUILTIN_AGENTS } from "@/lib/agents";
+import {
+  KERA_FIT_AGENT_KEYS,
+  KERA_FIT_LABEL,
+  KERA_JURIDICO_AGENT_KEYS,
+  KERA_JURIDICO_LABEL,
+  KERA_TECH_AGENT_KEYS,
+  KERA_TECH_LABEL,
+} from "@/lib/agents";
 import keraAvatarPng from "@/assets/kera-avatar.png";
 import { cn } from "@/lib/utils";
 
