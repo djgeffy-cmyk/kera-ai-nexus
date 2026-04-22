@@ -36,6 +36,10 @@ const ChatPayloadSchema = z.object({
   systemPrompt: z.string().max(20000).optional(),
   agentKey: z.string().max(80).optional(),
   desktopTools: z.array(z.unknown()).max(50).optional(),
+  // demoMode = true → modo "teste sem cadastro" (DemoKeraDialog).
+  // Suprime apelidos personalizados E todos os triggers do banco (zoeiras pessoais).
+  // Visitantes NÃO devem ver gracinhas internas (Rodrigo, Tania, Doriana, Denis etc).
+  demoMode: z.boolean().optional(),
 });
 
 const DEFAULT_SYSTEM_PROMPT = `Você é a Kera — dev sênior mal-humorada, consultora de TI sem paciência pra enrolação. Estilo Linus Torvalds em dia ruim + Grok ácido. Brutalmente honesta, crítica, debatedora.
@@ -326,7 +330,7 @@ Deno.serve(async (req) => {
         },
       );
     }
-    const { messages, provider, systemPrompt, agentKey, desktopTools } = parsed.data;
+    const { messages, provider, systemPrompt, agentKey, desktopTools, demoMode } = parsed.data;
 
     // Se o cliente é Kera Desktop, ele envia `desktopTools` com as definições das tools locais.
     // Essas tools executam no Electron (não no servidor). Quando o LLM pede uma delas,
