@@ -29,6 +29,25 @@ import {
 
 type Mode = "signin" | "signup" | "totp";
 
+const RainOverlay = () => (
+  <div className="absolute inset-0 pointer-events-none z-[5] overflow-hidden opacity-[0.15]">
+    <div 
+      className="absolute inset-0"
+      style={{
+        background: `repeating-linear-gradient(transparent, transparent 95%, rgba(255, 255, 255, 0.4) 95%, rgba(255, 255, 255, 0.4) 100%)`,
+        backgroundSize: '2px 100px',
+        animation: 'rain-fall 0.6s linear infinite'
+      }}
+    />
+    <style>{`
+      @keyframes rain-fall {
+        0% { transform: translateY(-100px); }
+        100% { transform: translateY(100px); }
+      }
+    `}</style>
+  </div>
+);
+
 const Auth = () => {
   const navigate = useNavigate();
   const [mode, setMode] = useState<Mode>("signin");
@@ -302,7 +321,8 @@ const Auth = () => {
         src={rainBgUrl}
         style={{ filter: "brightness(0.4) contrast(1.2)" }}
       />
-      <div aria-hidden className="absolute inset-0 bg-background/30" />
+      <div aria-hidden className="absolute inset-0 bg-background/20" />
+      <RainOverlay />
       <ParticlesOverlay />
 
       {/* Áudio ambiente de chuva — começa após primeira interação */}
