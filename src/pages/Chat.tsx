@@ -93,6 +93,7 @@ import keraGamerBgVideo from "@/assets/kera-gamer-bg.mp4.asset.json";
 import keraSpaceLogo from "@/assets/kera-spaceincloud-logo.png";
 
 import { assetUrl } from "@/lib/assetUrl";
+import { isIOS, isStandalonePWA } from "@/lib/platform";
 import { MessageBubble, type ChatMessage } from "@/components/chat/MessageBubble";
 import { PROVIDERS, getPreferredProvider, setPreferredProvider, type ProviderId } from "@/lib/providers";
 import {
