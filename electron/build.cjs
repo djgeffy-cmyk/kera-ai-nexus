@@ -30,7 +30,7 @@ if (process.env.BUILD_PLATFORM === "win32") {
   const arch = process.env.BUILD_ARCH === "arm64" ? "--arm64" : "--x64";
   platformFlag = `--mac dmg zip ${arch}`;
 } else {
-  platformFlag = "--linux AppImage";
+  platformFlag = "--linux deb AppImage";
 }
 
 console.log(`[2/2] electron-builder (${platformFlag})...`);

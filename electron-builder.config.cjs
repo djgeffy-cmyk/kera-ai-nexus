@@ -27,12 +27,15 @@ module.exports = {
     },
   ],
 
-  // Linux: AppImage com nome estável (sem arch) — a maioria dos builds
-  // são x64; o updater consome o latest-linux.yml.
+  // Linux: gera .deb + AppImage. O .deb é mais simples pra instalar em Ubuntu,
+  // enquanto o AppImage continua útil como versão portátil e pro auto-update.
   linux: {
-    target: [{ target: "AppImage", arch: ["x64"] }],
+    target: [
+      { target: "deb", arch: ["x64"] },
+      { target: "AppImage", arch: ["x64"] },
+    ],
     category: "Utility",
-    artifactName: "KeraDesktop-${version}.AppImage",
+    artifactName: "${productName}-${version}.${ext}",
   },
 
   // Windows: NSIS gera `KeraDesktop-Setup-<v>.exe` + latest.yml + .blockmap.

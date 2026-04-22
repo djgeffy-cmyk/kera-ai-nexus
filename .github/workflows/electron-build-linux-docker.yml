@@ -40,6 +40,7 @@ jobs:
         with:
           name: KeraDesktop-linux-docker
           path: |
+            release-builds/*.deb
             release-builds/*.AppImage
             release-builds/latest*.yml
           if-no-files-found: warn
