@@ -298,8 +298,9 @@ const Auth = () => {
         loop
         muted
         playsInline
-        className="absolute inset-0 w-full h-full object-cover opacity-40 mix-blend-screen"
+        className="absolute inset-0 w-full h-full object-cover"
         src={rainBgUrl}
+        style={{ filter: "brightness(0.4) contrast(1.2)" }}
       />
       <div aria-hidden className="absolute inset-0 bg-background/30" />
       <ParticlesOverlay />
