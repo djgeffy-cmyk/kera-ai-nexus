@@ -415,6 +415,92 @@ function shouldProbeIpm(messages: Array<{ role: string; content: unknown }>): bo
   return IPM_KEYWORDS.some((k) => text.includes(k));
 }
 
+function normalizeTextForMatch(value: string): string {
+  return value
+    .normalize("NFD")
+    .replace(/\p{Diacritic}/gu, "")
+    .toLowerCase();
+}
+
+async function listEngegovMunicipios(): Promise<Array<{ nome: string; uf: string }>> {
+  try {
+    const supaUrl = Deno.env.get("SUPABASE_URL");
+    const service = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+    if (!supaUrl || !service) return [];
+
+    const r = await fetch(
+      `${supaUrl}/rest/v1/engegov_municipios?enabled=eq.true&select=nome,uf&limit=1000`,
+      { headers: { apikey: service, Authorization: `Bearer ${service}` } },
+    );
+    if (!r.ok) return [];
+    const rows = await r.json();
+    return Array.isArray(rows) ? rows : [];
+  } catch {
+    return [];
+  }
+}
+
+async function detectEngegovMunicipio(messages: Array<{ role: string; content: unknown }>): Promise<{ nome: string; uf: string } | null> {
+  const text = normalizeTextForMatch(
+    messages
+      .filter((m) => m.role === "user")
+      .slice(-8)
+      .map((m) => (typeof m.content === "string" ? m.content : JSON.stringify(m.content)))
+      .join(" "),
+  );
+  if (!text) return null;
+
+  const municipios = await listEngegovMunicipios();
+  const matches = municipios.filter((m) => text.includes(normalizeTextForMatch(m.nome)));
+  if (matches.length === 0) return null;
+
+  matches.sort((a, b) => b.nome.length - a.nome.length);
+  return matches[0];
+}
+
+async function maybePrefetchEngegov(
+  agentKey: string | undefined,
+  messages: Array<{ role: string; content: unknown; tool_call_id?: string; tool_calls?: unknown[] }>,
+): Promise<Array<{ role: string; content: unknown; tool_call_id?: string; tool_calls?: unknown[] }>> {
+  if (agentKey !== "kera-engegov") return messages;
+
+  const lastUserText = normalizeTextForMatch(
+    [...messages]
+      .reverse()
+      .find((m) => m.role === "user" && typeof m.content === "string")?.content as string || "",
+  );
+
+  const hasRecentToolResult = messages.some(
+    (m) => m.role === "tool" && typeof m.content === "string" && m.content.includes('"tipo":"lista"'),
+  );
+  if (hasRecentToolResult) return messages;
+
+  const engegovIntentKeywords = [
+    "obra", "obras", "engegov", "gevo", "medicao", "medição", "fiscal", "andamento", "paralisada", "concluida", "concluída", "detalhe", "lista", "buscar", "busca",
+  ];
+  const softFollowUps = ["sim", "quero", "pode", "manda", "vai", "ok", "obra", "obras"];
+  const shouldRun = engegovIntentKeywords.some((k) => lastUserText.includes(normalizeTextForMatch(k)))
+    || softFollowUps.includes(lastUserText.trim());
+  if (!shouldRun) return messages;
+
+  const municipio = await detectEngegovMunicipio(messages);
+  if (!municipio) return messages;
+
+  const args = { tipo: "lista", cidade_nome: municipio.nome, uf: municipio.uf };
+  const toolCallId = `engegov_prefetch_${crypto.randomUUID()}`;
+  const result = await executeTool("engegov_query", args);
+
+  return [
+    ...messages,
+    {
+      role: "assistant",
+      content: "",
+      tool_calls: [{ id: toolCallId, type: "function", function: { name: "engegov_query", arguments: JSON.stringify(args) } }],
+    },
+    { role: "tool", tool_call_id: toolCallId, content: result },
+  ];
+}
+
 async function executeTool(name: string, args: Record<string, unknown>): Promise<string> {
   const fnByName: Record<string, string> = {
     ipm_query: "ipm-query",
@@ -597,7 +683,11 @@ ${intensityRules}`;
     const serverTools = shouldProbeIpm(messages) ? TOOLS : [];
     const combinedTools = hasDesktopTools ? [...serverTools, ...desktopTools] : serverTools;
 
-    if (supportsTools && combinedTools.length > 0) {
+    const prefetchedMessages = await maybePrefetchEngegov(agentKey, workingMessages);
+    const engegovPrefetched = prefetchedMessages.length > workingMessages.length;
+    workingMessages = prefetchedMessages;
+
+    if (!engegovPrefetched && supportsTools && combinedTools.length > 0) {
       try {
         const probe = await fetch(firstCfg.url, {
           method: "POST",
