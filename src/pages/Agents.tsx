@@ -6,15 +6,18 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Card } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog";
- import { ArrowLeft, Plus, Sparkles, Trash2, Pencil, Scale, Code2 } from "lucide-react";
+  import { ArrowLeft, Plus, Sparkles, Trash2, Pencil, Scale, Code2, Landmark } from "lucide-react";
 import { toast } from "sonner";
  import { 
    BUILTIN_AGENTS, 
    KERA_FIT_AGENT_KEYS, 
    KERA_JURIDICO_AGENT_KEYS, 
    KERA_TECH_AGENT_KEYS,
-   KERA_JURIDICO_LABEL,
-   KERA_TECH_LABEL
+    KERA_JURIDICO_LABEL,
+    KERA_TECH_LABEL,
+    KERA_MUNICIPIO_AGENT_KEYS,
+    KERA_MUNICIPIO_LABEL,
+    KERA_MUNICIPIO_DESCRIPTION
  } from "@/lib/agents";
 import { KeraFitGroup } from "@/components/KeraFitGroup";
 import { useUserAccess } from "@/hooks/useUserAccess";
@@ -161,13 +164,15 @@ const AgentsPage = () => {
  
              const techVisible = KERA_TECH_AGENT_KEYS.some((k) => canSee(k));
              const techUnlocked = KERA_TECH_AGENT_KEYS.some((k) => canAccess(k));
+             const municipioVisible = KERA_MUNICIPIO_AGENT_KEYS.some((k) => canSee(k));
+             const municipioUnlocked = KERA_MUNICIPIO_AGENT_KEYS.some((k) => canAccess(k));
  
-             const groupedKeys = new Set([...KERA_FIT_AGENT_KEYS, ...KERA_JURIDICO_AGENT_KEYS, ...KERA_TECH_AGENT_KEYS]);
+             const groupedKeys = new Set([...KERA_FIT_AGENT_KEYS, ...KERA_JURIDICO_AGENT_KEYS, ...KERA_TECH_AGENT_KEYS, ...KERA_MUNICIPIO_AGENT_KEYS]);
              const others = BUILTIN_AGENTS.filter((a) => canSee(a.key) && !groupedKeys.has(a.key as any));
 
-             const renderAgentCard = (a: (typeof BUILTIN_AGENTS)[number]) => {
+             const renderAgentCard = (a: (typeof BUILTIN_AGENTS)[number], isModuleUnlocked?: boolean) => {
               const Icon = a.icon;
-              const allowed = canAccess(a.key);
+              const allowed = isModuleUnlocked || canAccess(a.key);
               return (
                 <Card
                   key={a.key}
@@ -211,7 +216,7 @@ const AgentsPage = () => {
                      unlocked={fitUnlocked}
                      renderAgent={(key) => {
                        const a = BUILTIN_AGENTS.find((x) => x.key === key as any);
-                       return a ? renderAgentCard(a) : null;
+                        return a ? renderAgentCard(a, fitUnlocked) : null;
                      }}
                    />
                  )}
@@ -222,7 +227,7 @@ const AgentsPage = () => {
                      unlocked={juridicoUnlocked}
                      renderAgent={(key) => {
                        const a = BUILTIN_AGENTS.find((x) => x.key === key as any);
-                       return a ? renderAgentCard(a) : null;
+                        return a ? renderAgentCard(a, juridicoUnlocked) : null;
                      }}
                      customKeys={KERA_JURIDICO_AGENT_KEYS as unknown as string[]}
                      icon={Scale}
@@ -235,7 +240,21 @@ const AgentsPage = () => {
                      unlocked={techUnlocked}
                      renderAgent={(key) => {
                        const a = BUILTIN_AGENTS.find((x) => x.key === key as any);
-                       return a ? renderAgentCard(a) : null;
+                        return a ? renderAgentCard(a, techUnlocked) : null;
+
+                 {municipioVisible && (
+                   <KeraFitGroup
+                     label={KERA_MUNICIPIO_LABEL}
+                     description={KERA_MUNICIPIO_DESCRIPTION}
+                     unlocked={municipioUnlocked}
+                     renderAgent={(key) => {
+                       const a = BUILTIN_AGENTS.find((x) => x.key === key as any);
+                       return a ? renderAgentCard(a, municipioUnlocked) : null;
+                     }}
+                     customKeys={KERA_MUNICIPIO_AGENT_KEYS as unknown as string[]}
+                     icon={Landmark}
+                   />
+                 )}
                      }}
                      customKeys={KERA_TECH_AGENT_KEYS as unknown as string[]}
                      icon={Code2}

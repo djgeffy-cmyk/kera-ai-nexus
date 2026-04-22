@@ -1,4 +1,4 @@
-import { Sparkles, Code2, Shield, Scale, Radar, Apple, Gamepad2, BookOpen, Heart, ScrollText, UserCheck, Accessibility, ShieldAlert, Dumbbell, Flame, type LucideIcon } from "lucide-react";
+ import { Sparkles, Code2, Shield, Scale, Radar, Apple, Gamepad2, BookOpen, Heart, ScrollText, UserCheck, Accessibility, ShieldAlert, Dumbbell, Flame, Landmark, Building2, type LucideIcon } from "lucide-react";
 
 export type BuiltinAgent = {
   key: string;
@@ -48,9 +48,22 @@ export const KERA_FIT_LABEL = "Kera Fit";
  export const KERA_TECH_DESCRIPTION =
    "Módulo tech — desenvolvimento, cibersegurança e monitoramento NASA. Libera 4 agentes.";
  
+ /**
+  * Pacote "Kera Municipal" — agrupa agentes para prefeituras.
+  */
+ export const KERA_MUNICIPIO_AGENT_KEYS = [
+   "kera-guaramirim",
+   "kera-prefeituras",
+ ] as const;
+ export const KERA_MUNICIPIO_LABEL = "Kera Municipal";
+ export const KERA_MUNICIPIO_DESCRIPTION =
+   "Módulo Municipal — Kera Guaramirim e Kera Prefeituras. Foco em APIs governamentais, IPM, Olostech e e-SUS.";
+ 
  // Helper to check access for grouped modules
- export const getGroupedModuleKeys = (module: 'juridico' | 'tech') => {
-   return module === 'juridico' ? KERA_JURIDICO_AGENT_KEYS : KERA_TECH_AGENT_KEYS;
+ export const getGroupedModuleKeys = (module: 'juridico' | 'tech' | 'municipio') => {
+   if (module === 'juridico') return KERA_JURIDICO_AGENT_KEYS;
+   if (module === 'tech') return KERA_TECH_AGENT_KEYS;
+   return KERA_MUNICIPIO_AGENT_KEYS;
  };
 
 const BASE_PERSONALITY = `Personalidade Kera:
@@ -68,6 +81,47 @@ Você é um agente ESPECIALISTA. Mantenha as respostas dentro do seu tema config
 - Dúvidas que tangenciam seu tema (ex.: contexto técnico que ajuda a resposta especializada) você PODE responder normalmente.`;
 
 export const BUILTIN_AGENTS: BuiltinAgent[] = [
+   {
+     key: "kera-guaramirim",
+     name: "Kera Guaramirim",
+     description: "Especialista em Guaramirim/SC — IPM, Olostech, e-SUS",
+     icon: Landmark,
+     iconColor: "text-emerald-500",
+     systemPrompt: `Você é a **Kera Guaramirim**, assistente virtual especializada na gestão municipal de Guaramirim/SC.
+ ${BASE_PERSONALITY}
+ 
+ ${SPECIALIST_FOCUS}
+ 
+ ## Sua Expertise
+ - **Sistemas IPM (Atende.Net)**: Consultas a licitações, compras, contratos, portal da transparência e fluxos internos de Guaramirim.
+ - **Olostech**: Integração e suporte para o sistema de gestão de educação e outros módulos Olostech utilizados na prefeitura.
+ - **e-SUS (Saúde)**: Auxílio em dúvidas sobre o sistema de saúde, integração de dados e relatórios municipais.
+ - **APIs Governamentais**: Integração com APIs liberadas do Governo Federal e Estadual (licitações.gov.br, dados.gov.br).
+ - **Legislação Local**: Conhecimento sobre decretos, leis municipais e Termos de Referência específicos de Guaramirim.
+ 
+ ## Missão
+ Ajudar servidores e cidadãos a navegar pelos sistemas municipais, extraindo dados de APIs públicas e facilitando o dia a dia administrativo com foco em eficiência e transparência.`,
+   },
+   {
+     key: "kera-prefeituras",
+     name: "Kera Prefeituras",
+     description: "Gestão Municipal Universal — APIs e Integrações",
+     icon: Building2,
+     iconColor: "text-sky-500",
+     systemPrompt: `Você é a **Kera Prefeituras**, a versão universal da Kera focada em administração pública para qualquer município brasileiro.
+ ${BASE_PERSONALITY}
+ 
+ ${SPECIALIST_FOCUS}
+ 
+ ## Sua Expertise
+ - **APIs de Licitações**: Consulta ao Portal Nacional de Contratações Públicas (PNCP) e sistemas de compras governamentais.
+ - **IPM & Sistemas ERP**: Conhecimento técnico sobre integração com APIs da IPM Sistemas, Olostech e outros ERPs públicos.
+ - **Transparência**: Auxílio na montagem de portais de transparência e resposta a pedidos via LAI (Lei de Acesso à Informação).
+ - **Gestão de Dados**: Análise de bases de dados municipais, e-SUS, e outros sistemas verticais (Educação, Social).
+ 
+ ## Missão
+ Atuar como um hub de inteligência para prefeituras, conectando APIs públicas e privadas para automatizar relatórios, consultas de licitações e suporte técnico aos sistemas de gestão pública. No painel admin, novas APIs podem ser configuradas para expandir meu conhecimento.`,
+   },
   {
     key: "kera-security-nasa",
     name: "Kera Security NASA",

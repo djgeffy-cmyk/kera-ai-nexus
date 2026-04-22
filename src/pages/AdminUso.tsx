@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
- import { ArrowLeft, ImageIcon, Users, TrendingUp, DollarSign, RefreshCw, Dumbbell, Scale, Code2 } from "lucide-react";
+ import { ArrowLeft, ImageIcon, Users, TrendingUp, DollarSign, RefreshCw, Dumbbell, Scale, Code2, Landmark } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 import { toast } from "sonner";
 import {
@@ -30,6 +30,7 @@ type UsageRow = {
    spaceincloud_active?: boolean;
    juridico_active?: boolean;
    tech_active?: boolean;
+   municipio_active?: boolean;
  };
 
 type DailyRow = {
@@ -65,10 +66,10 @@ export default function AdminUso() {
 
   const load = async () => {
     setLoading(true);
-     const [usageRes, dailyRes, fitRes] = await Promise.all([
+      const [usageRes, dailyRes, fitRes] = await Promise.all([
        supabase.rpc("admin_list_users_usage"),
        supabase.rpc("admin_image_usage_daily", { _days: 30 }),
-       supabase.from("profiles").select("user_id, spaceincloud_active, juridico_active, tech_active"),
+        supabase.from("profiles").select("user_id, spaceincloud_active, juridico_active, tech_active, municipio_active"),
      ]);
     if (usageRes.error) {
       toast.error(usageRes.error.message);
@@ -88,6 +89,7 @@ export default function AdminUso() {
          spaceincloud_active: !!p?.spaceincloud_active,
          juridico_active: !!p?.juridico_active,
          tech_active: !!p?.tech_active,
+         municipio_active: !!p?.municipio_active,
        };
      }));
     setDaily(((dailyRes.data || []) as any[]).map((d) => ({
@@ -129,10 +131,10 @@ export default function AdminUso() {
     );
   };
 
-   const toggleModule = async (user_id: string, module: 'fit' | 'juridico' | 'tech', active: boolean) => {
+    const toggleModule = async (user_id: string, module: 'fit' | 'juridico' | 'tech' | 'municipio', active: boolean) => {
      const prev = rows;
-     const field = module === 'fit' ? 'spaceincloud_active' : module === 'juridico' ? 'juridico_active' : 'tech_active';
-     const rpc = module === 'fit' ? 'admin_set_spaceincloud_active' : module === 'juridico' ? 'admin_set_juridico_active' : 'admin_set_tech_active';
+      const field = module === 'fit' ? 'spaceincloud_active' : module === 'juridico' ? 'juridico_active' : module === 'tech' ? 'tech_active' : 'municipio_active';
+      const rpc = module === 'fit' ? 'admin_set_spaceincloud_active' : module === 'juridico' ? 'admin_set_juridico_active' : module === 'tech' ? 'admin_set_tech_active' : 'admin_set_municipio_active';
      
      setRows((p) => p.map((r) => (r.user_id === user_id ? { ...r, [field]: active } : r)));
      
@@ -147,7 +149,7 @@ export default function AdminUso() {
        return;
      }
      
-     const labels = { fit: "Growth FIT", juridico: "Módulo Jurídico", tech: "Módulo Tecnologia" };
+      const labels = { fit: "Growth FIT", juridico: "Módulo Jurídico", tech: "Módulo Tecnologia", municipio: "Módulo Municipal" };
      toast.success(active ? `${labels[module]} liberado.` : `${labels[module]} removido.`);
    };
 
@@ -325,7 +327,8 @@ export default function AdminUso() {
                       <th className="px-3 py-2 text-right">Custo</th>
                        <th className="px-3 py-2 text-center w-20" title="Pacote Kera Fit">Fit</th>
                        <th className="px-3 py-2 text-center w-20" title="Módulo Jurídico">Jurídico</th>
-                       <th className="px-3 py-2 text-center w-20" title="Módulo Tecnologia">Tech</th>
+                        <th className="px-3 py-2 text-center w-20" title="Módulo Tecnologia">Tech</th>
+                        <th className="px-3 py-2 text-center w-20" title="Módulo Municipal">Mun</th>
                       <th className="px-3 py-2 w-44">Mudar plano</th>
                     </tr>
                   </thead>
@@ -363,6 +366,12 @@ export default function AdminUso() {
                              <div className="flex items-center justify-center gap-2">
                                <Code2 className={`h-3.5 w-3.5 ${r.tech_active ? "text-blue-300" : "text-muted-foreground/40"}`} />
                                <Switch checked={!!r.tech_active} onCheckedChange={(v) => toggleModule(r.user_id, 'tech', v)} />
+                             </div>
+                           </td>
+                           <td className="px-3 py-3">
+                             <div className="flex items-center justify-center gap-2">
+                               <Landmark className={`h-3.5 w-3.5 ${r.municipio_active ? "text-emerald-300" : "text-muted-foreground/40"}`} />
+                               <Switch checked={!!r.municipio_active} onCheckedChange={(v) => toggleModule(r.user_id, 'municipio', v)} />
                              </div>
                            </td>
                           <td className="px-3 py-3">

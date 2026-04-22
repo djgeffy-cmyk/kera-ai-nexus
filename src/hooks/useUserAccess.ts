@@ -30,7 +30,8 @@ export function useUserAccess() {
    const [paywallTrialCount, setPaywallTrialCount] = useState<number>(0);
    const [spaceincloudActive, setSpaceincloudActive] = useState<boolean>(false);
    const [juridicoActive, setJuridicoActive] = useState<boolean>(false);
-   const [techActive, setTechActive] = useState<boolean>(false);
+    const [techActive, setTechActive] = useState<boolean>(false);
+    const [municipioActive, setMunicipioActive] = useState<boolean>(false);
    const [mustChangePassword, setMustChangePassword] = useState<boolean>(false);
    const [grantedAgentKeys, setGrantedAgentKeys] = useState<string[]>([]);
 
@@ -53,7 +54,7 @@ export function useUserAccess() {
        const [{ data: profile }, { data: adminFlag }] = await Promise.all([
          supabase
            .from("profiles")
-           .select("selected_agents, onboarding_completed, paywall_trial_count, spaceincloud_active, juridico_active, tech_active, must_change_password, granted_agent_keys")
+            .select("selected_agents, onboarding_completed, paywall_trial_count, spaceincloud_active, juridico_active, tech_active, municipio_active, must_change_password, granted_agent_keys")
            .eq("user_id", u.user.id)
            .maybeSingle(),
         supabase.rpc("has_role", { _user_id: u.user.id, _role: "admin" }),
@@ -66,7 +67,8 @@ export function useUserAccess() {
       setPaywallTrialCount(((profile as any)?.paywall_trial_count as number | null) ?? 0);
        setSpaceincloudActive(!!(profile as any)?.spaceincloud_active);
        setJuridicoActive(!!(profile as any)?.juridico_active);
-       setTechActive(!!(profile as any)?.tech_active);
+        setTechActive(!!(profile as any)?.tech_active);
+        setMunicipioActive(!!(profile as any)?.municipio_active);
        setMustChangePassword(!!(profile as any)?.must_change_password);
        setGrantedAgentKeys((profile as any)?.granted_agent_keys || []);
       setIsAdmin(!!adminFlag);
@@ -145,6 +147,7 @@ export function useUserAccess() {
     paywallTrialCount,
     trialsRemaining: Math.max(0, PAYWALL_FREE_TRIES - paywallTrialCount),
     spaceincloudActive,
+    municipioActive,
     canAccess,
     canSee,
     consumeTrial,
