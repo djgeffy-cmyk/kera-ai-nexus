@@ -44,3 +44,6 @@ verify_jwt = false
 
 [functions.spaceincloud-sync]
 verify_jwt = false
+
+[functions.geo-check]
+verify_jwt = false
