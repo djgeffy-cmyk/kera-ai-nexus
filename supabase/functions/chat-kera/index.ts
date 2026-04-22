@@ -284,7 +284,7 @@ function getProviderChain(requested: Provider | undefined): ProviderConfig[] {
   return chain;
 }
 
-// ===== TOOL CALLING: ipm_query =====
+// ===== TOOL CALLING: ipm_query + govdigital_query =====
 const TOOLS = [
   {
     type: "function",
@@ -313,6 +313,35 @@ const TOOLS = [
       },
     },
   },
+  {
+    type: "function",
+    function: {
+      name: "govdigital_query",
+      description:
+        "Consulta o portal GovDigital 'Guaramirim na Mão' (https://guaramirimnamao.govdigital.app/) — chamados/ouvidoria do cidadão. EXIGE login (username + password) que o usuário fornece no chat. USO: quando o usuário pedir pra ver chamados dele, status de protocolo da ouvidoria, ou abrir solicitação. Se ainda não tiver as credenciais na conversa, chame mesmo assim com username/password vazios — a função vai responder 'needs_credentials' e aí você pede educadamente.",
+      parameters: {
+        type: "object",
+        properties: {
+          username: { type: "string", description: "Login/email do usuário no portal Guaramirim na Mão (fornecido pelo usuário no chat)." },
+          password: { type: "string", description: "Senha do usuário no portal (fornecida pelo usuário no chat). Não é armazenada." },
+          tipo: {
+            type: "string",
+            enum: ["meus_chamados", "detalhe", "generico"],
+            description: "meus_chamados = lista os chamados do usuário; detalhe = um chamado específico (use path); generico = página qualquer.",
+          },
+          path: {
+            type: "string",
+            description: "Path opcional dentro do portal (ex '/meus-chamados', '/protocolo/12345'). Padrão: /meus-chamados.",
+          },
+          filtro_status: {
+            type: "string",
+            description: "Filtra chamados cujo status contenha este texto (ex 'aberto', 'andamento', 'concluido'). Opcional.",
+          },
+        },
+        required: ["tipo"],
+      },
+    },
+  },
 ];
 
 // Heurística leve: só roda probe de tool calling se a última mensagem do usuário
@@ -322,6 +351,10 @@ const IPM_KEYWORDS = [
   "dispensa", "homologa", "protocolo", "contrato", "vencedor", "contratada",
   "transparência", "transparenc", "atende.net", "ipm", "guaramirim",
   "receita", "despesa", "empenho", "secretaria",
+  // GovDigital / Guaramirim na Mão
+  "chamado", "chamados", "ouvidoria", "guaramirim na mão", "guaramirim na mao",
+  "govdigital", "guaramirimnamao", "minha solicitação", "minhas solicitações",
+  "abri um chamado", "abrir chamado",
 ];
 
 function shouldProbeIpm(messages: Array<{ role: string; content: unknown }>): boolean {
@@ -334,15 +367,19 @@ function shouldProbeIpm(messages: Array<{ role: string; content: unknown }>): bo
 }
 
 async function executeTool(name: string, args: Record<string, unknown>): Promise<string> {
-  if (name !== "ipm_query") return JSON.stringify({ error: `Tool desconhecida: ${name}` });
+  const fnByName: Record<string, string> = {
+    ipm_query: "ipm-query",
+    govdigital_query: "govdigital-query",
+  };
+  const slug = fnByName[name];
+  if (!slug) return JSON.stringify({ error: `Tool desconhecida: ${name}` });
   try {
-    const r = await fetch(`${Deno.env.get("SUPABASE_URL")}/functions/v1/ipm-query`, {
+    const r = await fetch(`${Deno.env.get("SUPABASE_URL")}/functions/v1/${slug}`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(args),
     });
     const data = await r.json();
-    // Limita o tamanho da resposta pra não estourar contexto
     const str = JSON.stringify(data);
     return str.length > 12000 ? str.slice(0, 12000) + "\n...[truncado]" : str;
   } catch (e) {
