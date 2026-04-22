@@ -11,7 +11,15 @@ const corsHeaders = {
 const FIRECRAWL_V2 = "https://api.firecrawl.dev/v2";
 const PORTAL_BASE = "https://guaramirimnamao.govdigital.app";
 const LOGIN_URL = `${PORTAL_BASE}/login`;
-const DEFAULT_TARGET_PATHS = ["/meus-chamados", "/chamados", "/solicitacoes", "/ouvidoria", "/"];
+// Filament/Livewire admin panel — rotas comuns pós-login
+const DEFAULT_TARGET_PATHS = [
+  "/",
+  "/meus-chamados",
+  "/chamados",
+  "/solicitacoes",
+  "/ouvidoria",
+  "/protocolos",
+];
 
 const SCHEMA = {
   type: "object",
