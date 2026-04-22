@@ -1223,6 +1223,15 @@ Por favor, analise: há perda de pacote? jitter alto sugere instabilidade de rot
             <Monitor className="size-4 mr-2" /> Kera Desktop (PC)
           </Button>
         )}
+        {isIOS() && !isStandalonePWA() && (
+          <Button
+            variant="ghost"
+            onClick={() => navigate("/install-ios")}
+            className="w-full justify-start text-primary hover:text-primary"
+          >
+            <Smartphone className="size-4 mr-2" /> Instalar no iPhone
+          </Button>
+        )}
         {spaceincloudActive && (
           <Button
             variant="ghost"
