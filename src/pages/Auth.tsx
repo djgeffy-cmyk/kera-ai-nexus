@@ -303,7 +303,6 @@ const Auth = () => {
         style={{ filter: "brightness(0.5) contrast(1.1) saturate(0.8)" }}
       />
       <div aria-hidden className="absolute inset-0 bg-background/20" />
-      <RainOverlay />
       <ParticlesOverlay />
 
       {/* Áudio ambiente de chuva — começa após primeira interação */}
