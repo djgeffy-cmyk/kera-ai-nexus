@@ -1,4 +1,12 @@
+import { useLocation } from "react-router-dom";
+
 const Footer = () => {
+  const { pathname } = useLocation();
+  // Esconde o rodapé nas telas onde ele se sobrepõe ao composer do chat
+  // (chat principal "/" e "/chat"). Nessas telas a barra de digitação fica
+  // fixa no fundo e o rodapé acaba cobrindo o input.
+  if (pathname === "/" || pathname.startsWith("/chat")) return null;
+
   return (
     <>
       {/* Rodapé compacto (texto + QR) — escondido no mobile pra não atrapalhar o chat */}
