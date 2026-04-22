@@ -1157,7 +1157,7 @@ Por favor, analise: há perda de pacote? jitter alto sugere instabilidade de rot
           }
         }}
       >
-        {agentBgVideos[agentKey] && (
+        {showBackground && agentBgVideos[agentKey] && (
           <div
             key={agentKey}
             className="absolute inset-0 z-0 overflow-hidden pointer-events-none animate-[fade-in_800ms_ease-out]"
