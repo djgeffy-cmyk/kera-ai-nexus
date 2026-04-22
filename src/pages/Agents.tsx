@@ -220,6 +220,8 @@ const AgentsPage = () => {
                  {fitVisible && (
                    <KeraFitGroup
                      unlocked={fitUnlocked}
+                     open={groupOpen("fit")}
+                     onOpenChange={handleGroupToggle("fit")}
                      renderAgent={(key) => {
                        const a = BUILTIN_AGENTS.find((x) => x.key === key as any);
                         return a ? renderAgentCard(a, fitUnlocked) : null;
@@ -231,6 +233,8 @@ const AgentsPage = () => {
                    <KeraFitGroup
                      label={KERA_JURIDICO_LABEL}
                      unlocked={juridicoUnlocked}
+                     open={groupOpen("juridico")}
+                     onOpenChange={handleGroupToggle("juridico")}
                      renderAgent={(key) => {
                        const a = BUILTIN_AGENTS.find((x) => x.key === key as any);
                         return a ? renderAgentCard(a, juridicoUnlocked) : null;
@@ -244,6 +248,8 @@ const AgentsPage = () => {
                    <KeraFitGroup
                      label={KERA_TECH_LABEL}
                      unlocked={techUnlocked}
+                     open={groupOpen("tech")}
+                     onOpenChange={handleGroupToggle("tech")}
                      renderAgent={(key) => {
                        const a = BUILTIN_AGENTS.find((x) => x.key === key as any);
                         return a ? renderAgentCard(a, techUnlocked) : null;
@@ -253,6 +259,8 @@ const AgentsPage = () => {
                      label={KERA_MUNICIPIO_LABEL}
                      description={KERA_MUNICIPIO_DESCRIPTION}
                      unlocked={municipioUnlocked}
+                     open={groupOpen("municipio")}
+                     onOpenChange={handleGroupToggle("municipio")}
                      renderAgent={(key) => {
                        const a = BUILTIN_AGENTS.find((x) => x.key === key as any);
                        return a ? renderAgentCard(a, municipioUnlocked) : null;
