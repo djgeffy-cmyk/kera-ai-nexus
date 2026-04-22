@@ -360,7 +360,9 @@ Deno.serve(async (req) => {
     //   esculacha com "seu hacker de merda" + usa o NOME COMPLETO ("Geverson Carlos Dalpra")
     //   tirando onda, tom mais ácido possível.
     const email = await getUserEmailFromAuth(req);
-    const profile = email ? USER_PROFILES[email] : null;
+    // Em modo demo (visitante sem conta), NUNCA aplica apelido pessoal nem
+    // brincadeiras internas — qualquer pessoa testando vê a Kera "limpa".
+    const profile = !demoMode && email ? USER_PROFILES[email] : null;
     let finalSystem = baseSystem;
     if (profile) {
       const lastUserMsg = [...messages].reverse().find((m: any) => m?.role === "user");
