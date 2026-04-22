@@ -120,7 +120,9 @@ async function scrapeAuthed(opts: {
       method: "POST",
       headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
       body: JSON.stringify({
-        url: LOGIN_URL,
+        // O Firecrawl scrapeia a URL final após executar todas as actions.
+        // Começamos pela URL alvo; a primeira action navega pro login, faz auth, e volta pra cá.
+        url: opts.url,
         formats: ["markdown", { type: "json", schema: SCHEMA, prompt: opts.prompt }],
         onlyMainContent: false,
         actions,
@@ -139,15 +141,17 @@ async function scrapeAuthed(opts: {
     const items = (payload?.json?.items ?? []) as unknown[];
     const preview = (payload?.markdown ?? "").slice(0, 1500);
 
-    // Heurística: se a página final ainda tem "Entrar" / "Login" no markdown,
-    // provavelmente o login falhou (credencial errada ou seletor não bateu).
-    const looksLikeLoginPage = /\b(entrar|login|esqueci.{0,10}senha)\b/i.test(preview) &&
+    // Heurística: se a página final ainda tem "Esqueceu sua senha" / "Lembre de mim"
+    // (textos exclusivos da tela de login do Filament), o login falhou.
+    const looksLikeLoginPage =
+      /(esqueceu sua senha|lembre de mim|e-?mail.{0,30}senha)/i.test(preview) &&
       items.length === 0;
     if (looksLikeLoginPage) {
       return {
         items: [],
         raw_preview: preview,
-        error: "Login parece ter falhado (página final ainda mostra tela de login). Confirma usuário e senha.",
+        error:
+          "Login não passou — o portal devolveu a tela de login. Confere se o e-mail e senha estão certinhos (é o mesmo cadastro que tu usa em guaramirimnamao.govdigital.app).",
       };
     }
 
