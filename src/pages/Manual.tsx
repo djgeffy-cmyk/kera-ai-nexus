@@ -27,6 +27,11 @@ import {
   Lock,
   Zap,
   CheckCircle2,
+  MonitorDown,
+  Globe,
+  Terminal,
+  Apple as AppleIcon,
+  Download,
 } from "lucide-react";
 
 type AgentInfo = {
@@ -251,6 +256,102 @@ export default function Manual() {
               Ver todos os planos
             </Button>
           </div>
+        </Section>
+
+        {/* KERA DESKTOP — destaque grande */}
+        <Section icon={MonitorDown} title="Kera Desktop — controle seu PC pela voz">
+          <Card className="p-6 md:p-8 border-2 border-primary/40 bg-gradient-to-br from-primary/10 via-background to-primary/5 shadow-glow">
+            <div className="flex flex-col md:flex-row gap-6 items-start">
+              <div className="size-16 rounded-2xl bg-primary/20 flex items-center justify-center shrink-0">
+                <MonitorDown className="size-8 text-primary" />
+              </div>
+              <div className="flex-1 space-y-4">
+                <div>
+                  <h3 className="text-xl md:text-2xl font-display text-glow mb-2">
+                    Kera vira sua assistente real no computador
+                  </h3>
+                  <p className="text-muted-foreground">
+                    Com o app desktop instalado, a Kera <strong className="text-foreground">abre programas, lê arquivos, executa comandos, controla o sistema, instala apps</strong> e muito mais — tudo por voz ou texto.
+                  </p>
+                </div>
+
+                {/* Aviso importante: web vs desktop */}
+                <div className="rounded-lg border border-amber-500/40 bg-amber-500/10 p-4">
+                  <div className="flex gap-3">
+                    <Globe className="size-5 text-amber-400 shrink-0 mt-0.5" />
+                    <div className="text-sm">
+                      <p className="font-bold text-amber-200 mb-1">⚠️ Importante: funciona só no app desktop</p>
+                      <p className="text-amber-100/90">
+                        Pedir pra Kera <em>"abrir o Spotify"</em> ou <em>"executar um comando"</em> aqui no <strong>navegador web não funciona</strong> — o navegador não tem permissão de mexer no seu computador. Por isso essas funções <strong>existem apenas no Kera Desktop</strong>.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* O que o Desktop faz */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-sm">
+                  {[
+                    "Abrir aplicativos (VS Code, Spotify, Chrome…)",
+                    "Ler e gravar arquivos em pastas autorizadas",
+                    "Executar comandos no terminal",
+                    "Instalar apps via APT / Flatpak (Linux)",
+                    "Tirar screenshot e analisar",
+                    "Desligar, reiniciar, hibernar o PC",
+                    "Ler/escrever na área de transferência",
+                    "Mascote flutuante com hotword",
+                  ].map((f) => (
+                    <div key={f} className="flex items-start gap-2">
+                      <CheckCircle2 className="size-4 text-primary mt-0.5 shrink-0" />
+                      <span>{f}</span>
+                    </div>
+                  ))}
+                </div>
+
+                {/* Plataformas */}
+                <div className="flex flex-wrap gap-2 pt-2">
+                  <Badge variant="outline" className="gap-1.5 border-primary/30 px-3 py-1.5">
+                    <Terminal className="size-3.5" /> Windows
+                  </Badge>
+                  <Badge variant="outline" className="gap-1.5 border-primary/30 px-3 py-1.5">
+                    <AppleIcon className="size-3.5" /> macOS (Intel + M1/M2/M3)
+                  </Badge>
+                  <Badge variant="outline" className="gap-1.5 border-primary/30 px-3 py-1.5">
+                    <Terminal className="size-3.5" /> Linux (AppImage)
+                  </Badge>
+                </div>
+
+                {/* CTAs grandes */}
+                <div className="flex flex-col sm:flex-row gap-3 pt-3">
+                  <Button
+                    onClick={() => navigate("/desktop")}
+                    size="lg"
+                    className="bg-gradient-cyber text-primary-foreground shadow-glow flex-1 sm:flex-none"
+                  >
+                    <Download className="size-5 mr-2" />
+                    Baixar Kera Desktop
+                  </Button>
+                  <Button
+                    asChild
+                    variant="outline"
+                    size="lg"
+                    className="border-primary/40"
+                  >
+                    <a
+                      href="https://github.com/djgeffy-cmyk/kera-ai-nexus/releases/latest"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
+                      Ver releases no GitHub
+                    </a>
+                  </Button>
+                </div>
+
+                <p className="text-xs text-muted-foreground pt-2">
+                  💡 <strong>Atualização automática:</strong> uma vez instalado, novas versões chegam sozinhas via electron-updater.
+                </p>
+              </div>
+            </div>
+          </Card>
         </Section>
 
         {/* SEGURANÇA */}
