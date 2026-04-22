@@ -69,6 +69,24 @@ Deno.serve(async (req) => {
 
     // action === "consume"
     if (used >= DEMO_LIMIT) {
+      // Registra tentativa de abuso (já estava bloqueado e tentou de novo)
+      const userAgent = req.headers.get("user-agent") ?? null;
+      const { error: logErr } = await supabase
+        .from("demo_abuse_log")
+        .insert({
+          ip_hash: ipHash,
+          attempted_count: used,
+          user_agent: userAgent,
+        });
+      if (logErr) {
+        console.error("[check-demo-quota] failed to log abuse attempt", logErr);
+      } else {
+        console.log("[check-demo-quota] abuse attempt logged", {
+          ip_hash_prefix: ipHash.slice(0, 8),
+          attempted_count: used,
+        });
+      }
+
       return json(429, {
         used,
         remaining: 0,
