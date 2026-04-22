@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
-import { Volume2, VolumeX, MousePointerClick } from "lucide-react";
+import { Volume2, VolumeX, MousePointerClick, Video, VideoOff } from "lucide-react";
 import { motion } from "framer-motion";
 import keraAvatar from "@/assets/kera-avatar.png";
 import rainAmbientUrl from "@/assets/rain-ambient.mp3";
@@ -27,6 +27,17 @@ const Welcome = () => {
   const [demoOpen, setDemoOpen] = useState(false);
   const [bgUrl, setBgUrl] = useState(bgVideoOptions[0].url);
   const [avatarUrl, setAvatarUrl] = useState(avatarVideoOptions[0].url);
+  const BG_KEY = "kera:global:show-bg";
+  const [showBackground, setShowBackground] = useState<boolean>(() => {
+    if (typeof window === "undefined") return true;
+    try {
+      const v = window.localStorage.getItem(BG_KEY);
+      return v === null ? true : v === "1";
+    } catch {
+      return true;
+    }
+  });
+
   const RAIN_MUTE_KEY = "kera:auth:rain-muted";
   const [audioMuted, setAudioMuted] = useState<boolean>(() => {
     if (typeof window === "undefined") return false;
@@ -68,35 +79,55 @@ const Welcome = () => {
 
   useEffect(() => {
     try {
+      window.localStorage.setItem(BG_KEY, showBackground ? "1" : "0");
+    } catch {}
+  }, [showBackground]);
+
+  useEffect(() => {
+    try {
       window.localStorage.setItem(RAIN_MUTE_KEY, audioMuted ? "1" : "0");
     } catch {}
   }, [audioMuted]);
 
   return (
     <main className="relative min-h-screen flex items-center justify-center p-4 overflow-hidden bg-background">
-      <video
-        ref={bgVideoRef}
-        key={bgUrl}
-        aria-hidden
-        autoPlay
-        loop
-        muted
-        playsInline
-        preload="auto"
-        poster={keraAvatar}
-        className="absolute inset-0 w-full h-full object-cover object-bottom"
-        src={bgUrl}
-      />
+      {showBackground && (
+        <video
+          ref={bgVideoRef}
+          key={bgUrl}
+          aria-hidden
+          autoPlay
+          loop
+          muted
+          playsInline
+          preload="auto"
+          poster={keraAvatar}
+          className="absolute inset-0 w-full h-full object-cover object-bottom"
+          src={bgUrl}
+        />
+      )}
 
       <audio ref={audioRef} src={rainAmbientUrl} loop preload="auto" muted={audioMuted} aria-hidden />
 
-      <button
-        type="button"
-        onClick={() => setAudioMuted((m) => !m)}
-        className="fixed top-4 right-4 z-40 size-10 rounded-full bg-background/40 backdrop-blur-md border border-white/10 flex items-center justify-center text-primary/80 hover:text-primary transition-all shadow-soft"
-      >
-        {audioMuted ? <VolumeX className="size-4" /> : <Volume2 className="size-4" />}
-      </button>
+      <div className="fixed top-4 right-4 z-40 flex flex-col gap-2">
+        <button
+          type="button"
+          onClick={() => setShowBackground((v) => !v)}
+          title={showBackground ? "Desativar vídeo de fundo" : "Ativar vídeo de fundo"}
+          className="size-10 rounded-full bg-background/40 backdrop-blur-md border border-white/10 flex items-center justify-center text-primary/80 hover:text-primary transition-all shadow-soft"
+        >
+          {showBackground ? <Video className="size-4" /> : <VideoOff className="size-4" />}
+        </button>
+
+        <button
+          type="button"
+          onClick={() => setAudioMuted((m) => !m)}
+          title={audioMuted ? "Ativar som ambiente" : "Desativar som ambiente"}
+          className="size-10 rounded-full bg-background/40 backdrop-blur-md border border-white/10 flex items-center justify-center text-primary/80 hover:text-primary transition-all shadow-soft"
+        >
+          {audioMuted ? <VolumeX className="size-4" /> : <Volume2 className="size-4" />}
+        </button>
+      </div>
 
       <div
         className="absolute inset-0 pointer-events-none"

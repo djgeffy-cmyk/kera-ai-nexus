@@ -62,6 +62,8 @@ import {
   Languages,
    Baby,
    ShieldAlert,
+   Video,
+   VideoOff,
 } from "lucide-react";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -230,6 +232,19 @@ const Chat = () => {
   const [hasRemoteTTS, setHasRemoteTTS] = useState(false);
   const [attachments, setAttachments] = useState<Attachment[]>([]);
   const [dragging, setDragging] = useState(false);
+  const BG_KEY = "kera:global:show-bg";
+  const [showBackground, setShowBackground] = useState<boolean>(() => {
+    try {
+      const v = localStorage.getItem(BG_KEY);
+      return v === null ? true : v === "1";
+    } catch {
+      return true;
+    }
+  });
+  useEffect(() => {
+    try { localStorage.setItem(BG_KEY, showBackground ? "1" : "0"); } catch {}
+  }, [showBackground]);
+
   const [sidebarOpen, setSidebarOpen] = useState<boolean>(() => {
     try { return localStorage.getItem("kera:sidebarOpen") !== "0"; } catch { return true; }
   });
@@ -1142,7 +1157,7 @@ Por favor, analise: há perda de pacote? jitter alto sugere instabilidade de rot
           }
         }}
       >
-        {agentBgVideos[agentKey] && (
+        {showBackground && agentBgVideos[agentKey] && (
           <div
             key={agentKey}
             className="absolute inset-0 z-0 overflow-hidden pointer-events-none animate-[fade-in_800ms_ease-out]"
@@ -1332,24 +1347,37 @@ Por favor, analise: há perda de pacote? jitter alto sugere instabilidade de rot
                 <FileText className="size-5" />
               </Button>
             )}
-            <Button
-              variant="ghost" size="icon"
-              onClick={() => {
-                const next = !voiceMode;
-                setVoiceMode(next);
-                try { localStorage.setItem("kera:voiceMode", next ? "1" : "0"); } catch {}
-                if (next) {
-                  voice.warmUpTTS();
-                  toast.success("Modo voz ativado — Kera vai falar as respostas");
-                } else {
-                  voice.stopSpeaking();
-                }
-              }}
-              aria-label="Modo voz"
-              className={`shrink-0 h-9 w-9 ${voiceMode ? "text-primary" : ""}`}
-            >
-              {voiceMode ? <Volume2 className="size-5" /> : <VolumeX className="size-5" />}
-            </Button>
+            <div className="flex items-center gap-1 bg-background/20 backdrop-blur-md rounded-full border border-white/5 p-0.5">
+              <Button
+                variant="ghost" size="icon"
+                onClick={() => setShowBackground(!showBackground)}
+                aria-label={showBackground ? "Desativar vídeo de fundo" : "Ativar vídeo de fundo"}
+                title={showBackground ? "Desativar vídeo de fundo" : "Ativar vídeo de fundo"}
+                className={`shrink-0 h-8 w-8 rounded-full transition-all ${showBackground ? "text-primary bg-primary/10" : "text-muted-foreground hover:text-foreground"}`}
+              >
+                {showBackground ? <Video className="size-4" /> : <VideoOff className="size-4" />}
+              </Button>
+
+              <Button
+                variant="ghost" size="icon"
+                onClick={() => {
+                  const next = !voiceMode;
+                  setVoiceMode(next);
+                  try { localStorage.setItem("kera:voiceMode", next ? "1" : "0"); } catch {}
+                  if (next) {
+                    voice.warmUpTTS();
+                    toast.success("Modo voz ativado — Kera vai falar as respostas");
+                  } else {
+                    voice.stopSpeaking();
+                  }
+                }}
+                aria-label="Modo voz"
+                title={voiceMode ? "Desativar modo voz" : "Ativar modo voz"}
+                className={`shrink-0 h-8 w-8 rounded-full transition-all ${voiceMode ? "text-primary bg-primary/10" : "text-muted-foreground hover:text-foreground"}`}
+              >
+                {voiceMode ? <Volume2 className="size-4" /> : <VolumeX className="size-4" />}
+              </Button>
+            </div>
           </div>
         </header>
 

@@ -180,7 +180,7 @@ export const DemoKeraDialog = ({ open, onOpenChange, onWantToSignUp }: DemoKeraD
   // Grupo expandido no seletor (só um por vez). null = nenhum aberto.
   const [openGroup, setOpenGroup] = useState<string | null>(null);
   // Preferência do visitante: mostrar vídeo da Kera atrás do chat ou fundo escuro limpo.
-  const BG_KEY = "kera-demo-show-bg";
+  const BG_KEY = "kera:global:show-bg";
   const [showBackground, setShowBackground] = useState<boolean>(() => {
     try {
       const v = localStorage.getItem(BG_KEY);
