@@ -1,20 +1,16 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { canSeeAgent, GUARAMIRIM_EMAIL_DOMAIN } from "@/lib/agents";
+import { canSeeAgent, GUARAMIRIM_EMAIL_DOMAIN, KERA_FIT_AGENT_KEYS } from "@/lib/agents";
 
 /** Quantas perguntas "palhinha" o usuário pode fazer a um agente bloqueado antes do paywall. */
 export const PAYWALL_FREE_TRIES = 3;
 
 /**
- * Agentes que fazem parte do pacote Growth FIT (Kera + SpaceInCloud).
+ * Agentes que fazem parte do pacote Kera Fit (Kera + SpaceInCloud).
  * Quem tem `spaceincloud_active = true` no profile vê esses 3 liberados,
  * independentemente do plano padrão.
  */
-export const FIT_AGENT_KEYS = new Set<string>([
-  "kera-nutri",
-  "kera-treinador",
-  "kera-iron",
-]);
+export const FIT_AGENT_KEYS = new Set<string>(KERA_FIT_AGENT_KEYS);
 
 /**
  * Carrega informações de acesso do usuário logado:
