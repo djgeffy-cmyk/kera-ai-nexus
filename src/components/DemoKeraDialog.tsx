@@ -445,7 +445,7 @@ export const DemoKeraDialog = ({ open, onOpenChange, onWantToSignUp }: DemoKeraD
           </div>
         ) : (
           <div className="relative border-t border-white/5 px-6 py-4">
-            <div className="kera-ai-composer flex items-center gap-2 px-2 py-1.5">
+            <div className="flex items-center gap-2 px-3 py-2 rounded-2xl bg-background/85 backdrop-blur-xl border border-primary/30 shadow-[0_8px_28px_-8px_hsl(var(--primary)/0.4)] focus-within:border-primary/60 transition-colors">
               <Input
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
@@ -457,13 +457,13 @@ export const DemoKeraDialog = ({ open, onOpenChange, onWantToSignUp }: DemoKeraD
                 }}
                 placeholder={`Pergunta pra ${currentAgent?.name ?? "Kera"}…`}
                 disabled={loading}
-                className="flex-1 border-0 bg-transparent shadow-none focus-visible:ring-0 focus-visible:ring-offset-0 focus:bg-transparent text-base placeholder:text-muted-foreground/50"
+                className="flex-1 border-0 bg-transparent shadow-none focus-visible:ring-0 focus-visible:ring-offset-0 focus:bg-transparent text-base text-foreground placeholder:text-muted-foreground/60"
                 autoFocus
               />
               <Button
                 onClick={send}
                 disabled={!input.trim() || loading}
-                className="kera-ai-cta h-10 px-4 rounded-xl font-semibold shrink-0 gap-1.5"
+                className="h-10 px-4 rounded-xl font-semibold shrink-0 gap-1.5 bg-primary text-primary-foreground hover:bg-primary/90 shadow-glow"
               >
                 {loading ? (
                   <Loader2 className="size-4 animate-spin" />
@@ -475,7 +475,7 @@ export const DemoKeraDialog = ({ open, onOpenChange, onWantToSignUp }: DemoKeraD
                 )}
               </Button>
             </div>
-            <div className="mt-2 flex items-center justify-center gap-2 text-[10px] text-muted-foreground/50">
+            <div className="mt-2 flex items-center justify-center gap-2 text-[11px] text-foreground/70">
               <span>Modo demo · respostas filtradas · sem histórico salvo</span>
               <span className="opacity-40">·</span>
               <button
@@ -484,7 +484,7 @@ export const DemoKeraDialog = ({ open, onOpenChange, onWantToSignUp }: DemoKeraD
                   onOpenChange(false);
                   onWantToSignUp();
                 }}
-                className="text-muted-foreground/70 hover:text-primary transition-colors underline-offset-2 hover:underline"
+                className="text-primary/90 hover:text-primary transition-colors underline-offset-2 underline"
               >
                 Já tem conta? Entrar
               </button>
