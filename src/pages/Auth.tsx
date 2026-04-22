@@ -313,7 +313,20 @@ const Auth = () => {
   };
 
   return (
-    <main ref={mainRef} className="relative min-h-screen flex items-center justify-center p-4 overflow-hidden">
+    <main
+      ref={mainRef}
+      className="relative min-h-screen flex items-center justify-center p-4 overflow-hidden"
+      style={{
+        // Fallback imediato: gradiente escuro + poster da Kera. Garante que a
+        // tela NUNCA fique 100% preta enquanto o vídeo de chuva (MBs) carrega
+        // ou quando o navegador/PC bloqueia autoplay/decodificação de vídeo.
+        backgroundColor: "hsl(var(--background))",
+        backgroundImage: `radial-gradient(ellipse at center, hsl(var(--primary) / 0.18), transparent 60%), url(${keraAvatar})`,
+        backgroundSize: "cover, cover",
+        backgroundPosition: "center, center",
+        backgroundRepeat: "no-repeat, no-repeat",
+      }}
+    >
       <video
         ref={bgVideoRef}
         aria-hidden
