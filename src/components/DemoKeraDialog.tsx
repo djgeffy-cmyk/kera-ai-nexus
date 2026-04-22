@@ -72,7 +72,7 @@ export const DemoKeraDialog = ({ open, onOpenChange, onWantToSignUp }: DemoKeraD
     return stored ? parseInt(stored, 10) : 0;
   });
   const scrollRef = useRef<HTMLDivElement>(null);
-  const rainVideoUrl = assetUrl(keraAvatarVideo);
+  const rainVideoUrl = KERA_RAIN_VIDEO_URL;
 
   const remaining = Math.max(0, DEMO_LIMIT - used);
   const exhausted = remaining === 0;
@@ -200,8 +200,7 @@ export const DemoKeraDialog = ({ open, onOpenChange, onWantToSignUp }: DemoKeraD
             </motion.div>
             <div className="flex-1 min-w-0">
               <DialogHeader className="space-y-1 text-left">
-                <DialogTitle className="font-display text-glow flex items-center gap-2 text-lg">
-                  <UmbrellaCorpLogo size={22} />
+                <DialogTitle className="font-display text-glow text-lg">
                   Teste a Kera ao vivo
                 </DialogTitle>
                 <DialogDescription className="text-xs">
