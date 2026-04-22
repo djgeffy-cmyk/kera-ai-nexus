@@ -11,8 +11,10 @@ import { ShieldCheck, KeyRound, Mail, ScanFace, Eye, EyeOff, Sparkles, MousePoin
 import { motion, AnimatePresence } from "framer-motion";
 import keraAvatar from "@/assets/kera-avatar.png";
 import keraAvatarVideo from "@/assets/kera-avatar-rain.mp4.asset.json";
-import rainBgVideo from "@/assets/rain-bg-realistic.mp4.asset.json";
 import rainAmbientUrl from "@/assets/rain-ambient.mp3";
+
+// URL de vídeo de chuva realista (Mixkit - Royalty Free)
+const REALISTIC_RAIN_VIDEO_URL = "https://assets.mixkit.co/videos/preview/mixkit-rain-falling-on-a-window-pane-1557-large.mp4";
 import ParticlesOverlay from "@/components/ParticlesOverlay";
 import DemoKeraDialog from "@/components/DemoKeraDialog";
 import { assetUrl } from "@/lib/assetUrl";
@@ -121,7 +123,7 @@ const Auth = () => {
   const [resetNote, setResetNote] = useState("");
   const [resetLoading, setResetLoading] = useState(false);
   const rainVideoUrl = assetUrl(keraAvatarVideo);
-  const rainBgUrl = assetUrl(rainBgVideo);
+  const rainBgUrl = REALISTIC_RAIN_VIDEO_URL;
 
   useEffect(() => {
     document.title = "Kera AI — Entrar";
@@ -298,9 +300,9 @@ const Auth = () => {
         playsInline
         className="absolute inset-0 w-full h-full object-cover"
         src={rainBgUrl}
-        poster={keraAvatar}
+        style={{ filter: "brightness(0.5) contrast(1.1) saturate(0.8)" }}
       />
-      <div aria-hidden className="absolute inset-0 bg-background/30" />
+      <div aria-hidden className="absolute inset-0 bg-background/20" />
       <ParticlesOverlay />
 
       {/* Áudio ambiente de chuva — começa após primeira interação */}
