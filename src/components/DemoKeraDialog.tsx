@@ -295,7 +295,7 @@ export const DemoKeraDialog = ({ open, onOpenChange, onWantToSignUp }: DemoKeraD
         </div>
 
         {exhausted ? (
-          <div className="border-t border-border/40 pt-4 space-y-3">
+          <div className="border-t border-border/40 px-5 py-4 space-y-3">
             <div className="flex items-center gap-2 text-sm text-amber-400">
               <Lock className="size-4" />
               Você usou suas 3 perguntas grátis. Crie sua conta pra liberar tudo.
@@ -311,7 +311,7 @@ export const DemoKeraDialog = ({ open, onOpenChange, onWantToSignUp }: DemoKeraD
             </Button>
           </div>
         ) : (
-          <div className="border-t border-border/40 pt-3 flex gap-2">
+          <div className="border-t border-border/40 px-5 py-3 flex gap-2">
             <Input
               value={input}
               onChange={(e) => setInput(e.target.value)}
@@ -321,7 +321,7 @@ export const DemoKeraDialog = ({ open, onOpenChange, onWantToSignUp }: DemoKeraD
                   send();
                 }
               }}
-              placeholder="Pergunta o que quiser…"
+              placeholder={`Pergunta pra ${currentAgent?.name ?? "Kera"}…`}
               disabled={loading}
               className="bg-input/50 flex-1"
               autoFocus
