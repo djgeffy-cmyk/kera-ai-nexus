@@ -76,6 +76,7 @@ export function useVoice(opts: { useElevenLabs?: boolean; useRemoteTTS?: boolean
   const recRef = useRef<SR | null>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const pendingAudioRef = useRef<HTMLAudioElement | null>(null);
+  const primedAudioRef = useRef<HTMLAudioElement | null>(null);
   const inflightRef = useRef<AbortController | null>(null);
   const unlockHandlerRef = useRef<(() => void) | null>(null);
   const sessionRef = useRef(0);
@@ -163,7 +164,11 @@ export function useVoice(opts: { useElevenLabs?: boolean; useRemoteTTS?: boolean
 
   const playAudioBlob = useCallback((blob: Blob, sessionId: number) => {
     return new Promise<void>((resolve, reject) => {
-      const audio = new Audio();
+      // Reusa o <audio> "primed" criado durante o clique do usuário (warmUpTTS),
+      // porque no iOS Safari o token de gesture só vale pro elemento que
+      // recebeu o primeiro .play(). Se não houver, cria um novo (desktop).
+      const audio = primedAudioRef.current ?? new Audio();
+      primedAudioRef.current = null;
       const url = URL.createObjectURL(blob);
       let settled = false;
 
@@ -187,6 +192,8 @@ export function useVoice(opts: { useElevenLabs?: boolean; useRemoteTTS?: boolean
       playbackRejectRef.current = rejectPlayback;
       audio.preload = "auto";
       audio.setAttribute("playsinline", "true");
+      audio.muted = false;
+      audio.volume = 1;
       audio.src = url;
       audioRef.current = audio;
 
@@ -307,10 +314,29 @@ export function useVoice(opts: { useElevenLabs?: boolean; useRemoteTTS?: boolean
   // "Warm-up" do contexto de áudio: chamado dentro de um clique do usuário para
   // destravar reprodução de Audio() em iOS Safari.
   const warmUpTTS = useCallback(() => {
+    // No iOS, o gesture-token só desbloqueia o elemento <audio> que recebeu
+    // o .play() durante o clique. Por isso criamos AGORA o elemento que vai
+    // tocar a fala, damos um play() mudo (com src silencioso) e guardamos a
+    // referência. Quando o blob real chegar, só trocamos o src e tocamos.
     try {
+      if (primedAudioRef.current) return; // já existe um pronto
       const a = new Audio();
+      a.setAttribute("playsinline", "true");
+      a.preload = "auto";
       a.muted = true;
-      a.play().catch(() => {});
+      // src "silencioso" mínimo (mp3 vazio data URI) só pra .play() resolver.
+      a.src =
+        "data:audio/mp3;base64,SUQzBAAAAAAAI1RTU0UAAAAPAAADTGF2ZjU4Ljc2LjEwMAAAAAAAAAAAAAAA//tQxAADB8AhSmxhIIEVCSiJrDCQBTcu3UrAIwUdkRgQbFAZC1CQEwTJ9mjRvBA4UOLD8nKVOWfh+UlK3z/177OXrfOdKl7097v///////////////////xQAOAAYABwAFiBwAGAAcABwAGwgcABwAFkBwAGAAcABwAFkBwAGAAcABwAGwgcABwAFkBwAGAAcABwAFkBwAGAAcABwAGwgcA//sQxBQAAAGkAAAAAAAAA0gAAAAAAEhJU1RPUlk=";
+      const p = a.play();
+      if (p && typeof p.then === "function") {
+        p.then(() => {
+          // pausa imediato — só queríamos desbloquear o elemento.
+          try { a.pause(); a.currentTime = 0; } catch {}
+        }).catch(() => {
+          // ignore — já gastamos o gesture; ainda guardamos o ref pra reuso.
+        });
+      }
+      primedAudioRef.current = a;
     } catch {}
   }, []);
 
