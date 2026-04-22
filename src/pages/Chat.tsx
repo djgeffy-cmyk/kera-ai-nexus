@@ -62,6 +62,8 @@ import {
   Languages,
    Baby,
    ShieldAlert,
+   Video,
+   VideoOff,
 } from "lucide-react";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -230,6 +232,19 @@ const Chat = () => {
   const [hasRemoteTTS, setHasRemoteTTS] = useState(false);
   const [attachments, setAttachments] = useState<Attachment[]>([]);
   const [dragging, setDragging] = useState(false);
+  const BG_KEY = "kera-chat-show-bg";
+  const [showBackground, setShowBackground] = useState<boolean>(() => {
+    try {
+      const v = localStorage.getItem(BG_KEY);
+      return v === null ? true : v === "1";
+    } catch {
+      return true;
+    }
+  });
+  useEffect(() => {
+    try { localStorage.setItem(BG_KEY, showBackground ? "1" : "0"); } catch {}
+  }, [showBackground]);
+
   const [sidebarOpen, setSidebarOpen] = useState<boolean>(() => {
     try { return localStorage.getItem("kera:sidebarOpen") !== "0"; } catch { return true; }
   });
