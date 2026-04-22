@@ -1,0 +1,154 @@
+import { useEffect, useRef, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { supabase } from "@/integrations/supabase/client";
+import { Button } from "@/components/ui/button";
+import { Volume2, VolumeX, MousePointerClick } from "lucide-react";
+import { motion } from "framer-motion";
+import keraAvatar from "@/assets/kera-avatar.png";
+import rainAmbientUrl from "@/assets/rain-ambient.mp3";
+import DemoKeraDialog from "@/components/DemoKeraDialog";
+
+const rainBgUrl = "https://ytixqgkzqgeoxrbmjqbo.supabase.co/storage/v1/object/public/kera-videos/kera-chuva.mp4?v=2026-04-22";
+const rainVideoUrl = "https://ytixqgkzqgeoxrbmjqbo.supabase.co/storage/v1/object/public/kera-videos/kera-avatar-rain.mp4?v=2026-04-22";
+
+const Welcome = () => {
+  const navigate = useNavigate();
+  const [demoOpen, setDemoOpen] = useState(false);
+  const RAIN_MUTE_KEY = "kera:auth:rain-muted";
+  const [audioMuted, setAudioMuted] = useState<boolean>(() => {
+    if (typeof window === "undefined") return false;
+    try {
+      return window.localStorage.getItem(RAIN_MUTE_KEY) === "1";
+    } catch {
+      return false;
+    }
+  });
+  const audioRef = useRef<HTMLAudioElement | null>(null);
+  const bgVideoRef = useRef<HTMLVideoElement | null>(null);
+
+  useEffect(() => {
+    document.title = "Kera AI — Bem-vindo";
+    supabase.auth.getSession().then(({ data }) => {
+      if (data.session) navigate("/", { replace: true });
+    });
+  }, [navigate]);
+
+  useEffect(() => {
+    const video = bgVideoRef.current;
+    if (!video) return;
+    const tryPlay = () => {
+      const p = video.play();
+      if (p && typeof p.catch === "function") {
+        p.catch(() => {});
+      }
+    };
+    video.addEventListener("canplay", tryPlay);
+    video.addEventListener("loadeddata", tryPlay);
+    window.addEventListener("pointerdown", tryPlay, { once: true });
+    tryPlay();
+    return () => {
+      video.removeEventListener("canplay", tryPlay);
+      video.removeEventListener("loadeddata", tryPlay);
+      window.removeEventListener("pointerdown", tryPlay);
+    };
+  }, []);
+
+  useEffect(() => {
+    try {
+      window.localStorage.setItem(RAIN_MUTE_KEY, audioMuted ? "1" : "0");
+    } catch {}
+  }, [audioMuted]);
+
+  return (
+    <main className="relative min-h-screen flex items-center justify-center p-4 overflow-hidden bg-background">
+      <video
+        ref={bgVideoRef}
+        aria-hidden
+        autoPlay
+        loop
+        muted
+        playsInline
+        preload="auto"
+        poster={keraAvatar}
+        className="absolute inset-0 w-full h-full object-cover object-bottom"
+        src={rainBgUrl}
+      />
+
+      <audio ref={audioRef} src={rainAmbientUrl} loop preload="auto" muted={audioMuted} aria-hidden />
+
+      <button
+        type="button"
+        onClick={() => setAudioMuted((m) => !m)}
+        className="fixed top-4 right-4 z-40 size-10 rounded-full bg-background/40 backdrop-blur-md border border-white/10 flex items-center justify-center text-primary/80 hover:text-primary transition-all shadow-soft"
+      >
+        {audioMuted ? <VolumeX className="size-4" /> : <Volume2 className="size-4" />}
+      </button>
+
+      <div
+        className="absolute inset-0 pointer-events-none"
+        style={{
+          background: "radial-gradient(circle at center, hsl(var(--background) / 0.58) 0%, hsl(var(--background) / 0.32) 24%, transparent 52%)",
+        }}
+      />
+
+      <motion.div
+        initial={{ opacity: 0, scale: 0.9, y: 20 }}
+        animate={{ opacity: 1, scale: 1, y: 0 }}
+        className="relative z-20 flex flex-col items-center px-6 py-7 rounded-[2rem] bg-background/20 backdrop-blur-sm border border-white/5"
+      >
+        <motion.button
+          type="button"
+          onClick={() => setDemoOpen(true)}
+          whileHover={{ scale: 1.04 }}
+          whileTap={{ scale: 0.97 }}
+          className="group relative rounded-full"
+        >
+          <motion.span
+            className="absolute inset-0 rounded-full border-2 border-primary/40"
+            animate={{ scale: [1, 1.35, 1.6], opacity: [0.6, 0.2, 0] }}
+            transition={{ duration: 2.4, repeat: Infinity }}
+          />
+          <div className="relative size-48 sm:size-56 rounded-full overflow-hidden border-2 border-primary/70 shadow-glow bg-background">
+            <video
+              autoPlay
+              loop
+              muted
+              playsInline
+              src={rainVideoUrl}
+              className="w-full h-full object-cover"
+            />
+          </div>
+          <div className="absolute bottom-2 right-2 bg-primary text-primary-foreground rounded-full p-2.5 shadow-glow">
+            <MousePointerClick className="size-5" />
+          </div>
+        </motion.button>
+
+        <h2 className="mt-8 text-primary font-display tracking-widest text-3xl uppercase text-glow">Kera</h2>
+        <p className="mt-3 text-base text-foreground/90 tracking-wide text-center max-w-sm">
+          Clique sobre mim para conversar — depois você decide se cria conta
+        </p>
+
+        <div className="mt-6 flex flex-col items-center gap-3">
+          <Button
+            variant="ghost"
+            onClick={() => navigate("/auth")}
+            className="text-sm text-primary underline underline-offset-4"
+          >
+            Já tenho conta — Entrar direto
+          </Button>
+          <p className="text-xs text-foreground/70 italic text-center">
+            Após entrar, as configurações de humor ficam na barra lateral.
+          </p>
+        </div>
+      </motion.div>
+
+      <DemoKeraDialog
+        open={demoOpen}
+        onOpenChange={setDemoOpen}
+        onWantToSignUp={() => navigate("/auth")}
+      />
+    </main>
+  );
+};
+
+export default Welcome;
