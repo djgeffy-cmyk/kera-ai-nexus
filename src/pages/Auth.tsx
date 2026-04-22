@@ -11,7 +11,7 @@ import { ShieldCheck, KeyRound, Mail, ScanFace, Eye, EyeOff, Sparkles, MousePoin
 import { motion, AnimatePresence } from "framer-motion";
 import keraAvatar from "@/assets/kera-avatar.png";
  import keraAvatarVideoV2 from "@/assets/kera-avatar-rain-v2.mp4";
- import rainBgRealisticUrl from "@/assets/rain-bg-realistic.mp4";
+ import rainBgRealisticUrl from "@/assets/rain-bg-chuva.mp4";
 import rainAmbientUrl from "@/assets/rain-ambient.mp3";
 
 import ParticlesOverlay from "@/components/ParticlesOverlay";
