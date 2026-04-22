@@ -11,7 +11,15 @@ const corsHeaders = {
 const FIRECRAWL_V2 = "https://api.firecrawl.dev/v2";
 const PORTAL_BASE = "https://guaramirimnamao.govdigital.app";
 const LOGIN_URL = `${PORTAL_BASE}/login`;
-const DEFAULT_TARGET_PATHS = ["/meus-chamados", "/chamados", "/solicitacoes", "/ouvidoria", "/"];
+// Filament/Livewire admin panel — rotas comuns pós-login
+const DEFAULT_TARGET_PATHS = [
+  "/",
+  "/meus-chamados",
+  "/chamados",
+  "/solicitacoes",
+  "/ouvidoria",
+  "/protocolos",
+];
 
 const SCHEMA = {
   type: "object",
@@ -70,26 +78,41 @@ async function scrapeAuthed(opts: {
   const apiKey = Deno.env.get("FIRECRAWL_API_KEY");
   if (!apiKey) return { items: [], raw_preview: "", error: "FIRECRAWL_API_KEY não configurada" };
 
-  // Sequência de actions:
-  // 1) navega pro login → 2) digita user → 3) digita senha → 4) clica entrar
-  // 5) espera carregar → 6) navega pra URL final → 7) espera → 8) scrape
+  // Portal é Filament 3 + Livewire (Laravel). Campos têm IDs `form.email` e `form.password`,
+  // mas usam wire:model — precisamos disparar input event pra Livewire enxergar o valor.
+  // Estratégia: click → write → executeJavascript pra dispatch input → click submit.
+  const escapedUser = opts.username.replace(/"/g, '\\"');
+  const escapedPass = opts.password.replace(/"/g, '\\"');
   const actions = [
     { type: "navigate", url: LOGIN_URL },
-    { type: "wait", milliseconds: 2000 },
+    { type: "wait", milliseconds: 2500 },
+    // Foca e digita email
+    { type: "click", selector: '#\\31  #form\\.email, input[type="email"]' },
+    { type: "wait", milliseconds: 200 },
     { type: "write", selector: 'input[type="email"]', text: opts.username },
-    { type: "write", selector: 'input[name="email"]', text: opts.username },
-    { type: "write", selector: 'input[name="usuario"]', text: opts.username },
-    { type: "write", selector: 'input[name="login"]', text: opts.username },
-    { type: "write", selector: 'input[type="text"]', text: opts.username },
+    { type: "wait", milliseconds: 200 },
+    // Foca e digita senha
+    { type: "click", selector: 'input[type="password"]' },
+    { type: "wait", milliseconds: 200 },
     { type: "write", selector: 'input[type="password"]', text: opts.password },
-    { type: "write", selector: 'input[name="senha"]', text: opts.password },
-    { type: "write", selector: 'input[name="password"]', text: opts.password },
+    { type: "wait", milliseconds: 300 },
+    // Força sync do Livewire: dispara input event nos dois campos via JS puro
+    {
+      type: "executeJavascript",
+      script: `
+        const e = document.querySelector('input[type="email"]');
+        const p = document.querySelector('input[type="password"]');
+        if (e) { e.value = "${escapedUser}"; e.dispatchEvent(new Event('input', {bubbles:true})); e.dispatchEvent(new Event('change', {bubbles:true})); e.dispatchEvent(new Event('blur', {bubbles:true})); }
+        if (p) { p.value = "${escapedPass}"; p.dispatchEvent(new Event('input', {bubbles:true})); p.dispatchEvent(new Event('change', {bubbles:true})); p.dispatchEvent(new Event('blur', {bubbles:true})); }
+      `,
+    },
+    { type: "wait", milliseconds: 800 },
+    // Submit (Livewire intercepta o submit do form)
     { type: "click", selector: 'button[type="submit"]' },
-    { type: "click", selector: 'button, a, input[type="submit"]', text: 'Entrar' },
-    { type: "click", selector: 'button, a, input[type="submit"]', text: 'Login' },
-    { type: "wait", milliseconds: 3500 },
+    { type: "wait", milliseconds: 4500 },
+    // Vai pro destino
     { type: "navigate", url: opts.url },
-    { type: "wait", milliseconds: 3000 },
+    { type: "wait", milliseconds: 3500 },
   ];
 
   try {
@@ -97,7 +120,9 @@ async function scrapeAuthed(opts: {
       method: "POST",
       headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
       body: JSON.stringify({
-        url: LOGIN_URL,
+        // O Firecrawl scrapeia a URL final após executar todas as actions.
+        // Começamos pela URL alvo; a primeira action navega pro login, faz auth, e volta pra cá.
+        url: opts.url,
         formats: ["markdown", { type: "json", schema: SCHEMA, prompt: opts.prompt }],
         onlyMainContent: false,
         actions,
@@ -116,15 +141,17 @@ async function scrapeAuthed(opts: {
     const items = (payload?.json?.items ?? []) as unknown[];
     const preview = (payload?.markdown ?? "").slice(0, 1500);
 
-    // Heurística: se a página final ainda tem "Entrar" / "Login" no markdown,
-    // provavelmente o login falhou (credencial errada ou seletor não bateu).
-    const looksLikeLoginPage = /\b(entrar|login|esqueci.{0,10}senha)\b/i.test(preview) &&
+    // Heurística: se a página final ainda tem "Esqueceu sua senha" / "Lembre de mim"
+    // (textos exclusivos da tela de login do Filament), o login falhou.
+    const looksLikeLoginPage =
+      /(esqueceu sua senha|lembre de mim|e-?mail.{0,30}senha)/i.test(preview) &&
       items.length === 0;
     if (looksLikeLoginPage) {
       return {
         items: [],
         raw_preview: preview,
-        error: "Login parece ter falhado (página final ainda mostra tela de login). Confirma usuário e senha.",
+        error:
+          "Login não passou — o portal devolveu a tela de login. Confere se o e-mail e senha estão certinhos (é o mesmo cadastro que tu usa em guaramirimnamao.govdigital.app).",
       };
     }
 
