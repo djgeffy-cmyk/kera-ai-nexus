@@ -478,6 +478,7 @@ const Auth = () => {
         src={rainAmbientUrl}
         loop
         preload="auto"
+        muted={audioMuted}
         aria-hidden
       />
 
