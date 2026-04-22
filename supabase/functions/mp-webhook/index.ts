@@ -13,12 +13,18 @@ const corsHeaders = {
 // Map nickname/reason do MP -> tier interno.
 function inferTier(reason: string | null | undefined, amount: number | null): string {
   const r = (reason ?? "").toLowerCase();
+  // Planos KeraFit (treinador)
+  if (r.includes("business")) return "business";
+  if (r.includes("scale")) return "scale";
+  if (r.includes("growth")) return "growth";
+  // Planos legados Kera
   if (r.includes("master")) return "master";
   if (r.includes("essencial") || r.includes("essential")) return "essencial";
   if (r.includes("pro")) return "pro";
-  // fallback por valor (ajuste conforme seus planos)
-  if (amount && amount >= 200) return "master";
-  if (amount && amount >= 80) return "pro";
+  // fallback por valor (KeraFit: 99 / 147 / 187)
+  if (amount && amount >= 180) return "business";
+  if (amount && amount >= 140) return "scale";
+  if (amount && amount >= 90) return "growth";
   if (amount && amount > 0) return "essencial";
   return "pro";
 }
