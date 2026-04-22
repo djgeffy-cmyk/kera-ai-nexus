@@ -214,6 +214,7 @@ const Onboarding = () => {
              <KeraFitGroup
                renderAgent={renderGroupedAgent}
                unlocked={anyFitSelected}
+               defaultOpen={anyFitSelected}
                badgeLabel={anyFitSelected ? `${KERA_FIT_AGENT_KEYS.filter((k) => selected.has(k)).length}/3 selecionados` : "Marque qualquer um pra incluir"}
              />
            </div>
@@ -224,6 +225,7 @@ const Onboarding = () => {
              <KeraFitGroup
                renderAgent={renderGroupedAgent}
                unlocked={anyJuridicoSelected}
+               defaultOpen={anyJuridicoSelected}
                label={KERA_JURIDICO_LABEL}
                description={KERA_JURIDICO_DESCRIPTION}
                customKeys={KERA_JURIDICO_AGENT_KEYS as unknown as string[]}
@@ -238,6 +240,7 @@ const Onboarding = () => {
              <KeraFitGroup
                renderAgent={renderGroupedAgent}
                unlocked={anyTechSelected}
+               defaultOpen={anyTechSelected}
                label={KERA_TECH_LABEL}
                description={KERA_TECH_DESCRIPTION}
                customKeys={KERA_TECH_AGENT_KEYS as unknown as string[]}
