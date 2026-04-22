@@ -478,6 +478,22 @@ const Auth = () => {
                 </form>
               ) : (
                 <>
+                  {mode === "signin" && iosNonSafari && !passkeyAvailable && (
+                    <div className="mb-4 rounded-lg border border-primary/40 bg-primary/10 p-3 text-sm text-foreground/90">
+                      <p className="font-semibold text-primary mb-1 flex items-center gap-2">
+                        <ScanFace className="size-4" />
+                        Face ID indisponível neste navegador
+                      </p>
+                      <p className="text-xs leading-relaxed">
+                        No iPhone, Face ID/Touch ID só funciona no <strong>Safari</strong>.
+                        Chrome, Firefox e Edge no iOS não têm acesso à biometria por
+                        limitação da Apple.
+                      </p>
+                      <p className="text-xs leading-relaxed mt-2">
+                        Para usar Face ID, abra <strong>chat.kera.ia.br</strong> no Safari.
+                      </p>
+                    </div>
+                  )}
                   {mode === "signin" && passkeyAvailable && (
                     <>
                       <Button
