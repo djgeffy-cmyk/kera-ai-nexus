@@ -47,7 +47,16 @@ const Auth = () => {
   const [inIframe] = useState(() => isInIframe());
   const [isUnlocked, setIsUnlocked] = useState(false);
   const [demoOpen, setDemoOpen] = useState(false);
-  const [audioMuted, setAudioMuted] = useState(false);
+  // Lembra a preferência do usuário entre visitas (localStorage).
+  const RAIN_MUTE_KEY = "kera:auth:rain-muted";
+  const [audioMuted, setAudioMuted] = useState<boolean>(() => {
+    if (typeof window === "undefined") return false;
+    try {
+      return window.localStorage.getItem(RAIN_MUTE_KEY) === "1";
+    } catch {
+      return false;
+    }
+  });
   const [audioStarted, setAudioStarted] = useState(false);
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const audioCtxRef = useRef<AudioContext | null>(null);
