@@ -151,11 +151,9 @@ const Auth = () => {
       if (!a || audioStarted) return;
       try {
         // Configura grafo Web Audio para enriquecer o som da chuva:
-        // - LowShelf realça os graves (chuva mais "cheia" e profunda)
-        // - HighShelf reduz agudo metálico (menos "chiado de rádio")
-        // - Peaking adiciona corpo nas médias (gotas e pingos audíveis)
-        // - Delay curto + feedback baixo cria reverb natural de ambiente
-        // - Gain master com fade-in suave (4s) para entrada confortável
+        // Perfil "chuva suave de pingos": tira o ronco grave de chuva
+        // torrencial, destaca a faixa cristalina dos pingos (3–4 kHz) e
+        // suaviza a sibilância áspera. Reverb sutil de ambiente.
         if (!audioCtxRef.current) {
           const Ctx =
             (window as any).AudioContext || (window as any).webkitAudioContext;
@@ -163,34 +161,44 @@ const Auth = () => {
             const ctx: AudioContext = new Ctx();
             const source = ctx.createMediaElementSource(a);
 
+            // HighPass: corta o "ronco" grave (trovão/torrencial)
+            const highPass = ctx.createBiquadFilter();
+            highPass.type = "highpass";
+            highPass.frequency.value = 220;
+            highPass.Q.value = 0.7;
+
+            // LowShelf negativo: alivia ainda mais o peso do grave
             const lowShelf = ctx.createBiquadFilter();
             lowShelf.type = "lowshelf";
-            lowShelf.frequency.value = 220;
-            lowShelf.gain.value = 6; // +6dB graves
+            lowShelf.frequency.value = 320;
+            lowShelf.gain.value = -3;
 
+            // Peaking nas médias-altas: pingos delicados, cristalinos
             const peaking = ctx.createBiquadFilter();
             peaking.type = "peaking";
-            peaking.frequency.value = 1200;
-            peaking.Q.value = 0.9;
-            peaking.gain.value = 2.5;
+            peaking.frequency.value = 3500;
+            peaking.Q.value = 1.1;
+            peaking.gain.value = 3;
 
+            // HighShelf negativo: tira sibilância áspera e "chiado"
             const highShelf = ctx.createBiquadFilter();
             highShelf.type = "highshelf";
-            highShelf.frequency.value = 6500;
-            highShelf.gain.value = -4; // suaviza agudos sibilantes
+            highShelf.frequency.value = 8000;
+            highShelf.gain.value = -4;
 
-            // Reverb leve via delay com feedback baixo
+            // Reverb sutil de ambiente
             const delay = ctx.createDelay(0.5);
-            delay.delayTime.value = 0.18;
+            delay.delayTime.value = 0.14;
             const feedback = ctx.createGain();
-            feedback.gain.value = 0.22;
+            feedback.gain.value = 0.18;
             const wet = ctx.createGain();
-            wet.gain.value = 0.28;
+            wet.gain.value = 0.22;
 
             const master = ctx.createGain();
             master.gain.value = 0; // arranca em 0 para fade-in
 
-            source.connect(lowShelf);
+            source.connect(highPass);
+            highPass.connect(lowShelf);
             lowShelf.connect(peaking);
             peaking.connect(highShelf);
             // dry path
@@ -212,7 +220,7 @@ const Auth = () => {
         a.volume = 1; // o controle real fica no GainNode master
         await a.play();
 
-        // Fade-in 4s até 0.55 (volume mais presente que antes, porém confortável)
+        // Fade-in suave 5s até 0.40 — volume mais ameno, pingos delicados
         const ctx = audioCtxRef.current;
         const master = gainNodeRef.current;
         if (ctx && master) {
@@ -222,7 +230,7 @@ const Auth = () => {
           const now = ctx.currentTime;
           master.gain.cancelScheduledValues(now);
           master.gain.setValueAtTime(0, now);
-          master.gain.linearRampToValueAtTime(0.55, now + 4);
+          master.gain.linearRampToValueAtTime(0.4, now + 5);
         }
 
         setAudioStarted(true);
@@ -251,7 +259,7 @@ const Auth = () => {
       const now = ctx.currentTime;
       master.gain.cancelScheduledValues(now);
       master.gain.setValueAtTime(master.gain.value, now);
-      master.gain.linearRampToValueAtTime(audioMuted ? 0 : 0.55, now + 0.25);
+      master.gain.linearRampToValueAtTime(audioMuted ? 0 : 0.4, now + 0.25);
     } else if (audioRef.current) {
       audioRef.current.muted = audioMuted;
     }
