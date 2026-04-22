@@ -1,4 +1,4 @@
-import { useState, useMemo, useRef } from "react";
+import { useState, useMemo, useRef, useEffect } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { Sparkles, Send, MonitorDown, Info, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -11,6 +11,7 @@ import {
 } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
 import { isKeraDesktop } from "@/lib/keraDesktop";
+import { supabase } from "@/integrations/supabase/client";
 
 const QUICK_PROMPTS = [
   { label: "Status do PC", desktop: true },
@@ -33,14 +34,38 @@ export const AskKeraFab = () => {
   // do React aplicar o setState. A ref bloqueia imediatamente.
   const sendingRef = useRef(false);
   const desktop = isKeraDesktop();
+  // Só mostra o FAB pra usuário logado — visitantes anônimos não devem
+  // ver o atalho "Pedir pra Kera" na página inicial.
+  const [authed, setAuthed] = useState<boolean | null>(null);
+
+  useEffect(() => {
+    let mounted = true;
+    supabase.auth.getSession().then(({ data }) => {
+      if (mounted) setAuthed(!!data.session);
+    });
+    const { data: sub } = supabase.auth.onAuthStateChange((_e, session) => {
+      setAuthed(!!session);
+    });
+    return () => {
+      mounted = false;
+      sub.subscription.unsubscribe();
+    };
+  }, []);
 
   const filteredPrompts = useMemo(() => {
     return QUICK_PROMPTS.filter(p => !p.desktop || desktop);
   }, [desktop]);
 
-  // Esconde em /auth e na home (que já é o próprio chat)
+  // Esconde em /auth, /welcome e na home (que já é o próprio chat),
+  // e também quando o visitante não está logado.
   const path = location.pathname;
-  if (path.startsWith("/auth") || path === "/" || path.startsWith("/chat")) {
+  if (
+    !authed ||
+    path.startsWith("/auth") ||
+    path.startsWith("/welcome") ||
+    path === "/" ||
+    path.startsWith("/chat")
+  ) {
     return null;
   }
 
