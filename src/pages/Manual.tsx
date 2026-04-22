@@ -53,7 +53,7 @@ const AGENTS: AgentInfo[] = [
   { name: "Kera Treinador", desc: "Hipertrofia, força, periodização. Treino prescrito com séries e reps.", icon: Dumbbell, color: "text-orange-400", plan: "Kera Fit" },
   { name: "Kera Iron", desc: "Bodybuilding avançado e composição corporal. Estilo carrasco honesto.", icon: Flame, color: "text-red-500", plan: "Kera Fit" },
   { name: "Kera Gamer", desc: "Guias de jogos, troféus, dicas de gameplay e cultura gamer.", icon: Gamepad2, color: "text-fuchsia-400", plan: "Kera Diversão" },
-  { name: "Kera Guaramirim", desc: "Especialista nos sistemas IPM, Olostech e e-SUS de Guaramirim/SC.", icon: Landmark, color: "text-emerald-500", plan: "Municipal" },
+  { name: "Kera Guaramirim", desc: "Especialista em IPM, Guaramirim na Mão e transparência pública de Guaramirim/SC.", icon: Landmark, color: "text-emerald-500", plan: "Municipal" },
   { name: "Kera Prefeituras", desc: "APIs governamentais (PNCP), gestão de transparência e ERPs públicos.", icon: Building2, color: "text-sky-500", plan: "Municipal" },
 ];
 

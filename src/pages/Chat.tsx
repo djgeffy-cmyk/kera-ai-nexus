@@ -185,12 +185,12 @@ const AGENT_SUGGESTIONS: Record<string, Array<{ q: string; icon: typeof Sparkles
     { q: "Inventário extrajudicial: passo a passo.", icon: ScrollText },
     { q: "Guarda compartilhada: direitos e deveres.", icon: Baby },
   ],
-   "kera-guaramirim": [
-     { q: "Kera, quais são as licitações abertas hoje em Guaramirim no Atende.net?", icon: FileSearch },
-     { q: "Como está o status dos contratos de coleta de lixo em Guaramirim?", icon: ScrollText },
-     { q: "Preciso consultar um protocolo da Secretaria de Obras via Olostech.", icon: Radar },
-     { q: "Gere um resumo das despesas da saúde de Guaramirim no último mês.", icon: Activity },
-   ],
+    "kera-guaramirim": [
+      { q: "Kera, quais são as licitações abertas hoje em Guaramirim no Atende.net?", icon: FileSearch },
+      { q: "Como está o status dos contratos de coleta de lixo em Guaramirim?", icon: ScrollText },
+      { q: "Kera, veja meus chamados no Guaramirim na Mão.", icon: Radar },
+      { q: "Gere um resumo das despesas públicas da saúde de Guaramirim no último mês com base no portal de transparência.", icon: Activity },
+    ],
    "kera-prefeituras": [
      { q: "Quais são as melhores APIs federais para integrar portais da transparência?", icon: Code2 },
      { q: "Como configurar a integração do IPM com o Portal Nacional de Contratações?", icon: Sparkles },

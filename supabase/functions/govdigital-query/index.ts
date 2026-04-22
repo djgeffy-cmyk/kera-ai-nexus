@@ -11,6 +11,7 @@ const corsHeaders = {
 const FIRECRAWL_V2 = "https://api.firecrawl.dev/v2";
 const PORTAL_BASE = "https://guaramirimnamao.govdigital.app";
 const LOGIN_URL = `${PORTAL_BASE}/login`;
+const DEFAULT_TARGET_PATHS = ["/meus-chamados", "/chamados", "/solicitacoes", "/ouvidoria", "/"];
 
 const SCHEMA = {
   type: "object",
@@ -75,11 +76,17 @@ async function scrapeAuthed(opts: {
   const actions = [
     { type: "navigate", url: LOGIN_URL },
     { type: "wait", milliseconds: 2000 },
-    // Tentativa de seletores comuns (input[type=email], input[name=usuario], etc.)
-    // Firecrawl aceita 'write' com seletor CSS.
-    { type: "write", selector: 'input[type="email"], input[name="email"], input[name="usuario"], input[name="login"], input[type="text"]', text: opts.username },
-    { type: "write", selector: 'input[type="password"], input[name="senha"], input[name="password"]', text: opts.password },
-    { type: "click", selector: 'button[type="submit"], button:has-text("Entrar"), button:has-text("Login")' },
+    { type: "write", selector: 'input[type="email"]', text: opts.username },
+    { type: "write", selector: 'input[name="email"]', text: opts.username },
+    { type: "write", selector: 'input[name="usuario"]', text: opts.username },
+    { type: "write", selector: 'input[name="login"]', text: opts.username },
+    { type: "write", selector: 'input[type="text"]', text: opts.username },
+    { type: "write", selector: 'input[type="password"]', text: opts.password },
+    { type: "write", selector: 'input[name="senha"]', text: opts.password },
+    { type: "write", selector: 'input[name="password"]', text: opts.password },
+    { type: "click", selector: 'button[type="submit"]' },
+    { type: "click", selector: 'button, a, input[type="submit"]', text: 'Entrar' },
+    { type: "click", selector: 'button, a, input[type="submit"]', text: 'Login' },
     { type: "wait", milliseconds: 3500 },
     { type: "navigate", url: opts.url },
     { type: "wait", milliseconds: 3000 },
@@ -127,6 +134,40 @@ async function scrapeAuthed(opts: {
   }
 }
 
+async function scrapeAcrossTargets(opts: {
+  username: string;
+  password: string;
+  path?: string;
+  prompt: string;
+}): Promise<{ items: unknown[]; raw_preview: string; url: string; error?: string }> {
+  const targets = opts.path ? [targetUrl(opts.path)] : DEFAULT_TARGET_PATHS.map((path) => targetUrl(path));
+
+  let lastError: string | undefined;
+  let lastPreview = "";
+
+  for (const url of targets) {
+    const result = await scrapeAuthed({ username: opts.username, password: opts.password, url, prompt: opts.prompt });
+    if (Array.isArray(result.items) && result.items.length > 0) {
+      return { items: result.items, raw_preview: result.raw_preview, url, error: result.error };
+    }
+
+    const previewSuggestsLoggedArea = /chamado|protocolo|ouvidoria|solicitaç|minhas/i.test(result.raw_preview);
+    if (!result.error && previewSuggestsLoggedArea) {
+      return { items: result.items, raw_preview: result.raw_preview, url, error: undefined };
+    }
+
+    lastError = result.error;
+    lastPreview = result.raw_preview;
+  }
+
+  return {
+    items: [],
+    raw_preview: lastPreview,
+    url: targets[0] ?? targetUrl(opts.path),
+    error: lastError ?? "Não achei a área de chamados no portal após o login.",
+  };
+}
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
@@ -146,10 +187,9 @@ Deno.serve(async (req) => {
       );
     }
 
-    const url = targetUrl(path ?? "/meus-chamados");
     const prompt = PROMPTS[tipo] ?? PROMPTS.generico;
 
-    const r = await scrapeAuthed({ username, password, url, prompt });
+    const r = await scrapeAcrossTargets({ username, password, path, prompt });
 
     let items = r.items;
     if (filtro_status && Array.isArray(items)) {
@@ -164,7 +204,7 @@ Deno.serve(async (req) => {
         success: !r.error,
         source: "govdigital_scraping",
         portal: "Guaramirim na Mão",
-        url,
+        url: r.url,
         tipo,
         filtro_status: filtro_status ?? null,
         total: items.length,
