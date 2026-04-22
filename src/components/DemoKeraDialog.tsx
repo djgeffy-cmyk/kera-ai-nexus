@@ -15,6 +15,7 @@ import {
   KERA_TECH_LABEL,
 } from "@/lib/agents";
 import keraAvatarPng from "@/assets/kera-avatar.png";
+import keraTestingBg from "@/assets/kera-testing-system.jpg";
 import { cn } from "@/lib/utils";
 
 // Fundo da tela de testes: Kera realista com gotas de chuva (mesmo do login).
