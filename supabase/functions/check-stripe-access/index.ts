@@ -36,6 +36,67 @@ function inferTierFromPrice(priceObj: any): string {
   return "pro"; // fallback genérico — assinatura ativa = pelo menos pro
 }
 
+type SourceResult = {
+  allowed: boolean;
+  source: "stripe" | "mercadopago";
+  plan_tier?: string;
+  status?: string;
+  reason?: string;
+  message?: string;
+};
+
+async function checkStripe(email: string, key: string | undefined): Promise<SourceResult> {
+  if (!key) return { allowed: false, source: "stripe", reason: "stripe_not_configured" };
+  try {
+    const customersResp = await fetch(
+      `https://api.stripe.com/v1/customers?email=${encodeURIComponent(email)}&limit=10`,
+      { headers: { Authorization: `Bearer ${key}` } },
+    );
+    if (!customersResp.ok) {
+      const txt = await customersResp.text();
+      return { allowed: false, source: "stripe", reason: "stripe_error", message: `${customersResp.status}: ${txt.slice(0,200)}` };
+    }
+    const customers: any[] = (await customersResp.json()).data ?? [];
+    if (customers.length === 0) return { allowed: false, source: "stripe", reason: "no_customer" };
+
+    for (const c of customers) {
+      const subsResp = await fetch(
+        `https://api.stripe.com/v1/subscriptions?customer=${c.id}&status=all&limit=10&expand[]=data.items.data.price.product`,
+        { headers: { Authorization: `Bearer ${key}` } },
+      );
+      if (!subsResp.ok) continue;
+      const subs: any[] = (await subsResp.json()).data ?? [];
+      const found = subs.find((s) => s.status === "active" || s.status === "trialing");
+      if (found) {
+        const price = found.items?.data?.[0]?.price;
+        return { allowed: true, source: "stripe", plan_tier: inferTierFromPrice(price), status: found.status };
+      }
+    }
+    return { allowed: false, source: "stripe", reason: "no_active_subscription" };
+  } catch (e) {
+    return { allowed: false, source: "stripe", reason: "stripe_exception", message: e instanceof Error ? e.message : String(e) };
+  }
+}
+
+async function checkMercadoPago(email: string, admin: any): Promise<SourceResult> {
+  try {
+    // Lê do cache local (alimentado pelo webhook mp-webhook).
+    const { data, error } = await admin
+      .from("mp_subscriptions")
+      .select("status, plan_tier, next_payment_date")
+      .ilike("email", email)
+      .in("status", ["authorized", "approved"])
+      .order("updated_at", { ascending: false })
+      .limit(1);
+    if (error) return { allowed: false, source: "mercadopago", reason: "mp_query_error", message: error.message };
+    if (!data || data.length === 0) return { allowed: false, source: "mercadopago", reason: "no_active_subscription" };
+    const row = data[0];
+    return { allowed: true, source: "mercadopago", plan_tier: row.plan_tier ?? "pro", status: row.status };
+  } catch (e) {
+    return { allowed: false, source: "mercadopago", reason: "mp_exception", message: e instanceof Error ? e.message : String(e) };
+  }
+}
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
 
@@ -80,76 +141,47 @@ Deno.serve(async (req) => {
     }
 
     // Sem chave Stripe → não conseguimos validar. Retorna estado degradado.
-    if (!STRIPE_SECRET_KEY) {
-      return new Response(JSON.stringify({
-        allowed: false,
-        reason: "stripe_not_configured",
-        message: "STRIPE_SECRET_KEY ainda não foi configurada no backend.",
-      }), { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } });
-    }
-
     if (!email) {
       return new Response(JSON.stringify({
         allowed: false, reason: "no_email",
       }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
 
-    // 1) Acha cliente na Stripe pelo e-mail.
-    const customersResp = await fetch(
-      `https://api.stripe.com/v1/customers?email=${encodeURIComponent(email)}&limit=10`,
-      { headers: { Authorization: `Bearer ${STRIPE_SECRET_KEY}` } },
-    );
-    if (!customersResp.ok) {
-      const txt = await customersResp.text();
-      return new Response(JSON.stringify({
-        allowed: false, reason: "stripe_error",
-        message: `Stripe ${customersResp.status}: ${txt.slice(0, 200)}`,
-      }), { status: 502, headers: { ...corsHeaders, "Content-Type": "application/json" } });
-    }
-    const customersJson = await customersResp.json();
-    const customers: any[] = customersJson.data ?? [];
+    // Consulta Stripe + Mercado Pago em paralelo. Qualquer um ativo libera.
+    const stripePromise = checkStripe(email, STRIPE_SECRET_KEY);
+    const mpPromise = checkMercadoPago(email, adminClient);
+    const [stripeRes, mpRes] = await Promise.all([stripePromise, mpPromise]);
 
-    if (customers.length === 0) {
+    // Prioriza o que estiver ativo. Se ambos, fica com o de maior tier.
+    const tierRank: Record<string, number> = { essencial: 1, pro: 2, master: 3 };
+    const candidates = [stripeRes, mpRes].filter((r) => r.allowed);
+    if (candidates.length > 0) {
+      candidates.sort((a, b) => (tierRank[b.plan_tier ?? ""] ?? 0) - (tierRank[a.plan_tier ?? ""] ?? 0));
+      const winner = candidates[0];
+      await adminClient
+        .from("profiles")
+        .update({ plan_tier: winner.plan_tier, updated_at: new Date().toISOString() })
+        .eq("user_id", user.id);
       return new Response(JSON.stringify({
-        allowed: false, reason: "no_customer", email,
+        allowed: true,
+        reason: `active_subscription:${winner.source}`,
+        plan_tier: winner.plan_tier,
+        status: winner.status,
+        sources: { stripe: stripeRes, mercadopago: mpRes },
       }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
 
-    // 2) Procura assinatura ativa em qualquer um dos customers.
-    let activeSub: any = null;
-    for (const c of customers) {
-      const subsResp = await fetch(
-        `https://api.stripe.com/v1/subscriptions?customer=${c.id}&status=all&limit=10&expand[]=data.items.data.price.product`,
-        { headers: { Authorization: `Bearer ${STRIPE_SECRET_KEY}` } },
-      );
-      if (!subsResp.ok) continue;
-      const subsJson = await subsResp.json();
-      const subs: any[] = subsJson.data ?? [];
-      const found = subs.find((s) => s.status === "active" || s.status === "trialing");
-      if (found) { activeSub = found; break; }
-    }
-
-    if (!activeSub) {
-      return new Response(JSON.stringify({
-        allowed: false, reason: "no_active_subscription", email,
-      }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
-    }
-
-    const price = activeSub.items?.data?.[0]?.price;
-    const planTier = inferTierFromPrice(price);
-
-    // Cacheia no profiles pra admin/UI usarem sem reconsultar.
-    await adminClient
-      .from("profiles")
-      .update({ plan_tier: planTier, updated_at: new Date().toISOString() })
-      .eq("user_id", user.id);
+    // Nenhum ativo. Retorna o motivo mais informativo.
+    const reason =
+      stripeRes.reason === "stripe_not_configured" && mpRes.reason !== "no_active_subscription"
+        ? mpRes.reason
+        : stripeRes.reason ?? mpRes.reason ?? "no_active_subscription";
 
     return new Response(JSON.stringify({
-      allowed: true,
-      reason: "active_subscription",
-      plan_tier: planTier,
-      status: activeSub.status,
-      current_period_end: activeSub.current_period_end,
+      allowed: false,
+      reason,
+      email,
+      sources: { stripe: stripeRes, mercadopago: mpRes },
     }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
 
   } catch (e) {
