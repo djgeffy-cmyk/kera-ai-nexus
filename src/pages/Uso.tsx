@@ -1,6 +1,6 @@
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, MessageSquare, Mic, Code2, Shield } from "lucide-react";
+import { ArrowLeft, MessageSquare, Mic, Code2, Shield, ExternalLink, Check } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { ImageQuotaCard } from "@/components/ImageQuotaCard";
 
@@ -21,6 +21,55 @@ export default function Uso() {
         </div>
 
         <ImageQuotaCard />
+
+        <Card className="p-6 space-y-4">
+          <div className="flex items-center justify-between gap-3 flex-wrap">
+            <h2 className="font-semibold text-lg">Tabela de planos</h2>
+            <Button size="sm" variant="outline" onClick={() => navigate("/planos")}>
+              Ver detalhes <ExternalLink className="h-3 w-3 ml-1" />
+            </Button>
+          </div>
+          <div className="overflow-x-auto -mx-2">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="text-left border-b border-border">
+                  <th className="px-2 py-2 font-medium">Plano</th>
+                  <th className="px-2 py-2 font-medium">Preço/mês</th>
+                  <th className="px-2 py-2 font-medium">Imagens/dia</th>
+                  <th className="px-2 py-2 font-medium">Destaque</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-border">
+                <tr>
+                  <td className="px-2 py-2 font-semibold">Free</td>
+                  <td className="px-2 py-2">R$ 0</td>
+                  <td className="px-2 py-2 text-muted-foreground">—</td>
+                  <td className="px-2 py-2 text-muted-foreground">Demo Kera</td>
+                </tr>
+                <tr>
+                  <td className="px-2 py-2 font-semibold">Essencial</td>
+                  <td className="px-2 py-2">R$ 29,90</td>
+                  <td className="px-2 py-2">1</td>
+                  <td className="px-2 py-2 text-muted-foreground">3 agentes à escolha</td>
+                </tr>
+                <tr className="bg-primary/5">
+                  <td className="px-2 py-2 font-semibold inline-flex items-center gap-1">
+                    Pro <Check className="h-3 w-3 text-primary" />
+                  </td>
+                  <td className="px-2 py-2">R$ 79,90</td>
+                  <td className="px-2 py-2">3</td>
+                  <td className="px-2 py-2 text-muted-foreground">Todos os especialistas + voz</td>
+                </tr>
+                <tr>
+                  <td className="px-2 py-2 font-semibold">Master</td>
+                  <td className="px-2 py-2">R$ 149,90</td>
+                  <td className="px-2 py-2">10</td>
+                  <td className="px-2 py-2 text-muted-foreground">NASA + Sentinela ilimitados</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </Card>
 
         <Card className="p-6 space-y-3">
           <h2 className="font-semibold text-lg">O foco da Kera não é gerar imagens</h2>
