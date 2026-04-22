@@ -1516,8 +1516,8 @@ Por favor, analise: há perda de pacote? jitter alto sugere instabilidade de rot
               </div>
             )}
             <div
-              className={`group relative rounded-2xl border bg-input/30 backdrop-blur-sm transition-all
-                ${streaming ? "border-primary/30" : "border-border/60 hover:border-border focus-within:border-primary/60 focus-within:shadow-[0_0_0_3px_hsl(var(--primary)/0.15)]"}`}
+              className={`kera-ai-composer group relative animate-fade-in-up transition-all
+                ${streaming ? "opacity-95" : ""}`}
             >
               <input
                 ref={fileInputRef}
@@ -1551,7 +1551,7 @@ Por favor, analise: há perda de pacote? jitter alto sugere instabilidade de rot
                         : `Pergunte algo à ${currentAgentName}...`
                 }
                 rows={1}
-                className="resize-none min-h-[56px] max-h-44 border-0 bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 px-4 pt-3.5 pb-12 text-base md:text-sm placeholder:text-muted-foreground/60"
+                className="resize-none min-h-[60px] max-h-44 border-0 bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 px-5 pt-4 pb-14 text-base md:text-sm placeholder:text-muted-foreground/55 placeholder:font-light tracking-[0.005em]"
               />
 
               {/* Toolbar inferior: ações à esquerda, enviar à direita */}
@@ -1642,11 +1642,12 @@ Por favor, analise: há perda de pacote? jitter alto sugere instabilidade de rot
                 <Button
                   onClick={() => sendText()}
                   disabled={(!input.trim() && attachments.length === 0) || streaming}
-                  size="icon"
-                  className="pointer-events-auto h-9 w-9 rounded-full bg-gradient-cyber text-primary-foreground shadow-glow hover:opacity-90 disabled:opacity-40 disabled:shadow-none transition"
+                  className="kera-ai-cta pointer-events-auto h-9 px-4 rounded-full font-medium text-xs sm:text-sm gap-1.5 disabled:opacity-40 disabled:cursor-not-allowed disabled:translate-y-0"
                   aria-label="Enviar mensagem"
                 >
-                  <Send className="size-4" />
+                  <Sparkles className="size-3.5" aria-hidden="true" />
+                  <span className="hidden sm:inline">Gerar</span>
+                  <Send className="size-3.5 sm:hidden" />
                 </Button>
               </div>
             </div>

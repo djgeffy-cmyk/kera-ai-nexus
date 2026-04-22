@@ -327,6 +327,109 @@
   .animate-blink { animation: blink 1s infinite; }
 }
 
+/* ===========================================================
+   Premium Composer — animated gradient border + glow
+   Inspired by Gemini / ChatGPT input
+   =========================================================== */
+@layer utilities {
+  @keyframes kera-gradient-border-spin {
+    0%   { background-position: 0% 50%; }
+    50%  { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+  }
+
+  @keyframes kera-fade-in-up {
+    from { opacity: 0; transform: translateY(8px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  .animate-fade-in-up { animation: kera-fade-in-up 0.45s ease-out both; }
+
+  @keyframes kera-shine-sweep {
+    0%   { transform: translateX(-120%) skewX(-20deg); }
+    100% { transform: translateX(220%) skewX(-20deg); }
+  }
+
+  /* Wrapper that draws an animated gradient border around the composer.
+     Uses a pseudo-element so it never interferes with input layout. */
+  .kera-ai-composer {
+    position: relative;
+    border-radius: 1.75rem;
+    background:
+      linear-gradient(hsl(var(--background) / 0.55), hsl(var(--background) / 0.55)) padding-box,
+      linear-gradient(120deg,
+        hsl(210 100% 60%) 0%,
+        hsl(265 90% 65%) 30%,
+        hsl(25 95% 60%) 60%,
+        hsl(190 100% 55%) 100%) border-box;
+    background-size: 100% 100%, 300% 300%;
+    border: 1.5px solid transparent;
+    backdrop-filter: blur(18px);
+    -webkit-backdrop-filter: blur(18px);
+    box-shadow:
+      0 10px 40px -10px hsl(220 60% 4% / 0.6),
+      inset 0 1px 0 0 hsl(0 0% 100% / 0.04);
+    transition: box-shadow 0.35s ease, transform 0.25s ease;
+    animation: kera-gradient-border-spin 8s ease-in-out infinite;
+  }
+
+  .kera-ai-composer:hover {
+    box-shadow:
+      0 14px 48px -10px hsl(220 60% 4% / 0.7),
+      0 0 0 1px hsl(var(--primary) / 0.15),
+      inset 0 1px 0 0 hsl(0 0% 100% / 0.06);
+  }
+
+  .kera-ai-composer:focus-within {
+    box-shadow:
+      0 0 0 3px hsl(var(--primary) / 0.18),
+      0 0 24px -2px hsl(265 90% 65% / 0.35),
+      0 0 60px -10px hsl(210 100% 60% / 0.4),
+      inset 0 1px 0 0 hsl(0 0% 100% / 0.08);
+    animation-duration: 4s;
+  }
+
+  /* Premium pill button with subtle moving shine */
+  .kera-ai-cta {
+    position: relative;
+    overflow: hidden;
+    background: linear-gradient(135deg,
+      hsl(210 100% 55%) 0%,
+      hsl(245 85% 60%) 50%,
+      hsl(280 85% 60%) 100%);
+    color: hsl(0 0% 100%);
+    box-shadow:
+      0 4px 14px -2px hsl(245 85% 50% / 0.45),
+      inset 0 1px 0 0 hsl(0 0% 100% / 0.25);
+    transition: transform 0.2s ease, box-shadow 0.3s ease, opacity 0.2s ease;
+  }
+  .kera-ai-cta:hover:not(:disabled) {
+    transform: translateY(-1px);
+    box-shadow:
+      0 6px 20px -2px hsl(245 85% 50% / 0.6),
+      0 0 24px -4px hsl(280 85% 60% / 0.5),
+      inset 0 1px 0 0 hsl(0 0% 100% / 0.3);
+  }
+  .kera-ai-cta:active:not(:disabled) {
+    transform: translateY(0) scale(0.98);
+  }
+  .kera-ai-cta::after {
+    content: "";
+    position: absolute;
+    top: 0; left: 0;
+    width: 40%;
+    height: 100%;
+    background: linear-gradient(90deg,
+      transparent,
+      hsl(0 0% 100% / 0.35),
+      transparent);
+    transform: translateX(-120%) skewX(-20deg);
+    pointer-events: none;
+  }
+  .kera-ai-cta:hover:not(:disabled)::after {
+    animation: kera-shine-sweep 1.1s ease-out;
+  }
+}
+
 /* Markdown prose */
 .prose-kera p { @apply leading-relaxed my-2; }
 .prose-kera h1, .prose-kera h2, .prose-kera h3 { @apply font-display text-foreground mt-4 mb-2; }
