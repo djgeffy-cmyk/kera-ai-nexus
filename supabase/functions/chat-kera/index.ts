@@ -503,7 +503,7 @@ async function maybePrefetchEngegov(
   ];
 }
 
-async function executeTool(name: string, args: Record<string, unknown>): Promise<string> {
+async function executeTool(name: string, args: Record<string, unknown>, truncate = true): Promise<string> {
   const fnByName: Record<string, string> = {
     ipm_query: "ipm-query",
     govdigital_query: "govdigital-query",
@@ -519,7 +519,7 @@ async function executeTool(name: string, args: Record<string, unknown>): Promise
     });
     const data = await r.json();
     const str = JSON.stringify(data);
-    return str.length > 12000 ? str.slice(0, 12000) + "\n...[truncado]" : str;
+    return truncate && str.length > 12000 ? str.slice(0, 12000) + "\n...[truncado]" : str;
   } catch (e) {
     return JSON.stringify({ error: e instanceof Error ? e.message : "tool error" });
   }
@@ -592,7 +592,7 @@ async function maybeDirectEngegovReply(agentKey: string | undefined, messages: C
   const municipio = await detectEngegovMunicipio(messages);
   if (!municipio) return null;
 
-  const raw = await executeTool("engegov_query", { tipo: "lista", cidade_nome: municipio.nome, uf: municipio.uf });
+  const raw = await executeTool("engegov_query", { tipo: "lista", cidade_nome: municipio.nome, uf: municipio.uf }, false);
   let parsed: any;
   try {
     parsed = JSON.parse(raw);
