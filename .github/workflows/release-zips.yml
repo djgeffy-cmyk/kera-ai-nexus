@@ -39,7 +39,7 @@ jobs:
           name: KeraDesktop-win32-x64
           path: release-builds/KeraDesktop-win32-x64.zip
           if-no-files-found: error
-          retention-days: 7
+          retention-days: 3
 
   build-linux-zip:
     runs-on: ubuntu-latest
@@ -67,7 +67,7 @@ jobs:
           name: KeraDesktop-linux-x64
           path: release-builds/KeraDesktop-linux-x64.zip
           if-no-files-found: error
-          retention-days: 7
+          retention-days: 3
 
   build-mac-x64-zip:
     runs-on: macos-13
@@ -92,7 +92,7 @@ jobs:
           name: KeraDesktop-darwin-x64
           path: release-builds/KeraDesktop-darwin-x64.zip
           if-no-files-found: error
-          retention-days: 7
+          retention-days: 3
 
   build-mac-arm64-zip:
     runs-on: macos-latest
@@ -117,7 +117,7 @@ jobs:
           name: KeraDesktop-darwin-arm64
           path: release-builds/KeraDesktop-darwin-arm64.zip
           if-no-files-found: error
-          retention-days: 7
+          retention-days: 3
 
   publish-release:
     needs: [build-windows-zip, build-linux-zip, build-mac-x64-zip, build-mac-arm64-zip]
