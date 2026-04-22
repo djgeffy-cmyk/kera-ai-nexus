@@ -9,6 +9,10 @@ import { BUILTIN_AGENTS } from "@/lib/agents";
 import { useUserAccess } from "@/hooks/useUserAccess";
 import keraWaterHero from "@/assets/kera-water-hero.jpg";
 
+// Vídeo animado da Kera (mesmo usado na tela de login). `?v=` invalida cache do CDN.
+const KERA_AVATAR_VIDEO =
+  "https://ytixqgkzqgeoxrbmjqbo.supabase.co/storage/v1/object/public/kera-videos//kera-avatar-rain.mp4?v=2026-04-22";
+
 /**
  * Tela mostrada uma única vez após o cadastro.
  * O usuário escolhe quais áreas/agentes da Kera quer liberar.
@@ -109,11 +113,15 @@ const Onboarding = () => {
         )}
         <header className="text-center mb-8 md:mb-10">
           <div className="relative mx-auto mb-5 size-28 md:size-36 rounded-full overflow-hidden ring-2 ring-primary/60 shadow-glow bg-background">
-            <img
-              src={keraWaterHero}
-              alt="Kera — IA"
-              width={1024}
-              height={1024}
+            <video
+              src={KERA_AVATAR_VIDEO}
+              poster={keraWaterHero}
+              autoPlay
+              loop
+              muted
+              playsInline
+              disablePictureInPicture
+              aria-label="Kera — IA"
               className="w-full h-full object-cover"
             />
             <div
