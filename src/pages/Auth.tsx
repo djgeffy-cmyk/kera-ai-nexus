@@ -41,6 +41,7 @@ import {
   registerPasskey,
   webauthnSupported,
   isInIframe,
+  isIOSNonSafari,
 } from "@/lib/webauthn";
 
 type Mode = "signin" | "signup" | "totp";
