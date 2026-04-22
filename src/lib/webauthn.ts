@@ -80,3 +80,25 @@ export async function loginWithPasskey(email: string) {
   if (error) throw error;
   return true;
 }
+
+/**
+ * Login sem digitar email — o navegador mostra a lista de passkeys
+ * disponíveis (Face ID/Touch ID/Windows Hello) e o usuário escolhe.
+ * Requer passkeys do tipo "resident key" (cadastradas com residentKey: "preferred").
+ */
+export async function loginWithPasskeyDiscoverable() {
+  ensureUsable();
+  const { options } = await call("auth-options-discoverable", { method: "POST" });
+  const assertion = await startAuthentication(options);
+  const result = await call("auth-verify-discoverable", {
+    method: "POST",
+    body: JSON.stringify({ response: assertion }),
+  });
+  if (!result?.token_hash) throw new Error("Sessão não pôde ser criada");
+  const { error } = await supabase.auth.verifyOtp({
+    token_hash: result.token_hash,
+    type: "magiclink",
+  });
+  if (error) throw error;
+  return { email: result.email as string };
+}
