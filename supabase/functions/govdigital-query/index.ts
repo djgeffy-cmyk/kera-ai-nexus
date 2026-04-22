@@ -48,7 +48,7 @@ const SCHEMA = {
 
 const PROMPTS: Record<string, string> = {
   meus_chamados:
-    "Liste TODOS os chamados/protocolos do usuário logado visíveis nesta página: número, assunto, secretaria, status (aberto/em andamento/concluído), data de abertura, última atualização e link. Não invente — só o que está visível.",
+    "Liste ABSOLUTAMENTE TODOS os chamados/protocolos/solicitações do usuário logado visíveis nesta página, sem omitir nenhum. Para cada um extraia: número/protocolo, assunto, secretaria, status (aberto, em andamento, aguardando, concluído, cancelado etc.), data de abertura, última atualização, descrição curta e link. Inclua itens de todas as abas/seções visíveis (abertos, em andamento, concluídos, históricos). Não invente nada — só o que está literalmente na página. Se houver paginação visível, liste o que aparece na página atual e mencione em 'observacoes' que existem mais páginas.",
   detalhe:
     "Extraia os detalhes completos do chamado/protocolo aberto nesta página: número, assunto, descrição, secretaria, status, data de abertura, última atualização, histórico de movimentações e link.",
   generico:
