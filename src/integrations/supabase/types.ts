@@ -113,6 +113,33 @@ export type Database = {
         }
         Relationships: []
       }
+      demo_abuse_log: {
+        Row: {
+          attempted_at: string
+          attempted_count: number
+          created_at: string
+          id: string
+          ip_hash: string
+          user_agent: string | null
+        }
+        Insert: {
+          attempted_at?: string
+          attempted_count: number
+          created_at?: string
+          id?: string
+          ip_hash: string
+          user_agent?: string | null
+        }
+        Update: {
+          attempted_at?: string
+          attempted_count?: number
+          created_at?: string
+          id?: string
+          ip_hash?: string
+          user_agent?: string | null
+        }
+        Relationships: []
+      }
       demo_usage: {
         Row: {
           count: number
