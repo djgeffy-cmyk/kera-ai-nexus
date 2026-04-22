@@ -522,6 +522,54 @@ export type Database = {
         }
         Relationships: []
       }
+      mp_subscriptions: {
+        Row: {
+          amount: number | null
+          created_at: string
+          currency: string | null
+          email: string
+          id: string
+          next_payment_date: string | null
+          payer_id: string | null
+          plan_tier: string
+          preapproval_id: string | null
+          raw: Json | null
+          reason: string | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          amount?: number | null
+          created_at?: string
+          currency?: string | null
+          email: string
+          id?: string
+          next_payment_date?: string | null
+          payer_id?: string | null
+          plan_tier?: string
+          preapproval_id?: string | null
+          raw?: Json | null
+          reason?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          amount?: number | null
+          created_at?: string
+          currency?: string | null
+          email?: string
+          id?: string
+          next_payment_date?: string | null
+          payer_id?: string | null
+          plan_tier?: string
+          preapproval_id?: string | null
+          raw?: Json | null
+          reason?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       network_metrics: {
         Row: {
           avg_ms: number | null
