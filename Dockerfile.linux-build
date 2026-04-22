@@ -1,0 +1,57 @@
+# syntax=docker/dockerfile:1.7
+
+# Multi-stage build pra gerar o AppImage do Kera Desktop (Linux x64)
+# usando cache do BuildKit. Cada stage isola uma fase, então mudanças
+# no código-fonte NÃO invalidam o cache de node_modules.
+
+# ---------------------------------------------------------------
+# Stage 1: deps — instala node_modules (cacheado via package*.json)
+# ---------------------------------------------------------------
+FROM node:24-bookworm-slim AS deps
+WORKDIR /app
+
+# Dependências nativas comuns pro electron-builder (fpm, AppImage tooling)
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    ca-certificates \
+    git \
+    python3 \
+    make \
+    g++ \
+    fakeroot \
+    rpm \
+    dpkg \
+    libsecret-1-dev \
+ && rm -rf /var/lib/apt/lists/*
+
+# Copia só os manifests primeiro: enquanto eles não mudarem,
+# o npm ci é reaproveitado do cache.
+COPY package.json package-lock.json* ./
+
+RUN --mount=type=cache,target=/root/.npm \
+    npm ci --no-audit --no-fund --prefer-offline
+
+# ---------------------------------------------------------------
+# Stage 2: builder — compila o app web e empacota com electron-builder
+# ---------------------------------------------------------------
+FROM deps AS builder
+WORKDIR /app
+
+# electron-builder cache (binários do Electron, AppImage runtime, etc.)
+ENV ELECTRON_CACHE=/root/.cache/electron \
+    ELECTRON_BUILDER_CACHE=/root/.cache/electron-builder \
+    ELECTRON_BUILD=true \
+    BUILD_PLATFORM=linux \
+    BUILD_ARCH=x64 \
+    CSC_IDENTITY_AUTO_DISCOVERY=false
+
+COPY . .
+
+RUN --mount=type=cache,target=/root/.cache/electron \
+    --mount=type=cache,target=/root/.cache/electron-builder \
+    npm run electron:build
+
+# ---------------------------------------------------------------
+# Stage 3: artifacts — imagem mínima só com o resultado pra `docker cp`
+# ---------------------------------------------------------------
+FROM scratch AS artifacts
+COPY --from=builder /app/release-builds/ /
