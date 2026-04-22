@@ -1,6 +1,6 @@
 // check-demo-quota — controla as 3 perguntas grátis do demo da Kera por IP.
 // Bloqueio definitivo (não reseta). Combinado com localStorage no client.
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.4";
+import { createClient } from "npm:@supabase/supabase-js@2.45.4";
 
 const DEMO_LIMIT = 3;
 
