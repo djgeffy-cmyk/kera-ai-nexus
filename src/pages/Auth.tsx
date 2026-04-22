@@ -13,8 +13,11 @@ import keraAvatar from "@/assets/kera-avatar.png";
  import keraAvatarVideoV2 from "@/assets/kera-avatar-rain-v2.mp4";
 import rainAmbientUrl from "@/assets/rain-ambient.mp3";
 
-// Vídeo de chuva hospedado no storage (atualizado pelo usuário)
-const rainBgRealisticUrl = "https://ytixqgkzqgeoxrbmjqbo.supabase.co/storage/v1/object/public/kera-videos//kera-chuva.mp4";
+// Vídeo de chuva hospedado no storage (atualizado pelo usuário).
+// `?v=` força o navegador/CDN a baixar a versão mais recente quando o arquivo
+// for trocado no bucket — sem isso, o cache antigo continua sendo exibido.
+const rainBgRealisticUrl =
+  "https://ytixqgkzqgeoxrbmjqbo.supabase.co/storage/v1/object/public/kera-videos//kera-chuva.mp4?v=2026-04-22";
 
 import DemoKeraDialog from "@/components/DemoKeraDialog";
 import { assetUrl } from "@/lib/assetUrl";
