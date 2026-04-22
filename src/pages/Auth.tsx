@@ -307,7 +307,10 @@ const Auth = () => {
         preload="auto"
         poster={keraAvatar}
         disablePictureInPicture
-        className="absolute inset-0 w-full h-full object-cover"
+        // O vídeo é vertical (784x1168). Em telas widescreen `object-cover` corta
+        // o topo E o chão. Alinhar pelo bottom garante que o solo com as gotas
+        // batendo SEMPRE fique visível.
+        className="absolute inset-0 w-full h-full object-cover object-bottom"
         src={rainBgUrl}
         // Sem filtros: mostra o vídeo de chuva original, com as gotas no chão visíveis
       />
