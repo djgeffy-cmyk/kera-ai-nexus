@@ -475,9 +475,20 @@ export const DemoKeraDialog = ({ open, onOpenChange, onWantToSignUp }: DemoKeraD
                 )}
               </Button>
             </div>
-            <p className="mt-2 text-center text-[10px] text-muted-foreground/50">
-              Modo demo · respostas filtradas · sem histórico salvo
-            </p>
+            <div className="mt-2 flex items-center justify-center gap-2 text-[10px] text-muted-foreground/50">
+              <span>Modo demo · respostas filtradas · sem histórico salvo</span>
+              <span className="opacity-40">·</span>
+              <button
+                type="button"
+                onClick={() => {
+                  onOpenChange(false);
+                  onWantToSignUp();
+                }}
+                className="text-muted-foreground/70 hover:text-primary transition-colors underline-offset-2 hover:underline"
+              >
+                Já tem conta? Entrar
+              </button>
+            </div>
           </div>
         )}
       </DialogContent>
