@@ -193,17 +193,16 @@ const Security = () => {
         </Card>
 
         {!mustChange && (
-          <>
-            <section>
-        <section>
-          <h2 className="font-display text-xl text-glow mb-1 flex items-center gap-2">
-            <ShieldCheck className="size-5 text-primary" /> Autenticação em 2 fatores (TOTP)
-          </h2>
-          <p className="text-sm text-muted-foreground">
-            Use Google Authenticator, Authy, Microsoft Authenticator ou 1Password
-            para gerar códigos de 6 dígitos a cada login.
-          </p>
-        </section>
+          <section>
+            <h2 className="font-display text-xl text-glow mb-1 flex items-center gap-2">
+              <ShieldCheck className="size-5 text-primary" /> Autenticação em 2 fatores (TOTP)
+            </h2>
+            <p className="text-sm text-muted-foreground">
+              Use Google Authenticator, Authy, Microsoft Authenticator ou 1Password
+              para gerar códigos de 6 dígitos a cada login.
+            </p>
+          </section>
+        )}
 
         {loading ? (
           <p className="text-muted-foreground text-sm">Carregando...</p>
