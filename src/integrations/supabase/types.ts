@@ -615,6 +615,7 @@ export type Database = {
           created_at: string
           display_name: string | null
           id: string
+          juridico_active: boolean
           onboarding_completed: boolean
           paywall_trial_count: number
           plan_tier: string
@@ -622,6 +623,7 @@ export type Database = {
           spaceincloud_active: boolean
           spaceincloud_external_id: string | null
           spaceincloud_synced_at: string | null
+          tech_active: boolean
           updated_at: string
           user_id: string
         }
@@ -630,6 +632,7 @@ export type Database = {
           created_at?: string
           display_name?: string | null
           id?: string
+          juridico_active?: boolean
           onboarding_completed?: boolean
           paywall_trial_count?: number
           plan_tier?: string
@@ -637,6 +640,7 @@ export type Database = {
           spaceincloud_active?: boolean
           spaceincloud_external_id?: string | null
           spaceincloud_synced_at?: string | null
+          tech_active?: boolean
           updated_at?: string
           user_id: string
         }
@@ -645,6 +649,7 @@ export type Database = {
           created_at?: string
           display_name?: string | null
           id?: string
+          juridico_active?: boolean
           onboarding_completed?: boolean
           paywall_trial_count?: number
           plan_tier?: string
@@ -652,6 +657,7 @@ export type Database = {
           spaceincloud_active?: boolean
           spaceincloud_external_id?: string | null
           spaceincloud_synced_at?: string | null
+          tech_active?: boolean
           updated_at?: string
           user_id?: string
         }
@@ -872,7 +878,15 @@ export type Database = {
           user_id: string
         }[]
       }
+      admin_set_juridico_active: {
+        Args: { _active: boolean; _target_user: string }
+        Returns: undefined
+      }
       admin_set_spaceincloud_active: {
+        Args: { _active: boolean; _target_user: string }
+        Returns: undefined
+      }
+      admin_set_tech_active: {
         Args: { _active: boolean; _target_user: string }
         Returns: undefined
       }

@@ -27,8 +27,10 @@ export function useUserAccess() {
   const [isAdmin, setIsAdmin] = useState(false);
   const [userId, setUserId] = useState<string | null>(null);
   const [userEmail, setUserEmail] = useState<string | null>(null);
-  const [paywallTrialCount, setPaywallTrialCount] = useState<number>(0);
-  const [spaceincloudActive, setSpaceincloudActive] = useState<boolean>(false);
+   const [paywallTrialCount, setPaywallTrialCount] = useState<number>(0);
+   const [spaceincloudActive, setSpaceincloudActive] = useState<boolean>(false);
+   const [juridicoActive, setJuridicoActive] = useState<boolean>(false);
+   const [techActive, setTechActive] = useState<boolean>(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -46,12 +48,12 @@ export function useUserAccess() {
         setUserEmail(u.user.email ?? null);
       }
 
-      const [{ data: profile }, { data: adminFlag }] = await Promise.all([
-        supabase
-          .from("profiles")
-          .select("selected_agents, onboarding_completed, paywall_trial_count, spaceincloud_active")
-          .eq("user_id", u.user.id)
-          .maybeSingle(),
+       const [{ data: profile }, { data: adminFlag }] = await Promise.all([
+         supabase
+           .from("profiles")
+           .select("selected_agents, onboarding_completed, paywall_trial_count, spaceincloud_active, juridico_active, tech_active")
+           .eq("user_id", u.user.id)
+           .maybeSingle(),
         supabase.rpc("has_role", { _user_id: u.user.id, _role: "admin" }),
       ]);
 
@@ -60,7 +62,9 @@ export function useUserAccess() {
       setSelectedAgents((profile?.selected_agents as string[] | null) ?? []);
       setOnboardingCompleted(!!profile?.onboarding_completed);
       setPaywallTrialCount(((profile as any)?.paywall_trial_count as number | null) ?? 0);
-      setSpaceincloudActive(!!(profile as any)?.spaceincloud_active);
+       setSpaceincloudActive(!!(profile as any)?.spaceincloud_active);
+       setJuridicoActive(!!(profile as any)?.juridico_active);
+       setTechActive(!!(profile as any)?.tech_active);
       setIsAdmin(!!adminFlag);
       setLoading(false);
     };
@@ -83,8 +87,19 @@ export function useUserAccess() {
     ) {
       return true;
     }
-    // Pacote Growth FIT — libera nutri/treinador/iron pra quem tem SpaceInCloud ativo.
-    if (spaceincloudActive && FIT_AGENT_KEYS.has(agentKey)) return true;
+     // Pacote Growth FIT — libera nutri/treinador/iron pra quem tem SpaceInCloud ativo.
+     if (spaceincloudActive && FIT_AGENT_KEYS.has(agentKey)) return true;
+ 
+     // Módulo Jurídico
+     if (juridicoActive && (KERA_FIT_AGENT_KEYS as any).includes && (window as any).KERA_JURIDICO_KEYS_SET?.has(agentKey)) return true;
+     // Workaround: as chaves são estáticas, vamos usar o Set local se possível ou checar manual
+     const juridicoKeys = ["kera-juridica", "kera-familia", "kera-sucessoes", "kera-personalidade", "kera-curatela"];
+     if (juridicoActive && juridicoKeys.includes(agentKey)) return true;
+ 
+     // Módulo Tecnologia
+     const techKeys = ["kera-dev", "kera-sec", "kera-security-nasa", "kera-sentinela"];
+     if (techActive && techKeys.includes(agentKey)) return true;
+ 
     return selectedAgents.includes(agentKey);
   };
 

@@ -8,7 +8,14 @@ import { Card } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog";
 import { ArrowLeft, Plus, Sparkles, Trash2, Pencil } from "lucide-react";
 import { toast } from "sonner";
-import { BUILTIN_AGENTS, KERA_FIT_AGENT_KEYS } from "@/lib/agents";
+ import { 
+   BUILTIN_AGENTS, 
+   KERA_FIT_AGENT_KEYS, 
+   KERA_JURIDICO_AGENT_KEYS, 
+   KERA_TECH_AGENT_KEYS,
+   KERA_JURIDICO_LABEL,
+   KERA_TECH_LABEL
+ } from "@/lib/agents";
 import { KeraFitGroup } from "@/components/KeraFitGroup";
 import { useUserAccess } from "@/hooks/useUserAccess";
 import keraLogo from "@/assets/kera-logo.png";
@@ -141,11 +148,22 @@ const AgentsPage = () => {
               </button>
             </p>
           )}
-          {(() => {
-            const fitKeys = new Set<string>(KERA_FIT_AGENT_KEYS);
-            const fitVisible = KERA_FIT_AGENT_KEYS.some((k) => canSee(k));
-            const fitUnlocked = KERA_FIT_AGENT_KEYS.some((k) => canAccess(k));
-            const others = BUILTIN_AGENTS.filter((a) => canSee(a.key) && !fitKeys.has(a.key));
+           {(() => {
+             const fitKeys = new Set<string>(KERA_FIT_AGENT_KEYS);
+             const juridicoKeys = new Set<string>(KERA_JURIDICO_AGENT_KEYS);
+             const techKeys = new Set<string>(KERA_TECH_AGENT_KEYS);
+ 
+             const fitVisible = KERA_FIT_AGENT_KEYS.some((k) => canSee(k));
+             const fitUnlocked = KERA_FIT_AGENT_KEYS.some((k) => canAccess(k));
+ 
+             const juridicoVisible = KERA_JURIDICO_AGENT_KEYS.some((k) => canSee(k));
+             const juridicoUnlocked = KERA_JURIDICO_AGENT_KEYS.some((k) => canAccess(k));
+ 
+             const techVisible = KERA_TECH_AGENT_KEYS.some((k) => canSee(k));
+             const techUnlocked = KERA_TECH_AGENT_KEYS.some((k) => canAccess(k));
+ 
+             const groupedKeys = new Set([...KERA_FIT_AGENT_KEYS, ...KERA_JURIDICO_AGENT_KEYS, ...KERA_TECH_AGENT_KEYS]);
+             const others = BUILTIN_AGENTS.filter((a) => canSee(a.key) && !groupedKeys.has(a.key));
 
             const renderAgentCard = (a: typeof BUILTIN_AGENTS[number]) => {
               const Icon = a.icon;
@@ -188,15 +206,39 @@ const AgentsPage = () => {
 
             return (
               <div className="space-y-4">
-                {fitVisible && (
-                  <KeraFitGroup
-                    unlocked={fitUnlocked}
-                    renderAgent={(key) => {
-                      const a = BUILTIN_AGENTS.find((x) => x.key === key);
-                      return a ? renderAgentCard(a) : null;
-                    }}
-                  />
-                )}
+                 {fitVisible && (
+                   <KeraFitGroup
+                     unlocked={fitUnlocked}
+                     renderAgent={(key) => {
+                       const a = BUILTIN_AGENTS.find((x) => x.key === key);
+                       return a ? renderAgentCard(a) : null;
+                     }}
+                   />
+                 )}
+ 
+                 {juridicoVisible && (
+                   <KeraFitGroup
+                     label={KERA_JURIDICO_LABEL}
+                     unlocked={juridicoUnlocked}
+                     renderAgent={(key) => {
+                       const a = BUILTIN_AGENTS.find((x) => x.key === key);
+                       return a ? renderAgentCard(a) : null;
+                     }}
+                     customKeys={KERA_JURIDICO_AGENT_KEYS as any}
+                   />
+                 )}
+ 
+                 {techVisible && (
+                   <KeraFitGroup
+                     label={KERA_TECH_LABEL}
+                     unlocked={techUnlocked}
+                     renderAgent={(key) => {
+                       const a = BUILTIN_AGENTS.find((x) => x.key === key);
+                       return a ? renderAgentCard(a) : null;
+                     }}
+                     customKeys={KERA_TECH_AGENT_KEYS as any}
+                   />
+                 )}
                 <div className="grid sm:grid-cols-2 gap-3">
                   {others.map((a) => renderAgentCard(a))}
                 </div>

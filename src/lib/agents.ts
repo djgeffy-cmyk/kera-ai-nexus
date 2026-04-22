@@ -18,8 +18,35 @@ export type BuiltinAgent = {
  */
 export const KERA_FIT_AGENT_KEYS = ["kera-nutri", "kera-treinador", "kera-iron"] as const;
 export const KERA_FIT_LABEL = "Kera Fit";
-export const KERA_FIT_DESCRIPTION =
-  "Pacote fitness — nutrição, treino e bodybuilding. Libera os 3 agentes de uma vez.";
+ export const KERA_FIT_DESCRIPTION =
+   "Pacote fitness — nutrição, treino e bodybuilding. Libera os 3 agentes de uma vez.";
+ 
+ /**
+  * Pacote "Kera Jurídica" — agrupa os agentes de direito.
+  */
+ export const KERA_JURIDICO_AGENT_KEYS = [
+   "kera-juridica",
+   "kera-familia",
+   "kera-sucessoes",
+   "kera-personalidade",
+   "kera-curatela",
+ ] as const;
+ export const KERA_JURIDICO_LABEL = "Kera Jurídica";
+ export const KERA_JURIDICO_DESCRIPTION =
+   "Módulo jurídico — família, sucessões, personalidade e licitações. Libera 5 agentes.";
+ 
+ /**
+  * Pacote "Kera Tecnologia" — agrupa os agentes de TI e segurança.
+  */
+ export const KERA_TECH_AGENT_KEYS = [
+   "kera-dev",
+   "kera-sec",
+   "kera-security-nasa",
+   "kera-sentinela",
+ ] as const;
+ export const KERA_TECH_LABEL = "Kera Tecnologia";
+ export const KERA_TECH_DESCRIPTION =
+   "Módulo tech — desenvolvimento, cibersegurança e monitoramento NASA. Libera 4 agentes.";
 
 const BASE_PERSONALITY = `Personalidade Kera:
 - Direta, honesta, truth-seeking. Sem enrolação corporativa.
