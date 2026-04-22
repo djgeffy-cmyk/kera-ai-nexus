@@ -421,7 +421,10 @@ const Chat = () => {
       .order("updated_at", { ascending: false });
     if (error) return toast.error(error.message);
     setConversations((data || []) as Conversation[]);
-    if (data && data.length && !currentId) selectConversation(data[0].id, data[0].agent_key);
+    const requestedAgent = searchParams.get("agent");
+    if (data && data.length && !currentId && !requestedAgent) {
+      selectConversation(data[0].id, data[0].agent_key);
+    }
   };
 
   const loadCustomAgents = async () => {
@@ -523,6 +526,33 @@ const Chat = () => {
     setTimeout(() => sendText(frase), 250);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [userId]);
+
+  const requestedAgentRef = useRef<string | null>(null);
+  useEffect(() => {
+    if (!userId) return;
+
+    const requestedAgent = searchParams.get("agent");
+    if (!requestedAgent) {
+      requestedAgentRef.current = null;
+      return;
+    }
+
+    if (requestedAgentRef.current === requestedAgent) return;
+
+    const agentExists =
+      BUILTIN_AGENTS.some((agent) => agent.key === requestedAgent) ||
+      customAgents.some((agent) => agent.id === requestedAgent);
+
+    const next = new URLSearchParams(searchParams);
+    next.delete("agent");
+    setSearchParams(next, { replace: true });
+
+    if (!agentExists) return;
+
+    requestedAgentRef.current = requestedAgent;
+    setAgentKey(requestedAgent);
+    void newConversation(requestedAgent);
+  }, [customAgents, searchParams, setSearchParams, userId]);
 
 
   const resolveSystemPrompt = (ak: string): string | undefined => {
