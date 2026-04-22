@@ -139,7 +139,10 @@ export const DemoKeraDialog = ({ open, onOpenChange, onWantToSignUp }: DemoKeraD
             apikey: SUPABASE_KEY,
             Authorization: `Bearer ${SUPABASE_KEY}`,
           },
-          body: JSON.stringify({ action: "check" }),
+          body: JSON.stringify({
+            action: "check",
+            clientFingerprint: getStableFingerprint(),
+          }),
         });
         if (!res.ok) return;
         const data = await res.json();
@@ -183,7 +186,10 @@ export const DemoKeraDialog = ({ open, onOpenChange, onWantToSignUp }: DemoKeraD
           apikey: SUPABASE_KEY,
           Authorization: `Bearer ${SUPABASE_KEY}`,
         },
-        body: JSON.stringify({ action: "consume" }),
+        body: JSON.stringify({
+          action: "consume",
+          clientFingerprint: getStableFingerprint(),
+        }),
       });
       const quota = await quotaRes.json().catch(() => ({} as any));
       if (quotaRes.status === 429 || quota?.blocked === true) {
