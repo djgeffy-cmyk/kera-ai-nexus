@@ -7,7 +7,7 @@ import { ArrowLeft, Check, X, KeyRound, ExternalLink, Volume2, Play } from "luci
 import { PROVIDERS, SECRET_NAMES, getPreferredProvider, setPreferredProvider, type ProviderId } from "@/lib/providers";
 import { loadVoicesAsync, getPreferredVoiceURI, setPreferredVoiceURI, classifyVoice } from "@/lib/nativeVoice";
 import { toast } from "sonner";
-import keraLogo from "@/assets/kera-logo.png";
+import keraLogo from "@/assets/kera-admin-logo.png";
 import { MonitorTargetsManager } from "@/components/admin/MonitorTargetsManager";
 import { NetworkMetricsChart } from "@/components/admin/NetworkMetricsChart";
 import { PasswordResetRequests } from "@/components/admin/PasswordResetRequests";
@@ -81,8 +81,8 @@ const Admin = () => {
         <Button variant="ghost" size="icon" onClick={() => navigate("/")}>
           <ArrowLeft className="size-5" />
         </Button>
-        <img src={keraLogo} alt="Kera AI" className="h-7" />
-        <h1 className="font-display text-glow text-lg ml-2">PAINEL ADMIN</h1>
+        <img src={keraLogo} alt="Kera AI — Space in Cloud" className="h-12 md:h-14 object-contain" />
+        <h1 className="font-display text-glow text-lg ml-3">PAINEL ADMIN</h1>
         <div className="ml-auto">
           <Button variant="outline" size="sm" onClick={() => navigate("/admin/uso")}>
             📊 Consumo de IA
