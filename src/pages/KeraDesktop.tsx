@@ -448,6 +448,52 @@ const KeraDesktopPage = () => {
               loja oficial. Em macOS: <em>Configurações → Privacidade & Segurança → Abrir mesmo assim</em>.
               Em Windows: <em>Mais informações → Executar mesmo assim</em>.
             </div>
+
+            {/* Instalador 1-linha pra Linux — busca .deb (preferido) ou cai no AppImage */}
+            <div className="rounded-lg border border-primary/30 bg-secondary/40 p-3 space-y-2">
+              <div className="flex items-center gap-2">
+                <Terminal className="size-4 text-primary" />
+                <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                  Linux — instalação em 1 comando
+                </span>
+              </div>
+              <p className="text-xs text-muted-foreground">
+                Cole no terminal. O script baixa a release mais nova, prefere o
+                <strong> .deb</strong> (Ubuntu/Debian, instala via apt) e cai no
+                <strong> AppImage</strong> portátil quando não houver .deb.
+              </p>
+              <div className="flex items-stretch gap-2">
+                <code className="flex-1 min-w-0 overflow-x-auto whitespace-nowrap rounded-md bg-background/70 border border-border px-3 py-2 text-[12px] font-mono text-foreground">
+                  curl -fsSL https://space.kera.ia.br/install-kera.sh | bash
+                </code>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  className="shrink-0"
+                  onClick={() => {
+                    navigator.clipboard
+                      .writeText("curl -fsSL https://space.kera.ia.br/install-kera.sh | bash")
+                      .then(() => toast.success("Comando copiado"))
+                      .catch(() => toast.error("Não consegui copiar"));
+                  }}
+                >
+                  <ClipboardCopy className="size-3.5" /> Copiar
+                </Button>
+              </div>
+              <p className="text-[11px] text-muted-foreground/80">
+                Prefere ver o script antes?{" "}
+                <a
+                  href="/install-kera.sh"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-primary hover:underline"
+                >
+                  abrir install-kera.sh
+                </a>
+                .
+              </p>
+            </div>
           </Card>
 
           {/* ATUALIZAÇÕES — preview desabilitado no navegador */}
