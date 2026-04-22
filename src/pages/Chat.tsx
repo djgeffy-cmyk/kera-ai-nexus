@@ -197,6 +197,12 @@ const AGENT_SUGGESTIONS: Record<string, Array<{ q: string; icon: typeof Sparkles
      { q: "Preciso de um modelo de Termo de Referência para contratar software de gestão.", icon: FileText },
      { q: "Quais as obrigações de transparência ativa para municípios pequenos?", icon: ShieldCheck },
    ],
+   "kera-engegov": [
+     { q: "Liste as obras em andamento em Jaraguá do Sul.", icon: FileSearch },
+     { q: "Mostre os detalhes da última obra cadastrada em Massaranduba.", icon: ScrollText },
+     { q: "Quais obras estão atrasadas no portal GEVO?", icon: Activity },
+     { q: "Resumo das medições e fiscais responsáveis das obras de Pato Branco.", icon: FileText },
+   ],
 };
 
 const Chat = () => {
