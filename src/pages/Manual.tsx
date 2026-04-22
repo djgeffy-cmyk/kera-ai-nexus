@@ -316,7 +316,7 @@ export default function Manual() {
                     <AppleIcon className="size-3.5" /> macOS (Intel + M1/M2/M3)
                   </Badge>
                   <Badge variant="outline" className="gap-1.5 border-primary/30 px-3 py-1.5">
-                    <Terminal className="size-3.5" /> Linux (AppImage)
+                    <Terminal className="size-3.5" /> Linux (.deb + AppImage)
                   </Badge>
                 </div>
 
@@ -347,7 +347,7 @@ export default function Manual() {
                 </div>
 
                 <p className="text-xs text-muted-foreground pt-2">
-                  💡 <strong>Atualização automática:</strong> uma vez instalado, novas versões chegam sozinhas via electron-updater.
+                  💡 <strong>Linux agora terá 2 opções:</strong> .deb pra instalar fácil no Ubuntu/Debian e AppImage como versão portátil.
                 </p>
               </div>
             </div>

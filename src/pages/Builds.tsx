@@ -128,8 +128,8 @@ export default function Builds() {
             </div>
             <h1 className="text-3xl font-bold">Últimas builds Linux</h1>
             <p className="mt-1 text-sm text-muted-foreground">
-              Baixe diretamente o .AppImage da release mais recente sem precisar
-              entrar na aba Actions.
+              Baixe diretamente o instalador .deb ou o AppImage da release mais
+              recente sem precisar entrar na aba Actions.
             </p>
           </div>
           <div className="flex items-center gap-2">
