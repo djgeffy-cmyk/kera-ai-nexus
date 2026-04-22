@@ -76,6 +76,7 @@ export function useVoice(opts: { useElevenLabs?: boolean; useRemoteTTS?: boolean
   const recRef = useRef<SR | null>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const pendingAudioRef = useRef<HTMLAudioElement | null>(null);
+  const primedAudioRef = useRef<HTMLAudioElement | null>(null);
   const inflightRef = useRef<AbortController | null>(null);
   const unlockHandlerRef = useRef<(() => void) | null>(null);
   const sessionRef = useRef(0);
