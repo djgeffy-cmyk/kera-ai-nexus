@@ -171,6 +171,18 @@ const AGENT_SUGGESTIONS: Record<string, Array<{ q: string; icon: typeof Sparkles
     { q: "Inventário extrajudicial: passo a passo.", icon: ScrollText },
     { q: "Guarda compartilhada: direitos e deveres.", icon: Baby },
   ],
+  "kera-guaramirim": [
+    { q: "Quais licitações estão abertas em Guaramirim agora?", icon: FileSearch },
+    { q: "Me mostra os últimos contratos da Prefeitura.", icon: ScrollText },
+    { q: "Como consultar protocolo no atende.net?", icon: Radar },
+    { q: "Relatório de despesas da Secretaria de Saúde de Guaramirim.", icon: Activity },
+  ],
+  "kera-prefeituras": [
+    { q: "Quais APIs do governo federal posso integrar na Prefeitura?", icon: Code2 },
+    { q: "Como conectar com o sistema IPM atende.net?", icon: Sparkles },
+    { q: "Modelo de TR pra contratação de software municipal.", icon: FileText },
+    { q: "Boas práticas de transparência ativa (LAI) pra prefeitura.", icon: ShieldCheck },
+  ],
 };
 
 const Chat = () => {
