@@ -19,6 +19,7 @@ import { PronunciationFixesManager } from "@/components/admin/PronunciationFixes
 import { ElevenLabsQuotaCard } from "@/components/admin/ElevenLabsQuotaCard";
 import { UserManager } from "@/components/admin/UserManager";
 import { WebserviceCredentialsManager } from "@/components/admin/WebserviceCredentialsManager";
+import { PaymentStatusCard } from "@/components/admin/PaymentStatusCard";
 
 type Status = Record<string, boolean>;
 
@@ -230,6 +231,8 @@ const Admin = () => {
         <div className="pt-4 border-t border-border">
           <UserManager />
         </div>
+
+        <PaymentStatusCard />
 
         <KeraPromptEditor />
 
