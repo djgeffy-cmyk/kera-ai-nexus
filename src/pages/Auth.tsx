@@ -149,12 +149,13 @@ const Auth = () => {
     const meta = document.querySelector('meta[name="description"]');
     if (meta) meta.setAttribute("content", "Acesse o Kera AI: assistente futurista para tecnologia, programação e cibersegurança.");
     supabase.auth.getSession().then(({ data }) => {
-      if (data.session) navigate("/", { replace: true });
-    });
-  }, [navigate]);
-
-    const { data: factors, error } = await supabase.auth.mfa.listFactors();
-    if (error) return false;
+     if (data.session) navigate("/", { replace: true });
+     });
+   }, [navigate]);
+ 
+   const checkAndChallengeMfa = async (): Promise<boolean> => {
+     const { data: factors, error } = await supabase.auth.mfa.listFactors();
+     if (error) return false;
     const totp = factors?.totp?.find((f) => f.status === "verified");
     if (!totp) return false;
     const ch = await supabase.auth.mfa.challenge({ factorId: totp.id });
