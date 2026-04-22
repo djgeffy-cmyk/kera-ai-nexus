@@ -1,5 +1,7 @@
 import { isImageRequest } from "@/lib/imageDetect";
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, memo } from "react";
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -104,6 +106,62 @@ const greetingFor = (agentKey: string, name: string) => {
   }
   return `Aqui é a ${name}. Modo demo: 3 perguntas grátis. Manda a primeira que eu já resolvo.`;
 };
+
+const MD_PLUGINS = [remarkGfm];
+
+const DemoMessage = memo(({ m, loading, isFirstAssistantOnly, greetingDone, typedGreeting }: { 
+  m: Msg; 
+  loading: boolean; 
+  isFirstAssistantOnly: boolean; 
+  greetingDone: boolean; 
+  typedGreeting: string; 
+}) => {
+  const isAssistant = m.role === "assistant";
+  
+  return (
+    <div
+      className={`max-w-[85%] rounded-2xl px-4 py-2.5 text-sm leading-relaxed transition-shadow ${
+        !isAssistant
+          ? "bg-gradient-to-br from-primary to-primary/80 text-primary-foreground shadow-[0_4px_18px_-4px_hsl(var(--primary)/0.55)] rounded-br-md"
+          : "bg-foreground/5 border border-white/10 text-foreground backdrop-blur-md rounded-bl-md"
+      }`}
+    >
+      {(() => {
+        if (isAssistant && isFirstAssistantOnly && !greetingDone) {
+          return (
+            <>
+              {typedGreeting}
+              <span className="inline-block w-[2px] h-[1em] align-middle ml-0.5 bg-primary/80 animate-pulse" />
+            </>
+          );
+        }
+        
+        if (isAssistant) {
+          return (
+            <div className="prose-kera-demo">
+              <ReactMarkdown 
+                remarkPlugins={MD_PLUGINS}
+                components={{
+                  img: ({ node, ...props }) => (
+                    <img 
+                      {...props} 
+                      className="rounded-lg border border-white/10 shadow-lg my-2 max-h-60 object-contain bg-black/20" 
+                      loading="lazy"
+                    />
+                  )
+                }}
+              >
+                {m.content || (loading ? "…" : "")}
+              </ReactMarkdown>
+            </div>
+          );
+        }
+
+        return <div className="whitespace-pre-wrap">{m.content}</div>;
+      })()}
+    </div>
+  );
+});
 
 export const DemoKeraDialog = ({ open, onOpenChange, onWantToSignUp }: DemoKeraDialogProps) => {
   const [agentKey, setAgentKey] = useState<string>("kera");
@@ -609,31 +667,13 @@ export const DemoKeraDialog = ({ open, onOpenChange, onWantToSignUp }: DemoKeraD
                 transition={{ duration: 0.25, ease: "easeOut" }}
                 className={`flex ${m.role === "user" ? "justify-end" : "justify-start"}`}
               >
-                <div
-                  className={`max-w-[85%] rounded-2xl px-4 py-2.5 text-sm whitespace-pre-wrap leading-relaxed transition-shadow ${
-                    m.role === "user"
-                      ? "bg-gradient-to-br from-primary to-primary/80 text-primary-foreground shadow-[0_4px_18px_-4px_hsl(var(--primary)/0.55)] rounded-br-md"
-                      : "bg-foreground/5 border border-white/10 text-foreground backdrop-blur-md rounded-bl-md"
-                  }`}
-                >
-                  {(() => {
-                    // Auto-typing apenas para a primeira mensagem assistant antes do user mandar algo.
-                    if (
-                      i === 0 &&
-                      m.role === "assistant" &&
-                      isFirstAssistantOnly &&
-                      !greetingDone
-                    ) {
-                      return (
-                        <>
-                          {typedGreeting}
-                          <span className="inline-block w-[2px] h-[1em] align-middle ml-0.5 bg-primary/80 animate-pulse" />
-                        </>
-                      );
-                    }
-                    return m.content || (loading && i === messages.length - 1 ? "…" : "");
-                  })()}
-                </div>
+                <DemoMessage 
+                  m={m} 
+                  loading={loading && i === messages.length - 1}
+                  isFirstAssistantOnly={i === 0 && isFirstAssistantOnly}
+                  greetingDone={greetingDone}
+                  typedGreeting={typedGreeting}
+                />
               </motion.div>
             ))}
           </AnimatePresence>
