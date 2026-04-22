@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useRef } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { Sparkles, Send, MonitorDown, Info, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -28,6 +28,10 @@ export const AskKeraFab = () => {
   const [open, setOpen] = useState(false);
   const [text, setText] = useState("");
   const [sending, setSending] = useState(false);
+  // Trava SÍNCRONA — `sending` (state) só atualiza no próximo render, então
+  // dois cliques no mesmo tick conseguiriam passar pelo `if (sending)` antes
+  // do React aplicar o setState. A ref bloqueia imediatamente.
+  const sendingRef = useRef(false);
   const desktop = isKeraDesktop();
 
   const filteredPrompts = useMemo(() => {
@@ -42,7 +46,8 @@ export const AskKeraFab = () => {
 
   const send = (frase: string) => {
     const q = frase.trim();
-    if (!q || sending) return;
+    if (!q || sendingRef.current) return;
+    sendingRef.current = true;
     setSending(true);
     const isDesktopPrompt = QUICK_PROMPTS.find(p => p.label === q)?.desktop;
     const agentParam = isDesktopPrompt ? "&agent=kera" : "";
@@ -53,6 +58,7 @@ export const AskKeraFab = () => {
       setOpen(false);
       setText("");
       setSending(false);
+      sendingRef.current = false;
     }, 250);
   };
 
