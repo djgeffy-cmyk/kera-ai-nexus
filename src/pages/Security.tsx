@@ -6,7 +6,7 @@ import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, ShieldCheck, ShieldOff, Smartphone } from "lucide-react";
+import { ArrowLeft, ShieldCheck, ShieldOff, Smartphone, Key } from "lucide-react";
 import { toast } from "sonner";
 import keraLogo from "@/assets/kera-logo.png";
 
@@ -22,11 +22,58 @@ const Security = () => {
   const [factorId, setFactorId] = useState<string | null>(null);
   const [code, setCode] = useState("");
   const [verifying, setVerifying] = useState(false);
+  const [newPassword, setNewPassword] = useState("");
+  const [changingPassword, setChangingPassword] = useState(false);
+  const [mustChange, setMustChange] = useState(false);
 
   useEffect(() => {
     document.title = "Kera AI — Segurança (2FA)";
     refresh();
   }, []);
+
+  useEffect(() => {
+    const checkProfile = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        const { data } = await supabase
+          .from("profiles")
+          .select("must_change_password")
+          .eq("user_id", user.id)
+          .maybeSingle();
+        setMustChange(!!data?.must_change_password);
+      }
+    };
+    checkProfile();
+  }, []);
+
+  const handleUpdatePassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (newPassword.length < 6) {
+      toast.error("A senha deve ter pelo menos 6 caracteres");
+      return;
+    }
+    setChangingPassword(true);
+    try {
+      const { error } = await supabase.auth.updateUser({ password: newPassword });
+      if (error) throw error;
+      
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        await supabase
+          .from("profiles")
+          .update({ must_change_password: false })
+          .eq("user_id", user.id);
+      }
+      
+      toast.success("Senha atualizada com sucesso!");
+      setNewPassword("");
+      setMustChange(false);
+    } catch (e: any) {
+      toast.error(e.message || "Erro ao atualizar senha");
+    } finally {
+      setChangingPassword(false);
+    }
+  };
 
   const refresh = async () => {
     setLoading(true);
@@ -90,15 +137,64 @@ const Security = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      <header className="h-14 border-b border-border panel flex items-center px-4 md:px-6 gap-3">
-        <Button variant="ghost" size="icon" onClick={() => navigate("/")}>
-          <ArrowLeft className="size-5" />
-        </Button>
-        <img src={keraLogo} alt="Kera AI" className="h-7" />
-        <h1 className="font-display text-glow text-lg ml-2">SEGURANÇA</h1>
-      </header>
+      {!mustChange && (
+        <header className="h-14 border-b border-border panel flex items-center px-4 md:px-6 gap-3">
+          <Button variant="ghost" size="icon" onClick={() => navigate("/")}>
+            <ArrowLeft className="size-5" />
+          </Button>
+          <img src={keraLogo} alt="Kera AI" className="h-7" />
+          <h1 className="font-display text-glow text-lg ml-2">SEGURANÇA</h1>
+        </header>
+      )}
 
       <main className="max-w-2xl mx-auto px-4 py-8 space-y-6">
+        {mustChange && (
+          <section className="text-center space-y-4 mb-8">
+            <div className="flex justify-center mb-6">
+              <img src={keraLogo} alt="Kera AI" className="h-12" />
+            </div>
+            <h2 className="font-display text-3xl text-glow">Defina sua nova senha</h2>
+            <p className="text-muted-foreground">
+              Por segurança, você deve alterar sua senha temporária no primeiro acesso.
+            </p>
+          </section>
+        )}
+
+        <section>
+          <h2 className="font-display text-xl text-glow mb-1 flex items-center gap-2">
+            <Key className="size-5 text-primary" /> Alterar Senha
+          </h2>
+          <p className="text-sm text-muted-foreground">
+            {mustChange ? "Digite sua nova senha definitiva abaixo." : "Mantenha sua conta segura com uma senha forte."}
+          </p>
+        </section>
+
+        <Card className="p-5 border-border bg-card/50">
+          <form onSubmit={handleUpdatePassword} className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="newPassword">Nova Senha</Label>
+              <Input
+                id="newPassword"
+                type="password"
+                placeholder="Mínimo 6 caracteres"
+                value={newPassword}
+                onChange={(e) => setNewPassword(e.target.value)}
+                required
+              />
+            </div>
+            <Button 
+              type="submit" 
+              disabled={changingPassword || newPassword.length < 6}
+              className="w-full shadow-glow"
+            >
+              {changingPassword ? "Atualizando..." : "Salvar Nova Senha"}
+            </Button>
+          </form>
+        </Card>
+
+        {!mustChange && (
+          <>
+            <section>
         <section>
           <h2 className="font-display text-xl text-glow mb-1 flex items-center gap-2">
             <ShieldCheck className="size-5 text-primary" /> Autenticação em 2 fatores (TOTP)
