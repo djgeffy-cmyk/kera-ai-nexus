@@ -58,14 +58,17 @@ Deno.serve(async (req) => {
 
     const body = await req.json().catch(() => ({}));
     const apply = body.apply === true;
-    const limit = Math.min(Number(body.limit ?? 5000), 20000);
+    const limit = Math.min(Number(body.limit ?? 200), 500);
+    const before: string | null = body.before ?? null;
 
-    const { data: rows, error } = await adminClient
+    let q = adminClient
       .from("messages")
-      .select("id, content")
+      .select("id, content, created_at")
       .eq("role", "user")
       .order("created_at", { ascending: false })
       .limit(limit);
+    if (before) q = q.lt("created_at", before);
+    const { data: rows, error } = await q;
     if (error) throw error;
 
     const dirty: { id: string; hits: string[]; preview: string; redacted: string }[] = [];
@@ -90,6 +93,7 @@ Deno.serve(async (req) => {
       ok: true, scanned: rows?.length ?? 0, found: dirty.length, updated,
       sample: dirty.slice(0, 10).map((d) => ({ id: d.id, hits: d.hits, preview: d.preview })),
       apply,
+      next_before: rows && rows.length === limit ? rows[rows.length - 1].created_at : null,
     }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
   } catch (e) {
     return new Response(JSON.stringify({ error: e instanceof Error ? e.message : String(e) }), {
