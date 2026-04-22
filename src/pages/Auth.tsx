@@ -14,7 +14,6 @@ import keraAvatar from "@/assets/kera-avatar.png";
  import rainBgRealisticUrl from "@/assets/rain-bg-chuva.mp4";
 import rainAmbientUrl from "@/assets/rain-ambient.mp3";
 
-import ParticlesOverlay from "@/components/ParticlesOverlay";
 import DemoKeraDialog from "@/components/DemoKeraDialog";
 import { assetUrl } from "@/lib/assetUrl";
 import { MissionCriticalSchema } from "@/lib/missionCriticalSchemas";
