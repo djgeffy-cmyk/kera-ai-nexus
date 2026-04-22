@@ -48,7 +48,7 @@ const PLANS: Plan[] = [
     features: [
       "Tudo do Essencial",
       "Todos os agentes especialistas",
-      "10 imagens geradas por dia",
+      "3 imagens geradas por dia",
       "Modo voz com TTS premium",
       "Análise de código (até 50/mês)",
       "Suporte prioritário",
@@ -66,7 +66,7 @@ const PLANS: Plan[] = [
       "Tudo do Pro",
       "Kera Security NASA ilimitada",
       "Sentinela (monitor 24/7)",
-      "50 imagens geradas por dia",
+      "10 imagens geradas por dia",
       "Análise de código ilimitada",
       "Acesso antecipado a novos agentes",
       "Suporte dedicado WhatsApp",
