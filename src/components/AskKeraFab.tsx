@@ -36,15 +36,39 @@ export const AskKeraFab = () => {
   const desktop = isKeraDesktop();
   // Só mostra o FAB pra usuário logado — visitantes anônimos não devem
   // ver o atalho "Pedir pra Kera" na página inicial.
-  const [authed, setAuthed] = useState<boolean | null>(null);
+  //
+  // Pra evitar "piscar" (mostrar o botão por 1 frame antes da sessão
+  // resolver), começamos com `null` (=> não renderiza nada) e só
+  // setamos `true/false` depois que o supabase respondeu OU o cache
+  // do localStorage indicou que tem sessão. O cache é uma checagem
+  // SÍNCRONA: se a chave `sb-*-auth-token` existir, já assumimos
+  // logado no primeiro render — evitando o flash inverso (botão
+  // sumir e reaparecer pra quem ESTÁ logado).
+  const [authed, setAuthed] = useState<boolean | null>(() => {
+    if (typeof window === "undefined") return null;
+    try {
+      for (let i = 0; i < window.localStorage.length; i++) {
+        const key = window.localStorage.key(i);
+        if (key && /^sb-.*-auth-token$/.test(key)) {
+          const raw = window.localStorage.getItem(key);
+          if (raw && raw.includes("access_token")) return true;
+        }
+      }
+      return false;
+    } catch {
+      return null;
+    }
+  });
 
   useEffect(() => {
     let mounted = true;
+    // Listener PRIMEIRO (recomendado pelo Supabase) e depois getSession()
+    // pra evitar race entre evento e leitura inicial.
+    const { data: sub } = supabase.auth.onAuthStateChange((_e, session) => {
+      if (mounted) setAuthed(!!session);
+    });
     supabase.auth.getSession().then(({ data }) => {
       if (mounted) setAuthed(!!data.session);
-    });
-    const { data: sub } = supabase.auth.onAuthStateChange((_e, session) => {
-      setAuthed(!!session);
     });
     return () => {
       mounted = false;
