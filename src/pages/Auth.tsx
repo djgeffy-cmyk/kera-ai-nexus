@@ -62,6 +62,7 @@ const Auth = () => {
   const audioCtxRef = useRef<AudioContext | null>(null);
   const gainNodeRef = useRef<GainNode | null>(null);
   const passkeyAvailable = supportsPasskey && !inIframe;
+  const muteTimeoutRef = useRef<number | null>(null);
 
   useEffect(() => {
     // eslint-disable-next-line no-console
@@ -254,10 +255,6 @@ const Auth = () => {
     return cleanup;
   }, [audioStarted, audioMuted]);
 
-  // Sincroniza mute com estado e persiste a preferência no localStorage.
-  // Mutar PARA o áudio de verdade (pausa o elemento <audio>) — não basta
-  // zerar o gain, pois o elemento continuaria decodificando. Faz fade de
-  // 400ms via GainNode antes de pausar para evitar corte brusco.
   useEffect(() => {
     try {
       window.localStorage.setItem(RAIN_MUTE_KEY, audioMuted ? "1" : "0");
@@ -265,6 +262,11 @@ const Auth = () => {
     const a = audioRef.current;
     const ctx = audioCtxRef.current;
     const master = gainNodeRef.current;
+
+    if (muteTimeoutRef.current) {
+      window.clearTimeout(muteTimeoutRef.current);
+      muteTimeoutRef.current = null;
+    }
 
     if (audioMuted) {
       // Fade-out + pause real do elemento de áudio
@@ -274,11 +276,12 @@ const Auth = () => {
         master.gain.setValueAtTime(master.gain.value, now);
         master.gain.linearRampToValueAtTime(0, now + 0.4);
       }
-      window.setTimeout(() => {
+      muteTimeoutRef.current = window.setTimeout(() => {
         if (a) {
           try { a.pause(); } catch { /* ignore */ }
           a.muted = true;
         }
+        muteTimeoutRef.current = null;
       }, 450);
     } else {
       // Desmutar: retoma o play (se já houve gesto) e fade-in
@@ -295,6 +298,25 @@ const Auth = () => {
       }
     }
   }, [audioMuted]);
+
+  // Cleanup final: garante que o som para ao sair da página
+  useEffect(() => {
+    return () => {
+      if (muteTimeoutRef.current) window.clearTimeout(muteTimeoutRef.current);
+      const a = audioRef.current;
+      const ctx = audioCtxRef.current;
+      if (a) {
+        try {
+          a.pause();
+          a.src = "";
+          a.load();
+        } catch { /* ignore */ }
+      }
+      if (ctx && ctx.state !== "closed") {
+        try { ctx.close(); } catch { /* ignore */ }
+      }
+    };
+  }, []);
 
   const checkAndChallengeMfa = async (): Promise<boolean> => {
     const { data: factors, error } = await supabase.auth.mfa.listFactors();
