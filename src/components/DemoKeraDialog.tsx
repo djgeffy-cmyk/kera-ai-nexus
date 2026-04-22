@@ -177,35 +177,93 @@ export const DemoKeraDialog = ({ open, onOpenChange, onWantToSignUp }: DemoKeraD
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="panel border-primary/30 max-w-lg max-h-[85vh] flex flex-col">
-        <DialogHeader>
-          <DialogTitle className="font-display text-glow flex items-center gap-2">
-            <UmbrellaCorpLogo size={28} />
-            Teste a Kera ao vivo
-             <div className="ml-auto flex flex-col items-end gap-1">
-               <span className="text-xs font-normal text-muted-foreground flex items-center gap-1">
-                 <Sparkles className="size-3 text-primary" />
-                 {remaining}/{DEMO_LIMIT} perguntas grátis
-               </span>
-               <button
-                 onClick={() => {
-                   onOpenChange(false);
-                   onWantToSignUp();
-                 }}
-                 className="text-[10px] text-primary/60 hover:text-primary underline transition-colors"
-               >
-                 Já tem conta? Entrar
-               </button>
-             </div>
-          </DialogTitle>
-          <DialogDescription>
-            Modo demo — sem conta, sem cadastro. Pergunta o que quiser.
-          </DialogDescription>
-        </DialogHeader>
+      <DialogContent className="panel border-primary/30 max-w-2xl max-h-[90vh] flex flex-col p-0 overflow-hidden">
+        {/* Header com avatar de vídeo */}
+        <div className="relative px-5 pt-5 pb-3 border-b border-primary/20 bg-gradient-to-b from-primary/10 to-transparent">
+          <div className="flex items-start gap-3">
+            <motion.div
+              animate={{ y: [0, -4, 0] }}
+              transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
+              className="relative size-16 sm:size-20 rounded-full overflow-hidden border-2 border-primary/70 shadow-glow ring-2 ring-primary/30 shrink-0 bg-background"
+            >
+              <video
+                aria-hidden
+                autoPlay
+                loop
+                muted
+                playsInline
+                src={rainVideoUrl}
+                poster={keraAvatarPng}
+                className="w-full h-full object-cover"
+              />
+            </motion.div>
+            <div className="flex-1 min-w-0">
+              <DialogHeader className="space-y-1 text-left">
+                <DialogTitle className="font-display text-glow flex items-center gap-2 text-lg">
+                  <UmbrellaCorpLogo size={22} />
+                  Teste a Kera ao vivo
+                </DialogTitle>
+                <DialogDescription className="text-xs">
+                  Escolhe um agente e manda ver. Sem conta, sem cadastro.
+                </DialogDescription>
+              </DialogHeader>
+            </div>
+            <div className="flex flex-col items-end gap-1 shrink-0">
+              <span className="text-xs font-normal text-muted-foreground flex items-center gap-1">
+                <Sparkles className="size-3 text-primary" />
+                {remaining}/{DEMO_LIMIT} grátis
+              </span>
+              <button
+                onClick={() => {
+                  onOpenChange(false);
+                  onWantToSignUp();
+                }}
+                className="text-[10px] text-primary/70 hover:text-primary underline transition-colors"
+              >
+                Já tem conta? Entrar
+              </button>
+            </div>
+          </div>
+
+          {/* Seletor de agentes — chips horizontais */}
+          <div className="mt-4 -mx-1 px-1 overflow-x-auto scrollbar-thin">
+            <div className="flex gap-2 pb-1 min-w-max">
+              {DEMO_AGENTS.map((ag) => {
+                const Icon = ag.icon;
+                const active = ag.key === agentKey;
+                return (
+                  <button
+                    key={ag.key}
+                    type="button"
+                    onClick={() => switchAgent(ag.key)}
+                    disabled={loading}
+                    title={ag.description}
+                    className={cn(
+                      "flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs whitespace-nowrap border transition-all",
+                      active
+                        ? "bg-primary/20 border-primary text-primary shadow-[0_0_12px_hsl(var(--primary)/0.4)]"
+                        : "bg-muted/30 border-border/40 text-muted-foreground hover:border-primary/50 hover:text-foreground",
+                      loading && "opacity-50 cursor-not-allowed",
+                    )}
+                  >
+                    <Icon className={cn("size-3.5", active ? "text-primary" : ag.iconColor)} />
+                    {ag.name}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          {currentAgent && (
+            <p className="mt-2 text-[11px] text-muted-foreground/80 italic">
+              {currentAgent.description}
+            </p>
+          )}
+        </div>
 
         <div
           ref={scrollRef}
-          className="flex-1 overflow-y-auto space-y-3 py-3 px-1 min-h-[280px] max-h-[45vh]"
+          className="flex-1 overflow-y-auto space-y-3 py-4 px-5 min-h-[260px] max-h-[42vh]"
         >
           <AnimatePresence initial={false}>
             {messages.map((m, i) => (
