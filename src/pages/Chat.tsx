@@ -216,6 +216,10 @@ const Chat = () => {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState("");
   const [openAgentGroups, setOpenAgentGroups] = useState<Record<string, boolean>>({});
+  const [creatorOpen, setCreatorOpen] = useState(false);
+  const [isGeneratingPrompt, setIsGeneratingPrompt] = useState(false);
+  const [newAgentForm, setNewAgentForm] = useState({ name: "", description: "", prompt: "" });
+  const [upgradeDialogOpen, setUpgradeDialogOpen] = useState(false);
   const [streaming, setStreaming] = useState(false);
   const [userId, setUserId] = useState<string | null>(null);
   const agentBgVideos = useMemo<Record<string, string>>(() => ({
