@@ -137,6 +137,7 @@ export const AskKeraFab = () => {
                 ? "Ex.: Abre o Firefox, qual o status do PC, instala o Spotify..."
                 : "Ex.: Gera uma imagem de um cachorro robô, consulta a licitação X..."
             }
+            disabled={sending}
             className="min-h-[100px]"
           />
 
@@ -146,6 +147,7 @@ export const AskKeraFab = () => {
                 key={p.label}
                 variant="outline"
                 size="sm"
+                disabled={sending}
                 onClick={() => send(p.label)}
               >
                 {p.label}
@@ -154,9 +156,22 @@ export const AskKeraFab = () => {
           </div>
 
           <div className="flex justify-end">
-            <Button onClick={() => send(text)} disabled={!text.trim()} className="gap-2">
-              <Send className="h-4 w-4" />
-              Enviar pro chat
+            <Button
+              onClick={() => send(text)}
+              disabled={!text.trim() || sending}
+              className="gap-2"
+            >
+              {sending ? (
+                <>
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  Abrindo chat...
+                </>
+              ) : (
+                <>
+                  <Send className="h-4 w-4" />
+                  Enviar pro chat
+                </>
+              )}
             </Button>
           </div>
         </DialogContent>
