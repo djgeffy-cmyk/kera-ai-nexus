@@ -15,6 +15,7 @@ import {
   KERA_TECH_LABEL,
 } from "@/lib/agents";
 import keraAvatarPng from "@/assets/kera-avatar.png";
+import keraTestingBg from "@/assets/kera-testing-system.jpg";
 import { cn } from "@/lib/utils";
 
 // Fundo da tela de testes: Kera realista com gotas de chuva (mesmo do login).
@@ -148,8 +149,16 @@ export const DemoKeraDialog = ({ open, onOpenChange, onWantToSignUp }: DemoKeraD
     setGreetingDone(false);
   }, [fullGreeting]);
 
+  // Reset quando o dialog abre (para que a animação comece toda vez do zero).
   useEffect(() => {
-    if (!isFirstAssistantOnly || greetingDone) return;
+    if (open) {
+      setTypedGreeting("");
+      setGreetingDone(false);
+    }
+  }, [open]);
+
+  useEffect(() => {
+    if (!open || !isFirstAssistantOnly || greetingDone) return;
     if (userStartedTyping) {
       // Usuário assumiu — completa a saudação na hora.
       setTypedGreeting(fullGreeting);
@@ -162,9 +171,9 @@ export const DemoKeraDialog = ({ open, onOpenChange, onWantToSignUp }: DemoKeraD
     }
     const t = window.setTimeout(() => {
       setTypedGreeting(fullGreeting.slice(0, typedGreeting.length + 1));
-    }, 22);
+    }, 28);
     return () => window.clearTimeout(t);
-  }, [typedGreeting, fullGreeting, isFirstAssistantOnly, greetingDone, userStartedTyping]);
+  }, [open, typedGreeting, fullGreeting, isFirstAssistantOnly, greetingDone, userStartedTyping]);
 
   const remaining = Math.max(0, DEMO_LIMIT - used);
   const exhausted = remaining === 0;
@@ -335,15 +344,11 @@ export const DemoKeraDialog = ({ open, onOpenChange, onWantToSignUp }: DemoKeraD
       <DialogContent className="panel border-white/10 w-[96vw] max-w-5xl h-[94vh] max-h-[94vh] flex flex-col p-0 overflow-hidden rounded-3xl bg-background/40 backdrop-blur-xl shadow-[0_30px_80px_-20px_hsl(220_60%_4%/0.7)] animate-fade-in-up">
         {/* Fundo: vídeo da Kera (toggle) ou apenas escuro */}
         {showBackground ? (
-          <video
+          <img
             aria-hidden
-            autoPlay
-            loop
-            muted
-            playsInline
-            src={rainVideoUrl}
-            poster={keraAvatarPng}
-            className="absolute inset-0 w-full h-full object-cover object-bottom opacity-40 pointer-events-none"
+            src={keraTestingBg}
+            alt=""
+            className="absolute inset-0 w-full h-full object-cover opacity-55 pointer-events-none"
           />
         ) : (
           <div aria-hidden className="absolute inset-0 bg-background pointer-events-none" />
