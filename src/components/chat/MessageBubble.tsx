@@ -142,7 +142,15 @@ const MessageBubbleImpl = ({
 }: Props) => {
   const [copied, setCopied] = useState(false);
   const isUser = msg.role === "user";
-  const plainText = typeof msg.content === "string" ? msg.content : "";
+  const plainText = useMemo(() => {
+    if (typeof msg.content === "string") return msg.content;
+    return (msg.content.find(c => c.type === "text") as any)?.text || "";
+  }, [msg.content]);
+
+  const images = useMemo(() => {
+    if (typeof msg.content === "string") return [];
+    return msg.content.filter(c => c.type === "image_url") as any[];
+  }, [msg.content]);
 
   // Skip regex pesado durante streaming (re-roda a cada token).
   const shouldOfferSwitch = useMemo(() => {
