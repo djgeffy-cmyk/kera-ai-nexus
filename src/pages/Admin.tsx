@@ -20,6 +20,7 @@ import { ElevenLabsQuotaCard } from "@/components/admin/ElevenLabsQuotaCard";
 import { UserManager } from "@/components/admin/UserManager";
 import { WebserviceCredentialsManager } from "@/components/admin/WebserviceCredentialsManager";
 import { PaymentStatusCard } from "@/components/admin/PaymentStatusCard";
+import { MercadoPagoSetupWizard } from "@/components/admin/MercadoPagoSetupWizard";
 
 type Status = Record<string, boolean>;
 
@@ -233,6 +234,8 @@ const Admin = () => {
         </div>
 
         <PaymentStatusCard />
+
+        <MercadoPagoSetupWizard />
 
         <KeraPromptEditor />
 
