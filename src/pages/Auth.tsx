@@ -138,7 +138,8 @@ const Auth = () => {
   const [resetEmail, setResetEmail] = useState("");
   const [resetNote, setResetNote] = useState("");
   const [resetLoading, setResetLoading] = useState(false);
-   const rainVideoUrl = "https://ytixqgkzqgeoxrbmjqbo.supabase.co/storage/v1/object/public/kera-videos//kera-avatar-rain.mp4";
+   // `?v=` quebra o cache do navegador/CDN para garantir o vídeo novo do avatar.
+   const rainVideoUrl = "https://ytixqgkzqgeoxrbmjqbo.supabase.co/storage/v1/object/public/kera-videos//kera-avatar-rain.mp4?v=2026-04-22";
     // Vídeo de chuva realista enviado pelo usuário (local, alta definição)
     const rainBgUrl = rainBgRealisticUrl;
 
