@@ -352,9 +352,12 @@ export const DemoKeraDialog = ({ open, onOpenChange, onWantToSignUp }: DemoKeraD
 
         {exhausted ? (
           <div className="border-t border-border/40 px-5 py-4 space-y-3">
-            <div className="flex items-center gap-2 text-sm text-amber-400">
-              <Lock className="size-4" />
-              Você usou suas 3 perguntas grátis. Crie sua conta pra liberar tudo.
+            <div className="flex items-start gap-2 text-sm text-amber-400">
+              <Lock className="size-4 mt-0.5 shrink-0" />
+              <span>
+                Suas 3 perguntas grátis acabaram. Pra continuar conversando com a Kera,
+                escolhe um plano — sem mais teste grátis por aqui.
+              </span>
             </div>
             <Button
               onClick={() => {
@@ -363,7 +366,7 @@ export const DemoKeraDialog = ({ open, onOpenChange, onWantToSignUp }: DemoKeraD
               }}
               className="w-full bg-gradient-cyber text-primary-foreground font-display tracking-wider shadow-glow"
             >
-              Criar conta grátis
+              Ver planos e assinar
             </Button>
           </div>
         ) : (
