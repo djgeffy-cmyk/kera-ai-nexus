@@ -81,6 +81,38 @@ export const DemoKeraDialog = ({ open, onOpenChange, onWantToSignUp }: DemoKeraD
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" });
   }, [messages, loading]);
 
+  // Ao abrir o diálogo, sincroniza com o servidor (controle por IP).
+  // Usa o MAIOR entre localStorage (este device) e servidor (este IP).
+  // Assim trocar navegador/abrir anônimo não zera o contador.
+  useEffect(() => {
+    if (!open) return;
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await fetch(`${SUPABASE_URL}/functions/v1/check-demo-quota`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            apikey: SUPABASE_KEY,
+            Authorization: `Bearer ${SUPABASE_KEY}`,
+          },
+          body: JSON.stringify({ action: "check" }),
+        });
+        if (!res.ok) return;
+        const data = await res.json();
+        if (cancelled) return;
+        const localUsed = parseInt(localStorage.getItem(DEMO_KEY) || "0", 10);
+        const serverUsed = typeof data.used === "number" ? data.used : 0;
+        const merged = Math.max(localUsed, serverUsed);
+        setUsed(merged);
+        localStorage.setItem(DEMO_KEY, String(merged));
+      } catch {
+        /* offline / falha — segue com valor local */
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [open]);
+
   const switchAgent = (key: string) => {
     if (key === agentKey || loading) return;
     const ag = DEMO_AGENTS.find((a) => a.key === key);
