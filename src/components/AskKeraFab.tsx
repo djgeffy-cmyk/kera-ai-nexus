@@ -112,18 +112,27 @@ export const AskKeraFab = () => {
                   Para isso você precisa do <strong>Kera Desktop</strong> (app instalado no PC),
                   que dá à Kera acesso a CPU/RAM, arquivos do Desktop, abrir apps, etc.
                 </p>
-                <a
-                  href="/desktop"
-                  className="inline-flex items-center gap-1 text-primary hover:underline font-medium"
-                  onClick={(e) => {
-                    e.preventDefault();
+                <button
+                  type="button"
+                  onClick={() => {
                     setOpen(false);
                     navigate("/desktop");
                   }}
+                  className="mt-2 w-full inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg bg-gradient-cyber text-primary-foreground font-bold shadow-glow hover:opacity-90 transition"
                 >
-                  <MonitorDown className="h-3.5 w-3.5" />
-                  Ver como instalar o Kera Desktop
-                </a>
+                  <MonitorDown className="h-4 w-4" />
+                  Baixar Kera Desktop agora
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setOpen(false);
+                    navigate("/manual");
+                  }}
+                  className="text-xs text-primary hover:underline mt-1 inline-flex items-center gap-1"
+                >
+                  Saiba mais no Manual da Kera →
+                </button>
               </div>
             </div>
           )}
