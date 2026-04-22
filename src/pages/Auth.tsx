@@ -50,6 +50,8 @@ const Auth = () => {
   const [audioMuted, setAudioMuted] = useState(false);
   const [audioStarted, setAudioStarted] = useState(false);
   const audioRef = useRef<HTMLAudioElement | null>(null);
+  const audioCtxRef = useRef<AudioContext | null>(null);
+  const gainNodeRef = useRef<GainNode | null>(null);
   const passkeyAvailable = supportsPasskey && !inIframe;
 
   useEffect(() => {
