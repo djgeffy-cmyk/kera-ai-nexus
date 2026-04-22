@@ -45,6 +45,8 @@ const KeraDesktopPage = () => {
     publishedAt: string;
     htmlUrl: string;
     name?: string;
+    linuxDebUrl?: string;
+    linuxAppImageUrl?: string;
   } | null>(null);
   const [loadingRelease, setLoadingRelease] = useState(true);
   const [releaseError, setReleaseError] = useState<string | null>(null);
@@ -65,6 +67,8 @@ const KeraDesktopPage = () => {
           publishedAt: data.published_at,
           htmlUrl: data.html_url,
           name: data.name,
+          linuxDebUrl: data.assets?.find((asset: { name?: string; browser_download_url?: string }) => /\.deb$/i.test(asset.name || ""))?.browser_download_url,
+          linuxAppImageUrl: data.assets?.find((asset: { name?: string; browser_download_url?: string }) => /\.AppImage$/i.test(asset.name || ""))?.browser_download_url,
         });
       } catch (e) {
         if (!cancelled) setReleaseError(e instanceof Error ? e.message : "Erro");
@@ -342,9 +346,9 @@ const KeraDesktopPage = () => {
       {
         os: "Linux",
         icon: Terminal,
-        href: `https://github.com/${GH_OWNER}/${GH_REPO}/releases/latest`,
-        ext: ".AppImage",
-        hint: "Ubuntu, Fedora, Arch…",
+        href: latestRelease?.linuxDebUrl || latestRelease?.linuxAppImageUrl || `https://github.com/${GH_OWNER}/${GH_REPO}/releases/latest`,
+        ext: latestRelease?.linuxDebUrl ? ".deb" : ".AppImage",
+        hint: latestRelease?.linuxDebUrl ? "Ubuntu/Debian — instalador simples" : "Ubuntu, Fedora, Arch…",
       },
     ];
 
@@ -413,8 +417,8 @@ const KeraDesktopPage = () => {
               )}
             </div>
             <p className="text-xs text-muted-foreground">
-              Escolha seu sistema. Você será levado à página da última versão publicada no GitHub —
-              baixe o arquivo correspondente e abra para instalar.
+              Escolha seu sistema. No Linux, o botão prioriza o instalador .deb quando ele existir;
+              se não existir, cai no AppImage da última release.
             </p>
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
               {downloads.map((d) => {
