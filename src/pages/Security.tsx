@@ -6,11 +6,13 @@ import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, ShieldCheck, ShieldOff, Smartphone, Key } from "lucide-react";
+import { ArrowLeft, ShieldCheck, ShieldOff, Smartphone, Key, Fingerprint, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import keraLogo from "@/assets/kera-logo.png";
+import { registerPasskey, webauthnSupported, isInIframe } from "@/lib/webauthn";
 
 type Factor = { id: string; status: string; friendly_name?: string | null };
+type Passkey = { id: string; device_label: string | null; created_at: string; last_used_at: string | null };
 
 const Security = () => {
   const navigate = useNavigate();
@@ -25,10 +27,15 @@ const Security = () => {
   const [newPassword, setNewPassword] = useState("");
   const [changingPassword, setChangingPassword] = useState(false);
   const [mustChange, setMustChange] = useState(false);
+  const [passkeys, setPasskeys] = useState<Passkey[]>([]);
+  const [registeringPk, setRegisteringPk] = useState(false);
+  const pkSupported = webauthnSupported();
+  const pkInIframe = isInIframe();
 
   useEffect(() => {
     document.title = "Kera AI — Segurança (2FA)";
     refresh();
+    refreshPasskeys();
   }, []);
 
   useEffect(() => {
@@ -81,6 +88,47 @@ const Security = () => {
     if (error) toast.error(error.message);
     else setFactors((data?.totp || []) as Factor[]);
     setLoading(false);
+  };
+
+  const refreshPasskeys = async () => {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return;
+    const { data, error } = await supabase
+      .from("webauthn_credentials")
+      .select("id, device_label, created_at, last_used_at")
+      .eq("user_id", user.id)
+      .order("created_at", { ascending: false });
+    if (!error && data) setPasskeys(data as Passkey[]);
+  };
+
+  const handleRegisterPasskey = async () => {
+    setRegisteringPk(true);
+    try {
+      const label = navigator.userAgent.includes("iPhone") || navigator.userAgent.includes("iPad")
+        ? "Face ID / Touch ID (iOS)"
+        : navigator.userAgent.includes("Mac")
+        ? "Touch ID (Mac)"
+        : navigator.userAgent.includes("Android")
+        ? "Biometria (Android)"
+        : "Windows Hello / Passkey";
+      await registerPasskey(label);
+      toast.success("Passkey cadastrada! No próximo login use Face ID/biometria.");
+      refreshPasskeys();
+    } catch (e: any) {
+      toast.error(e.message || "Falha ao cadastrar passkey");
+    } finally {
+      setRegisteringPk(false);
+    }
+  };
+
+  const handleRemovePasskey = async (id: string) => {
+    if (!confirm("Remover esta passkey? Você poderá cadastrar outra depois.")) return;
+    const { error } = await supabase.from("webauthn_credentials").delete().eq("id", id);
+    if (error) toast.error(error.message);
+    else {
+      toast.success("Passkey removida");
+      refreshPasskeys();
+    }
   };
 
   const startEnroll = async () => {
@@ -281,6 +329,64 @@ const Security = () => {
                 </Button>
               </Card>
             )}
+
+            {/* Passkey / Face ID */}
+            <section className="pt-2">
+              <h2 className="font-display text-xl text-glow mb-1 flex items-center gap-2">
+                <Fingerprint className="size-5 text-primary" /> Face ID / Touch ID (Passkey)
+              </h2>
+              <p className="text-sm text-muted-foreground">
+                Login sem senha usando biometria do seu dispositivo (Face ID, Touch ID, Windows Hello, biometria Android).
+              </p>
+            </section>
+
+            <Card className="p-5 border-border">
+              {!pkSupported ? (
+                <p className="text-sm text-muted-foreground">
+                  Seu navegador não suporta passkeys. Use Safari (iOS/Mac) ou Chrome/Edge atualizados.
+                </p>
+              ) : pkInIframe ? (
+                <p className="text-sm text-amber-500">
+                  Para cadastrar Face ID, abra a Kera diretamente em <strong>chat.kera.ia.br</strong> (não funciona dentro do preview).
+                </p>
+              ) : (
+                <>
+                  {passkeys.length > 0 ? (
+                    <div className="space-y-2 mb-4">
+                      {passkeys.map((pk) => (
+                        <div key={pk.id} className="flex items-center justify-between border border-border rounded-md p-3 text-sm">
+                          <div className="flex items-center gap-2">
+                            <Fingerprint className="size-4 text-primary" />
+                            <div>
+                              <p className="font-medium">{pk.device_label || "Passkey"}</p>
+                              <p className="text-[10px] text-muted-foreground">
+                                Criada em {new Date(pk.created_at).toLocaleDateString("pt-BR")}
+                                {pk.last_used_at && ` • Último uso ${new Date(pk.last_used_at).toLocaleDateString("pt-BR")}`}
+                              </p>
+                            </div>
+                          </div>
+                          <Button size="sm" variant="ghost" onClick={() => handleRemovePasskey(pk.id)}>
+                            <Trash2 className="size-4 text-destructive" />
+                          </Button>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="text-sm text-muted-foreground mb-4">
+                      Nenhuma passkey cadastrada ainda.
+                    </p>
+                  )}
+                  <Button
+                    onClick={handleRegisterPasskey}
+                    disabled={registeringPk}
+                    className="bg-gradient-cyber text-primary-foreground shadow-glow"
+                  >
+                    <Fingerprint className="size-4 mr-2" />
+                    {registeringPk ? "Aguardando biometria..." : "Cadastrar Face ID / biometria"}
+                  </Button>
+                </>
+              )}
+            </Card>
           </>
         )}
       </main>

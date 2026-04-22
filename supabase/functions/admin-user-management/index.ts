@@ -29,7 +29,7 @@ serve(async (req) => {
     if (!isAdmin) throw new Error('Forbidden')
 
     const body = await req.json()
-    const { action, email, password, displayName } = body
+    const { action, email, password, displayName, targetUserId, agentKeys } = body
 
     if (action === 'create_user') {
       if (!email || !password) throw new Error('Email and password are required')
@@ -73,6 +73,47 @@ serve(async (req) => {
             headers: { ...corsHeaders, 'Content-Type': 'application/json' },
             status: 200,
         })
+    }
+
+    if (action === 'reset_password') {
+      if (!targetUserId || !password) throw new Error('targetUserId and password required')
+
+      const { error: updErr } = await supabaseClient.auth.admin.updateUserById(targetUserId, {
+        password,
+      })
+      if (updErr) throw updErr
+
+      // Marca pra trocar no próximo login
+      await supabaseClient
+        .from('profiles')
+        .update({ must_change_password: true })
+        .eq('user_id', targetUserId)
+
+      return new Response(JSON.stringify({ ok: true }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        status: 200,
+      })
+    }
+
+    if (action === 'set_granted_agents') {
+      if (!targetUserId || !Array.isArray(agentKeys)) {
+        throw new Error('targetUserId and agentKeys[] required')
+      }
+      const cleaned = agentKeys
+        .filter((k: unknown): k is string => typeof k === 'string')
+        .map((k) => k.trim())
+        .filter(Boolean)
+
+      const { error: gErr } = await supabaseClient
+        .from('profiles')
+        .update({ granted_agent_keys: cleaned })
+        .eq('user_id', targetUserId)
+      if (gErr) throw gErr
+
+      return new Response(JSON.stringify({ ok: true, granted_agent_keys: cleaned }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        status: 200,
+      })
     }
 
     throw new Error('Invalid action')
