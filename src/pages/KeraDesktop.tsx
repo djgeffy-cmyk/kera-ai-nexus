@@ -3,7 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import {
   ArrowLeft, FolderOpen, Power, RotateCcw, Moon, Lock, FileText, Trash2, Save, RefreshCw,
   Monitor, ShieldCheck, Plus, X, ClipboardCopy, ClipboardPaste, Camera, Terminal, Rocket, Cpu, Globe, Download,
-  Sparkles, MessageSquare, Apple,
+  Sparkles, MessageSquare, Apple, Tag, Calendar,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -40,6 +40,40 @@ const KeraDesktopPage = () => {
   const [videosDownloading, setVideosDownloading] = useState(false);
   const [videosProgress, setVideosProgress] = useState<{ name: string; received: number; total: number } | null>(null);
   const [mascotVisible, setMascotVisible] = useState(false);
+  const [latestRelease, setLatestRelease] = useState<{
+    version: string;
+    publishedAt: string;
+    htmlUrl: string;
+    name?: string;
+  } | null>(null);
+  const [loadingRelease, setLoadingRelease] = useState(true);
+  const [releaseError, setReleaseError] = useState<string | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await fetch(
+          "https://api.github.com/repos/djgeffy-cmyk/kera-ai-nexus/releases/latest",
+          { headers: { Accept: "application/vnd.github+json" } },
+        );
+        if (!res.ok) throw new Error(`GitHub ${res.status}`);
+        const data = await res.json();
+        if (cancelled) return;
+        setLatestRelease({
+          version: data.tag_name || data.name || "?",
+          publishedAt: data.published_at,
+          htmlUrl: data.html_url,
+          name: data.name,
+        });
+      } catch (e) {
+        if (!cancelled) setReleaseError(e instanceof Error ? e.message : "Erro");
+      } finally {
+        if (!cancelled) setLoadingRelease(false);
+      }
+    })();
+    return () => { cancelled = true; };
+  }, []);
 
   useEffect(() => {
     const k = getKera();
@@ -338,6 +372,45 @@ const KeraDesktopPage = () => {
               <h2 className="text-sm uppercase tracking-wider text-muted-foreground">
                 Baixar instalador
               </h2>
+            </div>
+            {/* Última versão publicada no GitHub */}
+            <div className="rounded-lg border border-primary/30 bg-primary/5 p-3 flex items-center justify-between gap-3 flex-wrap">
+              <div className="flex items-center gap-3 flex-wrap">
+                <div className="flex items-center gap-1.5 text-sm font-mono">
+                  <Tag className="size-4 text-primary" />
+                  <span className="text-muted-foreground">Última versão:</span>
+                  {loadingRelease ? (
+                    <span className="text-foreground/60 italic">carregando…</span>
+                  ) : releaseError ? (
+                    <span className="text-destructive">indisponível</span>
+                  ) : latestRelease ? (
+                    <span className="text-foreground font-semibold">{latestRelease.version}</span>
+                  ) : (
+                    <span className="text-muted-foreground">—</span>
+                  )}
+                </div>
+                {latestRelease?.publishedAt && (
+                  <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                    <Calendar className="size-3.5" />
+                    <span>
+                      Publicada em{" "}
+                      {new Date(latestRelease.publishedAt).toLocaleDateString("pt-BR", {
+                        day: "2-digit", month: "long", year: "numeric",
+                      })}
+                    </span>
+                  </div>
+                )}
+              </div>
+              {latestRelease?.htmlUrl && (
+                <a
+                  href={latestRelease.htmlUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-xs text-primary hover:underline font-medium"
+                >
+                  Ver notas do release →
+                </a>
+              )}
             </div>
             <p className="text-xs text-muted-foreground">
               Escolha seu sistema. Você será levado à página da última versão publicada no GitHub —
