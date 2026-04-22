@@ -137,7 +137,7 @@ export default function Builds() {
               value={sortMode}
               onValueChange={(v) => setSortMode(v as SortMode)}
             >
-              <SelectTrigger className="w-[180px]" size="sm">
+              <SelectTrigger className="h-9 w-[180px]">
                 <SelectValue placeholder="Ordenar por" />
               </SelectTrigger>
               <SelectContent>
