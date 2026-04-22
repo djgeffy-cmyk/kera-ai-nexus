@@ -181,18 +181,18 @@ const AGENT_SUGGESTIONS: Record<string, Array<{ q: string; icon: typeof Sparkles
     { q: "Inventário extrajudicial: passo a passo.", icon: ScrollText },
     { q: "Guarda compartilhada: direitos e deveres.", icon: Baby },
   ],
-  "kera-guaramirim": [
-    { q: "Quais licitações estão abertas em Guaramirim agora?", icon: FileSearch },
-    { q: "Me mostra os últimos contratos da Prefeitura.", icon: ScrollText },
-    { q: "Como consultar protocolo no atende.net?", icon: Radar },
-    { q: "Relatório de despesas da Secretaria de Saúde de Guaramirim.", icon: Activity },
-  ],
-  "kera-prefeituras": [
-    { q: "Quais APIs do governo federal posso integrar na Prefeitura?", icon: Code2 },
-    { q: "Como conectar com o sistema IPM atende.net?", icon: Sparkles },
-    { q: "Modelo de TR pra contratação de software municipal.", icon: FileText },
-    { q: "Boas práticas de transparência ativa (LAI) pra prefeitura.", icon: ShieldCheck },
-  ],
+   "kera-guaramirim": [
+     { q: "Kera, quais são as licitações abertas hoje em Guaramirim no Atende.net?", icon: FileSearch },
+     { q: "Como está o status dos contratos de coleta de lixo em Guaramirim?", icon: ScrollText },
+     { q: "Preciso consultar um protocolo da Secretaria de Obras via Olostech.", icon: Radar },
+     { q: "Gere um resumo das despesas da saúde de Guaramirim no último mês.", icon: Activity },
+   ],
+   "kera-prefeituras": [
+     { q: "Quais são as melhores APIs federais para integrar portais da transparência?", icon: Code2 },
+     { q: "Como configurar a integração do IPM com o Portal Nacional de Contratações?", icon: Sparkles },
+     { q: "Preciso de um modelo de Termo de Referência para contratar software de gestão.", icon: FileText },
+     { q: "Quais as obrigações de transparência ativa para municípios pequenos?", icon: ShieldCheck },
+   ],
 };
 
 const Chat = () => {
