@@ -43,8 +43,9 @@ const AgentsPage = () => {
   // Accordion: apenas um pacote expandido por vez. null = todos fechados.
   const [openGroup, setOpenGroup] = useState<string | null>(null);
   const groupOpen = (id: string) => openGroup === id;
-  const handleGroupToggle = (id: string) => (next: boolean) =>
-    setOpenGroup(next ? id : (cur) => (cur === id ? null : cur) as any);
+  const handleGroupToggle = (id: string) => (next: boolean) => {
+    setOpenGroup(next ? id : null);
+  };
 
   useEffect(() => {
     document.title = "Kera AI — Agentes";
