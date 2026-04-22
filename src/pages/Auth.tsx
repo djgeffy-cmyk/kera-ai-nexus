@@ -47,7 +47,16 @@ const Auth = () => {
   const [inIframe] = useState(() => isInIframe());
   const [isUnlocked, setIsUnlocked] = useState(false);
   const [demoOpen, setDemoOpen] = useState(false);
-  const [audioMuted, setAudioMuted] = useState(false);
+  // Lembra a preferência do usuário entre visitas (localStorage).
+  const RAIN_MUTE_KEY = "kera:auth:rain-muted";
+  const [audioMuted, setAudioMuted] = useState<boolean>(() => {
+    if (typeof window === "undefined") return false;
+    try {
+      return window.localStorage.getItem(RAIN_MUTE_KEY) === "1";
+    } catch {
+      return false;
+    }
+  });
   const [audioStarted, setAudioStarted] = useState(false);
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const audioCtxRef = useRef<AudioContext | null>(null);
@@ -146,6 +155,9 @@ const Auth = () => {
   // (autoplay policy do navegador exige gesture).
   useEffect(() => {
     if (audioStarted) return;
+    // Se o usuário já desligou a chuva em uma visita anterior, não inicializa
+    // o grafo de áudio nem tenta tocar — respeita a preferência persistida.
+    if (audioMuted) return;
     const tryStart = async () => {
       const a = audioRef.current;
       if (!a || audioStarted) return;
@@ -239,11 +251,15 @@ const Auth = () => {
     window.addEventListener("keydown", tryStart);
     window.addEventListener("touchstart", tryStart);
     return cleanup;
-  }, [audioStarted]);
+  }, [audioStarted, audioMuted]);
 
-  // Sincroniza mute com estado (usa GainNode quando disponível para evitar
-  // cortes bruscos — fade rápido de 250ms entre mute/unmute).
+  // Sincroniza mute com estado e persiste a preferência no localStorage.
+  // Usa GainNode quando disponível para evitar cortes bruscos
+  // (fade de 500ms entre mute/unmute).
   useEffect(() => {
+    try {
+      window.localStorage.setItem(RAIN_MUTE_KEY, audioMuted ? "1" : "0");
+    } catch { /* ignore */ }
     const ctx = audioCtxRef.current;
     const master = gainNodeRef.current;
     if (ctx && master) {
