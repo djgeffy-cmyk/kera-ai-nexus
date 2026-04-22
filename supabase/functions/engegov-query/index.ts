@@ -8,7 +8,8 @@
 //   { tipo: 'lista', cidade_nome: 'Massaranduba', uf?: 'SC' }
 //   { tipo: 'detalhe', cidade_id: 4900, obra_url: 'https://...' }
 //
-// Auth: exige JWT de usuário autenticado (qualquer plano).
+// Esta função é chamada server-to-server pelo chat-kera (que já valida o usuário)
+// e também pelo painel admin via supabase.functions.invoke (autenticado).
 // Cache: 6h por chave (cidade+tipo+obra).
 import { createClient } from "jsr:@supabase/supabase-js@2";
 
@@ -66,31 +67,12 @@ Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
 
   try {
-    // ---- Auth ----
-    const authHeader = req.headers.get("Authorization");
-    if (!authHeader?.startsWith("Bearer ")) {
-      return new Response(JSON.stringify({ error: "Unauthorized" }), {
-        status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
     const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
-    const ANON = Deno.env.get("SUPABASE_ANON_KEY")!;
     const SERVICE = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const FIRECRAWL_KEY = Deno.env.get("FIRECRAWL_API_KEY");
     if (!FIRECRAWL_KEY) {
       return new Response(JSON.stringify({ error: "FIRECRAWL_API_KEY não configurada" }), {
         status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
-
-    const userClient = createClient(SUPABASE_URL, ANON, {
-      global: { headers: { Authorization: authHeader } },
-    });
-    const token = authHeader.replace("Bearer ", "");
-    const { data: claims, error: authErr } = await userClient.auth.getClaims(token);
-    if (authErr || !claims?.claims) {
-      return new Response(JSON.stringify({ error: "Unauthorized" }), {
-        status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
