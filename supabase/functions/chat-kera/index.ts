@@ -427,15 +427,22 @@ Deno.serve(async (req) => {
 
     // ===== Gatilhos editáveis (carregados do banco — kera_triggers) =====
     // Roda independente do bloco de apelido — funciona pra qualquer usuário autenticado.
+    // Em modo demo (sem cadastro) NÃO aplica triggers — visitante não vê zoeira interna.
+    if (!demoMode) {
     const lastUserMsgForTriggers = [...messages].reverse().find((m: any) => m?.role === "user");
     const lastTextForTriggers = typeof lastUserMsgForTriggers?.content === "string"
       ? lastUserMsgForTriggers.content
       : JSON.stringify(lastUserMsgForTriggers?.content ?? "");
 
     const dbTriggers = await loadDbTriggers();
+    // Filtra triggers que o próprio usuário desligou nas preferências dele.
+    const userId = await getUserIdFromAuth(req);
+    const disabledByUser = userId ? await loadUserDisabledTriggers(userId) : new Set<string>();
     const matchedTriggers: string[] = [];
     const matchedIntensities = new Set<TriggerIntensity>();
     for (const t of dbTriggers) {
+      // Usuário desligou esse gatilho nas próprias preferências
+      if (disabledByUser.has(t.id)) continue;
       // Filtro por escopo: "global" sempre roda; "agent:<key>" só roda se bater
       if (t.scope && t.scope !== "global") {
         const expectedAgent = t.scope.startsWith("agent:") ? t.scope.slice(6) : null;
