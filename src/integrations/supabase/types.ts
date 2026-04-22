@@ -614,8 +614,10 @@ export type Database = {
           avatar_url: string | null
           created_at: string
           display_name: string | null
+          granted_agent_keys: string[] | null
           id: string
           juridico_active: boolean
+          must_change_password: boolean | null
           onboarding_completed: boolean
           paywall_trial_count: number
           plan_tier: string
@@ -631,8 +633,10 @@ export type Database = {
           avatar_url?: string | null
           created_at?: string
           display_name?: string | null
+          granted_agent_keys?: string[] | null
           id?: string
           juridico_active?: boolean
+          must_change_password?: boolean | null
           onboarding_completed?: boolean
           paywall_trial_count?: number
           plan_tier?: string
@@ -648,8 +652,10 @@ export type Database = {
           avatar_url?: string | null
           created_at?: string
           display_name?: string | null
+          granted_agent_keys?: string[] | null
           id?: string
           juridico_active?: boolean
+          must_change_password?: boolean | null
           onboarding_completed?: boolean
           paywall_trial_count?: number
           plan_tier?: string
