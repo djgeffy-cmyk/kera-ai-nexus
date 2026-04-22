@@ -927,7 +927,6 @@ const Chat = () => {
     toast.success("Kera assumiu — continua mandando que ela pega o fio da meada");
   }, [currentId]);
   const isSentinela = agentKey === "kera-sentinela";
-  const isTradutora = agentKey === "kera-tradutora";
 
   const runSentinelaCheck = async () => {
     if (streaming) return;
