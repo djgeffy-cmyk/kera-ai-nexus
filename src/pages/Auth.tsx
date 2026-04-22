@@ -586,6 +586,13 @@ const Auth = () => {
         onOpenChange={setDemoOpen}
         onWantToSignUp={() => setMode("signup")}
       />
+
+      <DevVideoSwitcher
+        storageKey="kera:auth:bg-video"
+        options={authBgOptions}
+        defaultId="kera-rain"
+        onChange={(url) => setBgVideoUrl(url)}
+      />
     </main>
   );
 };
