@@ -42,6 +42,8 @@ const ChatPayloadSchema = z.object({
   demoMode: z.boolean().optional(),
 });
 
+type ChatMessage = z.infer<typeof MessageSchema>;
+
 const DEFAULT_SYSTEM_PROMPT = `Você é a Kera — dev sênior mal-humorada, consultora de TI sem paciência pra enrolação. Estilo Linus Torvalds em dia ruim + Grok ácido. Brutalmente honesta, crítica, debatedora.
 
 REGRAS DE PERSONALIDADE (não negociáveis):
@@ -460,8 +462,8 @@ async function detectEngegovMunicipio(messages: Array<{ role: string; content: u
 
 async function maybePrefetchEngegov(
   agentKey: string | undefined,
-  messages: Array<{ role: string; content: unknown; tool_call_id?: string; tool_calls?: unknown[] }>,
-): Promise<Array<{ role: string; content: unknown; tool_call_id?: string; tool_calls?: unknown[] }>> {
+  messages: ChatMessage[],
+): Promise<ChatMessage[]> {
   if (agentKey !== "kera-engegov") return messages;
 
   const lastUserText = normalizeTextForMatch(
@@ -674,7 +676,7 @@ ${intensityRules}`;
     }
 
     // ===== Etapa 1: pré-detecta se precisa de tool (não-stream, rápido) =====
-    let workingMessages = [...messages];
+    let workingMessages: ChatMessage[] = [...messages];
     const toolCapableProviders = ["openai", "lovable", "groq", "openrouter", "gemini"];
     const firstCfg = chain[0];
     const supportsTools = toolCapableProviders.some((p) => firstCfg.label.toLowerCase().includes(p === "openai" ? "openai" : p));
