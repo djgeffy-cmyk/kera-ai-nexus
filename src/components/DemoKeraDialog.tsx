@@ -165,13 +165,18 @@ export const DemoKeraDialog = ({ open, onOpenChange, onWantToSignUp }: DemoKeraD
       setGreetingDone(true);
       return;
     }
-    if (typedGreeting.length >= fullGreeting.length) {
-      setGreetingDone(true);
-      return;
+    // Loop infinito: digita até o final, segura, apaga e recomeça.
+    // Para somente quando o usuário começa a digitar (assume a conversa).
+    if (typedGreeting.length < fullGreeting.length) {
+      const t = window.setTimeout(() => {
+        setTypedGreeting(fullGreeting.slice(0, typedGreeting.length + 1));
+      }, 38);
+      return () => window.clearTimeout(t);
     }
+    // Chegou no fim: pausa longa e reinicia (efeito "ficar chamando").
     const t = window.setTimeout(() => {
-      setTypedGreeting(fullGreeting.slice(0, typedGreeting.length + 1));
-    }, 28);
+      setTypedGreeting("");
+    }, 2200);
     return () => window.clearTimeout(t);
   }, [open, typedGreeting, fullGreeting, isFirstAssistantOnly, greetingDone, userStartedTyping]);
 
