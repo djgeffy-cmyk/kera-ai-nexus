@@ -155,6 +155,9 @@ const Auth = () => {
   // (autoplay policy do navegador exige gesture).
   useEffect(() => {
     if (audioStarted) return;
+    // Se o usuário já desligou a chuva em uma visita anterior, não inicializa
+    // o grafo de áudio nem tenta tocar — respeita a preferência persistida.
+    if (audioMuted) return;
     const tryStart = async () => {
       const a = audioRef.current;
       if (!a || audioStarted) return;
@@ -248,11 +251,15 @@ const Auth = () => {
     window.addEventListener("keydown", tryStart);
     window.addEventListener("touchstart", tryStart);
     return cleanup;
-  }, [audioStarted]);
+  }, [audioStarted, audioMuted]);
 
-  // Sincroniza mute com estado (usa GainNode quando disponível para evitar
-  // cortes bruscos — fade rápido de 250ms entre mute/unmute).
+  // Sincroniza mute com estado e persiste a preferência no localStorage.
+  // Usa GainNode quando disponível para evitar cortes bruscos
+  // (fade de 500ms entre mute/unmute).
   useEffect(() => {
+    try {
+      window.localStorage.setItem(RAIN_MUTE_KEY, audioMuted ? "1" : "0");
+    } catch { /* ignore */ }
     const ctx = audioCtxRef.current;
     const master = gainNodeRef.current;
     if (ctx && master) {
