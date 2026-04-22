@@ -15,8 +15,51 @@ const KERA_RAIN_VIDEO_URL =
 
 const DEMO_LIMIT = 3;
 const DEMO_KEY = "kera-demo-questions-used";
+const FP_KEY = "kera-demo-fp";
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
 const SUPABASE_KEY = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
+
+// Fingerprint estável do navegador — combina características que persistem
+// mesmo após limpar localStorage/cookies normais. Salvo em IndexedDB-ish
+// (localStorage) + cookie pra resistir a limpezas parciais.
+function getStableFingerprint(): string {
+  try {
+    const cached = localStorage.getItem(FP_KEY);
+    if (cached) return cached;
+  } catch { /* ignore */ }
+
+  let canvasHash = "";
+  try {
+    const canvas = document.createElement("canvas");
+    canvas.width = 240;
+    canvas.height = 60;
+    const ctx = canvas.getContext("2d");
+    if (ctx) {
+      ctx.textBaseline = "top";
+      ctx.font = "14px 'Arial'";
+      ctx.fillStyle = "#f60";
+      ctx.fillRect(0, 0, 240, 60);
+      ctx.fillStyle = "#069";
+      ctx.fillText("Kera-fp-🛡️-2026", 2, 15);
+      ctx.strokeStyle = "rgba(102,204,0,0.7)";
+      ctx.strokeRect(10, 10, 100, 30);
+      canvasHash = canvas.toDataURL().slice(-64);
+    }
+  } catch { /* ignore */ }
+
+  const parts = [
+    navigator.userAgent,
+    navigator.language,
+    `${screen.width}x${screen.height}x${screen.colorDepth}`,
+    new Date().getTimezoneOffset(),
+    (navigator as any).hardwareConcurrency ?? "?",
+    (navigator as any).deviceMemory ?? "?",
+    canvasHash,
+  ].join("|");
+
+  try { localStorage.setItem(FP_KEY, parts); } catch { /* ignore */ }
+  return parts;
+}
 
 interface Msg {
   role: "user" | "assistant";
