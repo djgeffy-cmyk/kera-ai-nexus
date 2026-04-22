@@ -119,6 +119,52 @@ export const DemoKeraDialog = ({ open, onOpenChange, onWantToSignUp }: DemoKeraD
   const rainVideoUrl = KERA_RAIN_VIDEO_URL;
   // Grupo expandido no seletor (só um por vez). null = nenhum aberto.
   const [openGroup, setOpenGroup] = useState<string | null>(null);
+  // Preferência do visitante: mostrar vídeo da Kera atrás do chat ou fundo escuro limpo.
+  const BG_KEY = "kera-demo-show-bg";
+  const [showBackground, setShowBackground] = useState<boolean>(() => {
+    try {
+      const v = localStorage.getItem(BG_KEY);
+      return v === null ? true : v === "1";
+    } catch {
+      return true;
+    }
+  });
+  useEffect(() => {
+    try { localStorage.setItem(BG_KEY, showBackground ? "1" : "0"); } catch {}
+  }, [showBackground]);
+
+  // Auto-typing da saudação (só na primeira mensagem assistant, antes do user mandar algo).
+  // Pausa imediatamente se o usuário começar a digitar no input.
+  const [typedGreeting, setTypedGreeting] = useState("");
+  const [greetingDone, setGreetingDone] = useState(false);
+  const fullGreeting = greetingFor(agentKey, currentAgent?.name ?? "Kera");
+  const isFirstAssistantOnly =
+    messages.length === 1 && messages[0].role === "assistant";
+  const userStartedTyping = input.length > 0;
+
+  useEffect(() => {
+    // Reset quando a saudação muda (troca de agente).
+    setTypedGreeting("");
+    setGreetingDone(false);
+  }, [fullGreeting]);
+
+  useEffect(() => {
+    if (!isFirstAssistantOnly || greetingDone) return;
+    if (userStartedTyping) {
+      // Usuário assumiu — completa a saudação na hora.
+      setTypedGreeting(fullGreeting);
+      setGreetingDone(true);
+      return;
+    }
+    if (typedGreeting.length >= fullGreeting.length) {
+      setGreetingDone(true);
+      return;
+    }
+    const t = window.setTimeout(() => {
+      setTypedGreeting(fullGreeting.slice(0, typedGreeting.length + 1));
+    }, 22);
+    return () => window.clearTimeout(t);
+  }, [typedGreeting, fullGreeting, isFirstAssistantOnly, greetingDone, userStartedTyping]);
 
   const remaining = Math.max(0, DEMO_LIMIT - used);
   const exhausted = remaining === 0;
