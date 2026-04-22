@@ -102,6 +102,7 @@ import {
   KERA_JURIDICO_AGENT_KEYS,
   KERA_TECH_AGENT_KEYS,
   KERA_MUNICIPIO_AGENT_KEYS,
+  KERA_DIVERSAO_AGENT_KEYS,
 } from "@/lib/agents";
 import { useUserAccess } from "@/hooks/useUserAccess";
 import { useVoice } from "@/hooks/useVoice";
