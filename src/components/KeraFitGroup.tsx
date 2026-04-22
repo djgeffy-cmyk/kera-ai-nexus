@@ -20,6 +20,9 @@ import { useState, type ReactNode } from "react";
    icon?: LucideIcon;
    /** Se aberto inicialmente. Padrão: fechado (clica pra abrir os subagentes). */
    defaultOpen?: boolean;
+  /** Controle externo (accordion). Se passado, sobrescreve o estado interno. */
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
  };
 
 /**
@@ -36,6 +39,8 @@ import { useState, type ReactNode } from "react";
    customKeys,
    icon: IconProp,
    defaultOpen = false,
+  open: openProp,
+  onOpenChange,
  }: Props) => {
    const displayKeys = (customKeys || KERA_FIT_AGENT_KEYS) as string[];
    const displayLabel = label || KERA_FIT_LABEL;
@@ -45,7 +50,13 @@ import { useState, type ReactNode } from "react";
    const activeAgents = displayKeys.filter((k) =>
      BUILTIN_AGENTS.some((a) => a.key === k),
    );
-   const [open, setOpen] = useState<boolean>(defaultOpen);
+  const [internalOpen, setInternalOpen] = useState<boolean>(defaultOpen);
+  const isControlled = openProp !== undefined;
+  const open = isControlled ? !!openProp : internalOpen;
+  const setOpen = (v: boolean) => {
+    if (!isControlled) setInternalOpen(v);
+    onOpenChange?.(v);
+  };
    const count = activeAgents.length;
    const titleWithEmoji = displayLabel.includes("🔥") ? displayLabel : `🔥 ${displayLabel}`;
  
