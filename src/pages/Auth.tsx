@@ -23,6 +23,16 @@ const rainVideoUrl =
   "https://ytixqgkzqgeoxrbmjqbo.supabase.co/storage/v1/object/public/kera-videos/kera-avatar-rain.mp4?v=2026-04-22";
 import DemoKeraDialog from "@/components/DemoKeraDialog";
 import { assetUrl } from "@/lib/assetUrl";
+import DevVideoSwitcher from "@/components/DevVideoSwitcher";
+
+const authBgOptions = [
+  { id: "kera-rain", label: "Kera com chuva (full bg)", url: rainVideoUrl },
+  { id: "rain", label: "Chuva pura", url: rainBgUrl },
+];
+const authAvatarOptions = [
+  { id: "kera-rain", label: "Kera com chuva", url: rainVideoUrl },
+  { id: "rain", label: "Chuva pura", url: rainBgUrl },
+];
 import { MissionCriticalSchema } from "@/lib/missionCriticalSchemas";
 import { PasswordStrengthMeter } from "@/components/PasswordStrengthMeter";
 import {
@@ -48,6 +58,8 @@ const Auth = () => {
   const [supportsPasskey] = useState(() => webauthnSupported());
   const [inIframe] = useState(() => isInIframe());
   const [demoOpen, setDemoOpen] = useState(false);
+  const [bgVideoUrl, setBgVideoUrl] = useState(authBgOptions[0].url);
+  const [avatarVideoUrl, setAvatarVideoUrl] = useState(authAvatarOptions[0].url);
   // Lembra a preferência do usuário entre visitas (localStorage).
   const RAIN_MUTE_KEY = "kera:auth:rain-muted";
   const [audioMuted, setAudioMuted] = useState<boolean>(() => {
@@ -289,7 +301,8 @@ const Auth = () => {
         // o topo E o chão. Alinhar pelo bottom garante que o solo com as gotas
         // batendo SEMPRE fique visível.
         className="absolute inset-0 w-full h-full object-cover object-bottom"
-        src={rainVideoUrl}
+        key={bgVideoUrl}
+        src={bgVideoUrl}
         // Sem filtros: mostra o vídeo de chuva original, com as gotas no chão visíveis
       />
 
@@ -364,7 +377,8 @@ const Auth = () => {
                     loop
                     muted
                     playsInline
-                    src={rainVideoUrl}
+                    key={avatarVideoUrl}
+                    src={avatarVideoUrl}
                     poster={keraAvatar}
                     className="w-full h-full object-cover"
                   />
@@ -571,6 +585,13 @@ const Auth = () => {
         open={demoOpen}
         onOpenChange={setDemoOpen}
         onWantToSignUp={() => setMode("signup")}
+      />
+
+      <DevVideoSwitcher
+        storageKey="kera:auth:bg-video"
+        options={authBgOptions}
+        defaultId="kera-rain"
+        onChange={(url) => setBgVideoUrl(url)}
       />
     </main>
   );
