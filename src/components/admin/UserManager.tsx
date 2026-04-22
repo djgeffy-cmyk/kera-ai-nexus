@@ -4,7 +4,22 @@ import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
-import { UserPlus, Users, Loader2, ShieldCheck, Mail, Key } from "lucide-react";
+import { UserPlus, Users, Loader2, ShieldCheck, Mail, Key, Wand2, Copy } from "lucide-react";
+
+// Gera senha forte no padrão Kera: 14 caracteres, com maiúscula, minúscula, número e símbolo.
+const generateKeraPassword = (length = 14): string => {
+  const upper = "ABCDEFGHJKLMNPQRSTUVWXYZ"; // sem I, O
+  const lower = "abcdefghijkmnpqrstuvwxyz"; // sem l, o
+  const digits = "23456789"; // sem 0, 1
+  const symbols = "!@#$%&*?";
+  const all = upper + lower + digits + symbols;
+  const rand = (set: string) => set[Math.floor(crypto.getRandomValues(new Uint32Array(1))[0] / (0xffffffff + 1) * set.length)];
+  const required = [rand(upper), rand(lower), rand(digits), rand(symbols)];
+  const remaining = Array.from({ length: length - required.length }, () => rand(all));
+  return [...required, ...remaining]
+    .sort(() => crypto.getRandomValues(new Uint32Array(1))[0] - 0x7fffffff)
+    .join("");
+};
 
 export const UserManager = () => {
   const [loading, setLoading] = useState(false);
@@ -99,14 +114,45 @@ export const UserManager = () => {
             </div>
             <div className="space-y-1">
               <label className="text-xs text-muted-foreground ml-1">Senha Temporária</label>
-              <Input
-                type="text"
-                placeholder="Senha123!"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-                className="bg-background/50 border-primary/20"
-              />
+              <div className="flex gap-1">
+                <Input
+                  type="text"
+                  placeholder="Senha123!"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  required
+                  className="bg-background/50 border-primary/20 font-mono"
+                />
+                <Button
+                  type="button"
+                  size="icon"
+                  variant="outline"
+                  title="Gerar senha forte (padrão Kera)"
+                  onClick={() => {
+                    const pwd = generateKeraPassword();
+                    setPassword(pwd);
+                    toast.success("Senha gerada no padrão Kera");
+                  }}
+                  className="shrink-0 border-primary/30 hover:bg-primary/10"
+                >
+                  <Wand2 className="size-4 text-primary" />
+                </Button>
+                <Button
+                  type="button"
+                  size="icon"
+                  variant="outline"
+                  title="Copiar senha"
+                  disabled={!password}
+                  onClick={async () => {
+                    await navigator.clipboard.writeText(password);
+                    toast.success("Senha copiada");
+                  }}
+                  className="shrink-0 border-primary/30 hover:bg-primary/10"
+                >
+                  <Copy className="size-4 text-primary" />
+                </Button>
+              </div>
+              <p className="text-[10px] text-muted-foreground ml-1">14 caracteres • A-Z, a-z, 0-9, símbolo</p>
             </div>
           </div>
 
