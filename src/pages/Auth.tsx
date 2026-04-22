@@ -16,7 +16,7 @@ import rainAmbientUrl from "@/assets/rain-ambient.mp3";
 // Vídeo de chuva hospedado no storage (atualizado pelo usuário).
 // `?v=` força o navegador/CDN a baixar a versão mais recente quando o arquivo
 // for trocado no bucket — sem isso, o cache antigo continua sendo exibido.
-const rainBgRealisticUrl = "https://ytixqgkzqgeoxrbmjqbo.supabase.co/storage/v1/object/public/kera-videos//kera-avatar-rain.mp4?v=2026-04-22";
+const rainBgRealisticUrl = "https://ytixqgkzqgeoxrbmjqbo.supabase.co/storage/v1/object/public/kera-videos/kera-avatar-rain.mp4?v=2026-04-22";
 const rainVideoUrl = rainBgRealisticUrl;
 import DemoKeraDialog from "@/components/DemoKeraDialog";
 import { assetUrl } from "@/lib/assetUrl";

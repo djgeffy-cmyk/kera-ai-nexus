@@ -11,7 +11,7 @@ import { cn } from "@/lib/utils";
 
 // URL pública direta do storage (mesmo vídeo, sem depender do asset interno).
 const KERA_RAIN_VIDEO_URL =
-  "https://ytixqgkzqgeoxrbmjqbo.supabase.co/storage/v1/object/public/kera-videos/kera-avatar-rain.mp4";
+  "https://ytixqgkzqgeoxrbmjqbo.supabase.co/storage/v1/object/public/kera-videos/kera-avatar-rain.mp4?v=2026-04-22";
 
 const DEMO_LIMIT = 3;
 const DEMO_KEY = "kera-demo-questions-used";
@@ -283,16 +283,26 @@ export const DemoKeraDialog = ({ open, onOpenChange, onWantToSignUp }: DemoKeraD
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent
-        className="panel border-white/10 max-w-2xl max-h-[90vh] flex flex-col p-0 overflow-hidden rounded-3xl backdrop-blur-2xl bg-background/70 shadow-[0_30px_80px_-20px_hsl(220_60%_4%/0.7)] animate-fade-in-up"
-      >
-        {/* Glow ambiente atrás do dialog */}
+      <DialogContent className="panel border-white/10 max-w-2xl max-h-[90vh] flex flex-col p-0 overflow-hidden rounded-3xl bg-background/40 backdrop-blur-xl shadow-[0_30px_80px_-20px_hsl(220_60%_4%/0.7)] animate-fade-in-up">
+        {/* Vídeo de fundo de chuva, igual ao login */}
+        <video
+          aria-hidden
+          autoPlay
+          loop
+          muted
+          playsInline
+          src={rainVideoUrl}
+          poster={keraAvatarPng}
+          className="absolute inset-0 w-full h-full object-cover object-bottom opacity-40 pointer-events-none"
+        />
+
+        {/* Glow ambiente sobre o vídeo */}
         <div
           aria-hidden
-          className="pointer-events-none absolute inset-0 opacity-60"
+          className="pointer-events-none absolute inset-0 opacity-40"
           style={{
             background:
-              "radial-gradient(circle at 20% 0%, hsl(210 100% 60% / 0.18), transparent 55%), radial-gradient(circle at 80% 100%, hsl(265 90% 65% / 0.14), transparent 55%)",
+              "radial-gradient(circle at 20% 0%, hsl(210 100% 60% / 0.12), transparent 55%), radial-gradient(circle at 80% 100%, hsl(265 90% 65% / 0.1), transparent 55%)",
           }}
         />
 
