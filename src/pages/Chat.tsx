@@ -988,16 +988,16 @@ Por favor, analise: há perda de pacote? jitter alto sugere instabilidade de rot
    const Sidebar = () => (
      <aside className="h-full w-full md:w-80 bg-background/95 backdrop-blur-2xl border-r border-white/5 flex flex-col shadow-2xl">
        {/* Topo: avatar minimalista */}
-         <div className="px-2 pt-4 pb-2 flex items-center justify-center">
-           <div className="relative group w-full">
-             <div className="absolute inset-0 bg-primary/30 blur-3xl opacity-60 group-hover:opacity-90 transition-opacity duration-500" />
-             <img
-               src={spaceInCloudLogo}
-               alt="Kera AI — Space In Cloud"
-               className="relative w-full h-auto max-h-52 object-contain drop-shadow-[0_0_25px_rgba(59,130,246,0.5)] transition-transform duration-500 group-hover:scale-[1.03]"
-             />
-           </div>
-         </div>
+          <div className="px-1 pt-3 pb-2 flex items-center justify-center">
+            <div className="relative group w-full">
+              <div className="absolute inset-0 bg-primary/30 blur-3xl opacity-60 group-hover:opacity-90 transition-opacity duration-500" />
+              <img
+                src={spaceInCloudLogo}
+                alt="Kera AI — Space In Cloud"
+                className="relative w-full h-auto object-contain drop-shadow-[0_0_25px_rgba(59,130,246,0.5)] transition-transform duration-500 group-hover:scale-[1.03]"
+              />
+            </div>
+          </div>
  
        {/* Ações principais — estilo moderno */}
        <nav className="px-4 space-y-1">
