@@ -479,6 +479,7 @@ Deno.serve(async (req) => {
 ${intensityRules}`;
       finalSystem += VARIATION_RULE + `\n\n${matchedTriggers.join("\n\n")}`;
     }
+    } // fim do if (!demoMode) — bloco de triggers
 
     const chain = getProviderChain(provider as Provider | undefined);
     if (chain.length === 0) {
