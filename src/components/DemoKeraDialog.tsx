@@ -9,9 +9,9 @@ import { BUILTIN_AGENTS } from "@/lib/agents";
 import keraAvatarPng from "@/assets/kera-avatar.png";
 import { cn } from "@/lib/utils";
 
-// Fundo da tela de testes: vídeo de chuva pura (sem o avatar da Kera).
+// Fundo da tela de testes: Kera realista com gotas de chuva (mesmo do login).
 const KERA_RAIN_VIDEO_URL =
-  "https://ytixqgkzqgeoxrbmjqbo.supabase.co/storage/v1/object/public/kera-videos/kera-chuva.mp4?v=2026-04-22b";
+  "https://ytixqgkzqgeoxrbmjqbo.supabase.co/storage/v1/object/public/kera-videos/kera-avatar-rain.mp4?v=2026-04-22c";
 
 const DEMO_LIMIT = 3;
 const DEMO_KEY = "kera-demo-questions-used";
