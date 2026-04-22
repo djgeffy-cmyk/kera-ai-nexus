@@ -58,6 +58,8 @@ const Auth = () => {
   const [supportsPasskey] = useState(() => webauthnSupported());
   const [inIframe] = useState(() => isInIframe());
   const [demoOpen, setDemoOpen] = useState(false);
+  const [bgVideoUrl, setBgVideoUrl] = useState(authBgOptions[0].url);
+  const [avatarVideoUrl, setAvatarVideoUrl] = useState(authAvatarOptions[0].url);
   // Lembra a preferência do usuário entre visitas (localStorage).
   const RAIN_MUTE_KEY = "kera:auth:rain-muted";
   const [audioMuted, setAudioMuted] = useState<boolean>(() => {
