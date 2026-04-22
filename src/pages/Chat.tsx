@@ -1276,6 +1276,7 @@ Por favor, analise: há perda de pacote? jitter alto sugere instabilidade de rot
                   </>
                 );
               })()}
+              {/* (handled below — old block replaced) */}
               {customAgents.length > 0 && (
                 <>
                   <DropdownMenuSeparator />
