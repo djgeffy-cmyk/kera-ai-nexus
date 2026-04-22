@@ -36,6 +36,67 @@ function inferTierFromPrice(priceObj: any): string {
   return "pro"; // fallback genérico — assinatura ativa = pelo menos pro
 }
 
+type SourceResult = {
+  allowed: boolean;
+  source: "stripe" | "mercadopago";
+  plan_tier?: string;
+  status?: string;
+  reason?: string;
+  message?: string;
+};
+
+async function checkStripe(email: string, key: string | undefined): Promise<SourceResult> {
+  if (!key) return { allowed: false, source: "stripe", reason: "stripe_not_configured" };
+  try {
+    const customersResp = await fetch(
+      `https://api.stripe.com/v1/customers?email=${encodeURIComponent(email)}&limit=10`,
+      { headers: { Authorization: `Bearer ${key}` } },
+    );
+    if (!customersResp.ok) {
+      const txt = await customersResp.text();
+      return { allowed: false, source: "stripe", reason: "stripe_error", message: `${customersResp.status}: ${txt.slice(0,200)}` };
+    }
+    const customers: any[] = (await customersResp.json()).data ?? [];
+    if (customers.length === 0) return { allowed: false, source: "stripe", reason: "no_customer" };
+
+    for (const c of customers) {
+      const subsResp = await fetch(
+        `https://api.stripe.com/v1/subscriptions?customer=${c.id}&status=all&limit=10&expand[]=data.items.data.price.product`,
+        { headers: { Authorization: `Bearer ${key}` } },
+      );
+      if (!subsResp.ok) continue;
+      const subs: any[] = (await subsResp.json()).data ?? [];
+      const found = subs.find((s) => s.status === "active" || s.status === "trialing");
+      if (found) {
+        const price = found.items?.data?.[0]?.price;
+        return { allowed: true, source: "stripe", plan_tier: inferTierFromPrice(price), status: found.status };
+      }
+    }
+    return { allowed: false, source: "stripe", reason: "no_active_subscription" };
+  } catch (e) {
+    return { allowed: false, source: "stripe", reason: "stripe_exception", message: e instanceof Error ? e.message : String(e) };
+  }
+}
+
+async function checkMercadoPago(email: string, admin: any): Promise<SourceResult> {
+  try {
+    // Lê do cache local (alimentado pelo webhook mp-webhook).
+    const { data, error } = await admin
+      .from("mp_subscriptions")
+      .select("status, plan_tier, next_payment_date")
+      .ilike("email", email)
+      .in("status", ["authorized", "approved"])
+      .order("updated_at", { ascending: false })
+      .limit(1);
+    if (error) return { allowed: false, source: "mercadopago", reason: "mp_query_error", message: error.message };
+    if (!data || data.length === 0) return { allowed: false, source: "mercadopago", reason: "no_active_subscription" };
+    const row = data[0];
+    return { allowed: true, source: "mercadopago", plan_tier: row.plan_tier ?? "pro", status: row.status };
+  } catch (e) {
+    return { allowed: false, source: "mercadopago", reason: "mp_exception", message: e instanceof Error ? e.message : String(e) };
+  }
+}
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
 
