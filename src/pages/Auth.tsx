@@ -11,8 +11,10 @@ import { ShieldCheck, KeyRound, Mail, ScanFace, Eye, EyeOff, Sparkles, MousePoin
 import { motion, AnimatePresence } from "framer-motion";
 import keraAvatar from "@/assets/kera-avatar.png";
  import keraAvatarVideoV2 from "@/assets/kera-avatar-rain-v2.mp4";
- import rainBgRealisticUrl from "@/assets/rain-bg-chuva.mp4";
 import rainAmbientUrl from "@/assets/rain-ambient.mp3";
+
+// Vídeo de chuva hospedado no storage (atualizado pelo usuário)
+const rainBgRealisticUrl = "https://ytixqgkzqgeoxrbmjqbo.supabase.co/storage/v1/object/public/kera-videos//kera-chuva.mp4";
 
 import DemoKeraDialog from "@/components/DemoKeraDialog";
 import { assetUrl } from "@/lib/assetUrl";
