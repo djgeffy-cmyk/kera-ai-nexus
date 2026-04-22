@@ -1,0 +1,48 @@
+name: Build Kera Desktop (Linux only)
+
+# Atalho pra disparar manualmente SÓ o build do Linux,
+# sem rodar Windows/macOS junto. Útil pra testes rápidos.
+
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: 'true'
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build-linux:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: 'npm'
+
+      - name: Install Dependencies
+        run: npm install --no-audit --no-fund
+
+      - name: Build (electron-builder)
+        run: npm run electron:build
+        env:
+          ELECTRON_BUILD: 'true'
+          BUILD_PLATFORM: 'linux'
+          BUILD_ARCH: 'x64'
+          CSC_IDENTITY_AUTO_DISCOVERY: 'false'
+
+      - name: Upload CI artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: KeraDesktop-linux
+          path: |
+            release-builds/*.AppImage
+            release-builds/latest*.yml
+          if-no-files-found: warn
+          retention-days: 7
