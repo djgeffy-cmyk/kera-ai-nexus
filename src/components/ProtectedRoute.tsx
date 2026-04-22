@@ -14,6 +14,7 @@ export const ProtectedRoute = ({ children, requireAdmin = false }: Props) => {
   const [authReady, setAuthReady] = useState(false);
   const [onboardingChecked, setOnboardingChecked] = useState(false);
   const [needsOnboarding, setNeedsOnboarding] = useState(false);
+  const [mustChangePassword, setMustChangePassword] = useState(false);
   const location = useLocation();
 
   useEffect(() => {
@@ -48,11 +49,12 @@ export const ProtectedRoute = ({ children, requireAdmin = false }: Props) => {
     if (!session?.user) { setOnboardingChecked(true); setNeedsOnboarding(false); return; }
     supabase
       .from("profiles")
-      .select("onboarding_completed")
+      .select("onboarding_completed, must_change_password")
       .eq("user_id", session.user.id)
       .maybeSingle()
       .then(({ data }) => {
         setNeedsOnboarding(!data?.onboarding_completed);
+        setMustChangePassword(!!data?.must_change_password);
         setOnboardingChecked(true);
       });
   }, [session, authReady]);
@@ -66,6 +68,12 @@ export const ProtectedRoute = ({ children, requireAdmin = false }: Props) => {
     );
   }
   if (!session) return <Navigate to="/welcome" replace />;
+
+  // Força troca de senha se necessário (exceto se já estiver na página de segurança)
+  if (mustChangePassword && location.pathname !== "/security") {
+    return <Navigate to="/security" replace />;
+  }
+
   // Se ainda não escolheu áreas, manda pro onboarding (exceto se já está nele)
   if (needsOnboarding && location.pathname !== "/onboarding") {
     return <Navigate to="/onboarding" replace />;
