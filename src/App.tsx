@@ -21,6 +21,7 @@ import Uso from "./pages/Uso.tsx";
 import Builds from "./pages/Builds.tsx";
 import Processos from "./pages/Processos.tsx";
 import InstallIOS from "./pages/InstallIOS.tsx";
+import AcessoRestrito from "./pages/AcessoRestrito.tsx";
 import { ProtectedRoute } from "./components/ProtectedRoute";
 import Footer from "./components/Footer";
 import { LicitacoesAlertsListener } from "./components/LicitacoesAlertsListener";
@@ -34,8 +35,8 @@ const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
       <Sonner />
-      <GeoBlockGate>
       <HashRouter>
+        <GeoBlockGate>
         <LicitacoesAlertsListener />
         <Routes>
           <Route path="/welcome" element={<Welcome />} />
@@ -56,13 +57,14 @@ const App = () => (
           <Route path="/builds" element={<ProtectedRoute><Builds /></ProtectedRoute>} />
           <Route path="/processos" element={<ProtectedRoute><Processos /></ProtectedRoute>} />
           <Route path="/install-ios" element={<InstallIOS />} />
+          <Route path="/acesso-restrito" element={<AcessoRestrito />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
         <Footer />
         <AskKeraFab />
         <IconUpdateBanner />
+        </GeoBlockGate>
       </HashRouter>
-      </GeoBlockGate>
     </TooltipProvider>
   </QueryClientProvider>
 );
