@@ -191,6 +191,16 @@ const Onboarding = () => {
           </p>
         </header>
 
+        {fitVisible && (
+          <div className="mb-4">
+            <KeraFitGroup
+              renderAgent={renderFitAgent}
+              unlocked={anyFitSelected}
+              badgeLabel={anyFitSelected ? `${KERA_FIT_AGENT_KEYS.filter((k) => selected.has(k)).length}/3 selecionados` : "Marque qualquer um pra incluir"}
+            />
+          </div>
+        )}
+
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-4 mb-8">
           {ordered.map(a => {
             const Icon = a.icon;
