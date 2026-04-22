@@ -10,6 +10,7 @@ import Onboarding from "./pages/Onboarding.tsx";
 import Planos from "./pages/Planos.tsx";
 import AdminUso from "./pages/AdminUso.tsx";
 import Security from "./pages/Security.tsx";
+import HumorKera from "./pages/HumorKera.tsx";
 import Transparencia from "./pages/Transparencia.tsx";
 import TransparenciaHistorico from "./pages/TransparenciaHistorico.tsx";
 import NotFound from "./pages/NotFound.tsx";
@@ -37,6 +38,7 @@ const App = () => (
           <Route path="/admin/uso" element={<ProtectedRoute requireAdmin><AdminUso /></ProtectedRoute>} />
           <Route path="/agents" element={<ProtectedRoute><Agents /></ProtectedRoute>} />
           <Route path="/security" element={<ProtectedRoute><Security /></ProtectedRoute>} />
+          <Route path="/humor" element={<ProtectedRoute><HumorKera /></ProtectedRoute>} />
           <Route path="/transparencia" element={<ProtectedRoute><Transparencia /></ProtectedRoute>} />
           <Route path="/transparencia/historico" element={<ProtectedRoute><TransparenciaHistorico /></ProtectedRoute>} />
           <Route path="/desktop" element={<ProtectedRoute><KeraDesktopPage /></ProtectedRoute>} />
