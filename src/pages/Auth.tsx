@@ -11,7 +11,7 @@ import { ShieldCheck, KeyRound, Mail, ScanFace, Eye, EyeOff, Sparkles, MousePoin
 import { motion, AnimatePresence } from "framer-motion";
 import keraAvatar from "@/assets/kera-avatar.png";
  import keraAvatarVideo from "@/assets/kera-avatar-rain.mp4.asset.json";
- import rainBgRealistic from "@/assets/rain-bg-realistic.mp4.asset.json";
+ import rainBgRealisticUrl from "@/assets/rain-bg-realistic.mp4";
 import rainAmbientUrl from "@/assets/rain-ambient.mp3";
 
 import ParticlesOverlay from "@/components/ParticlesOverlay";
@@ -122,8 +122,8 @@ const Auth = () => {
   const [resetNote, setResetNote] = useState("");
   const [resetLoading, setResetLoading] = useState(false);
    const rainVideoUrl = assetUrl(keraAvatarVideo);
-    // URL de vídeo de chuva realista (Pexels - Alta Definição)
-    const rainBgUrl = "https://videos.pexels.com/video-files/854748/854748-hd_1920_1080_30fps.mp4";
+    // Vídeo de chuva realista enviado pelo usuário (local, alta definição)
+    const rainBgUrl = rainBgRealisticUrl;
 
   useEffect(() => {
     document.title = "Kera AI — Entrar";
