@@ -14,7 +14,6 @@ import keraAvatar from "@/assets/kera-avatar.png";
  import rainBgRealisticUrl from "@/assets/rain-bg-chuva.mp4";
 import rainAmbientUrl from "@/assets/rain-ambient.mp3";
 
-import ParticlesOverlay from "@/components/ParticlesOverlay";
 import DemoKeraDialog from "@/components/DemoKeraDialog";
 import { assetUrl } from "@/lib/assetUrl";
 import { MissionCriticalSchema } from "@/lib/missionCriticalSchemas";
@@ -303,7 +302,6 @@ const Auth = () => {
         style={{ filter: "brightness(0.95) contrast(1.05) saturate(1)" }}
       />
       <div aria-hidden className="absolute inset-0 bg-background/10" />
-      <ParticlesOverlay />
 
       {/* Áudio ambiente de chuva — começa após primeira interação */}
       <audio
