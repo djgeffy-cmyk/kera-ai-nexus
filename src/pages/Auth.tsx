@@ -7,7 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Card } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { toast } from "sonner";
-import { ShieldCheck, KeyRound, Mail, ScanFace, Eye, EyeOff, Sparkles, Volume2, VolumeX } from "lucide-react";
+import { ShieldCheck, KeyRound, Mail, ScanFace, Eye, EyeOff, Sparkles, Volume2, VolumeX, ArrowLeft } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import keraAvatar from "@/assets/kera-avatar.png";
  import keraAvatarVideoV2 from "@/assets/kera-avatar-rain-v2.mp4";
@@ -312,6 +312,18 @@ const Auth = () => {
         className="fixed top-4 right-4 z-40 size-10 rounded-full bg-background/40 backdrop-blur-md border border-white/10 flex items-center justify-center text-primary/80 hover:text-primary hover:bg-background/60 hover:scale-105 active:scale-95 transition-all duration-300 shadow-soft"
       >
         {audioMuted ? <VolumeX className="size-4" /> : <Volume2 className="size-4" />}
+      </button>
+
+      {/* Botão voltar — canto superior esquerdo. Volta pra tela inicial /welcome. */}
+      <button
+        type="button"
+        onClick={() => navigate("/welcome")}
+        aria-label="Voltar pra tela inicial"
+        title="Voltar"
+        className="fixed top-4 left-4 z-40 h-10 px-3 rounded-full bg-background/40 backdrop-blur-md border border-white/10 flex items-center gap-1.5 text-primary/80 hover:text-primary hover:bg-background/60 hover:scale-105 active:scale-95 transition-all duration-300 shadow-soft text-sm"
+      >
+        <ArrowLeft className="size-4" />
+        <span className="hidden sm:inline">Voltar</span>
       </button>
 
       <div
