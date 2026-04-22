@@ -1,4 +1,4 @@
-import { Sparkles, Code2, Shield, Scale, Radar, Apple, Gamepad2, Heart, ScrollText, UserCheck, Accessibility, ShieldAlert, Dumbbell, Flame, Landmark, Building2, type LucideIcon } from "lucide-react";
+import { Sparkles, Code2, Shield, Scale, Radar, Apple, Gamepad2, Heart, ScrollText, UserCheck, Accessibility, ShieldAlert, Dumbbell, Flame, Landmark, Building2, HardHat, type LucideIcon } from "lucide-react";
 
 export type BuiltinAgent = {
   key: string;
@@ -54,6 +54,7 @@ export const KERA_FIT_LABEL = "Kera Fit";
  export const KERA_MUNICIPIO_AGENT_KEYS = [
    "kera-guaramirim",
    "kera-prefeituras",
+   "kera-engegov",
  ] as const;
  export const KERA_MUNICIPIO_LABEL = "Kera Municipal";
  export const KERA_MUNICIPIO_DESCRIPTION =
