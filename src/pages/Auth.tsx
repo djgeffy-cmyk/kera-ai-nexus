@@ -340,7 +340,7 @@ const Auth = () => {
         className="absolute inset-0 pointer-events-none"
         style={{
           background:
-            "radial-gradient(ellipse at center, transparent 0%, hsl(var(--background) / 0.25) 65%, hsl(var(--background) / 0.6) 100%)",
+            "radial-gradient(circle at center, hsl(var(--background) / 0.58) 0%, hsl(var(--background) / 0.32) 24%, transparent 52%), radial-gradient(ellipse at center, transparent 0%, hsl(var(--background) / 0.18) 68%, hsl(var(--background) / 0.52) 100%)",
         }}
       />
 
@@ -357,7 +357,11 @@ const Auth = () => {
               transition: { duration: 0.5, ease: [0.4, 0, 0.2, 1] },
             }}
             transition={{ duration: 0.6, ease: "easeOut" }}
-            className="relative z-20 flex flex-col items-center"
+            className="relative z-20 flex flex-col items-center px-6 py-7 rounded-[2rem]"
+            style={{
+              background: "linear-gradient(180deg, hsl(var(--background) / 0.34), hsl(var(--background) / 0.18))",
+              boxShadow: "0 18px 60px hsl(0 0% 0% / 0.28)",
+            }}
           >
             {/* Trigger: avatar grande da Kera. Hover = pulse + chamada. Click = abre demo. */}
             <motion.button
@@ -418,7 +422,8 @@ const Auth = () => {
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.4 }}
-              className="mt-8 text-primary font-display tracking-widest text-2xl uppercase text-center text-glow"
+              className="mt-8 text-primary font-display tracking-widest text-3xl uppercase text-center text-glow"
+              style={{ textShadow: "0 0 12px hsl(var(--primary) / 0.9), 0 4px 24px hsl(0 0% 0% / 0.7)" }}
             >
               Kera
             </motion.h2>
@@ -426,7 +431,8 @@ const Auth = () => {
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.6 }}
-              className="mt-2 text-sm text-muted-foreground tracking-wider text-center max-w-xs"
+              className="mt-3 text-base text-foreground/90 tracking-wide text-center max-w-sm leading-relaxed"
+              style={{ textShadow: "0 2px 18px hsl(0 0% 0% / 0.72)" }}
             >
               Clique sobre mim para conversar — depois você decide se cria conta
             </motion.p>
@@ -440,11 +446,12 @@ const Auth = () => {
                <Button
                  variant="ghost"
                  onClick={() => setIsUnlocked(true)}
-                 className="text-xs text-primary/80 hover:text-primary hover:bg-primary/10 tracking-wider underline-offset-4 underline transition-all"
+                  className="text-sm text-primary hover:text-primary hover:bg-background/25 tracking-wide underline-offset-4 underline transition-all"
+                  style={{ textShadow: "0 2px 16px hsl(0 0% 0% / 0.65)" }}
                >
                  Já tenho conta — Entrar direto
                </Button>
-               <p className="text-[10px] text-muted-foreground/50 italic">
+                <p className="text-xs text-foreground/70 italic text-center" style={{ textShadow: "0 2px 16px hsl(0 0% 0% / 0.72)" }}>
                  Após entrar, as configurações de humor ficam na barra lateral.
                </p>
              </motion.div>
@@ -464,13 +471,11 @@ const Auth = () => {
           >
             <Card
               className="relative w-full max-w-sm p-5 sm:p-6 shadow-glow z-10 max-h-[calc(100vh-2rem)] overflow-y-auto scrollbar-thin rounded-2xl"
-              style={{
-                background: "rgba(0, 0, 0, 0.03)",
-                backdropFilter: "blur(2px)",
-                WebkitBackdropFilter: "blur(2px)",
-                border: "1px solid rgba(255, 255, 255, 0.1)",
-                textShadow: "0px 0px 5px rgba(0, 0, 0, 0.8)",
-              }}
+               style={{
+                 background: "linear-gradient(180deg, hsl(var(--background) / 0.62), hsl(var(--background) / 0.46))",
+                 border: "1px solid hsl(var(--border) / 0.7)",
+                 textShadow: "0 2px 14px rgba(0, 0, 0, 0.72)",
+               }}
             >
               <div className="flex flex-col items-center mb-4">
                 <div className="relative size-20 sm:size-24 rounded-full overflow-hidden border-2 border-primary/70 shadow-glow mb-3 bg-background ring-4 ring-primary/20">
