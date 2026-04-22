@@ -1266,11 +1266,25 @@ Por favor, analise: há perda de pacote? jitter alto sugere instabilidade de rot
                     {groupOrder.map((group, idx) => {
                       const items = visible.filter(a => (group.keys as readonly string[]).includes(a.key));
                       if (items.length === 0) return null;
+                      const containsActive = items.some(a => a.key === agentKey);
+                      const isOpen = openAgentGroups[group.label] ?? containsActive;
                       return (
                         <div key={group.label}>
                           {(idx > 0 || others.length > 0) && <DropdownMenuSeparator />}
-                          <DropdownMenuLabel className="text-[10px] text-primary/70 uppercase tracking-[0.15em] font-bold">{group.label}</DropdownMenuLabel>
-                          {items.map(renderItem)}
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.preventDefault();
+                              e.stopPropagation();
+                              setOpenAgentGroups(prev => ({ ...prev, [group.label]: !isOpen }));
+                            }}
+                            onPointerDown={(e) => e.preventDefault()}
+                            className="w-full flex items-center justify-between px-2 py-1.5 text-[10px] text-primary/70 uppercase tracking-[0.15em] font-bold hover:bg-white/5 rounded-sm transition-colors"
+                          >
+                            <span>{group.label}</span>
+                            <ChevronDown className={`size-3 transition-transform ${isOpen ? "rotate-180" : ""}`} />
+                          </button>
+                          {isOpen && items.map(renderItem)}
                         </div>
                       );
                     })}
