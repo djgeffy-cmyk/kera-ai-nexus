@@ -118,6 +118,45 @@ const Auth = () => {
     };
   }, []);
 
+  // Garante autoplay/loop do vídeo de chuva mesmo quando o navegador bloqueia
+  // o primeiro play (ex.: autoplay policy) ou quando há falha de rede.
+  useEffect(() => {
+    const video = bgVideoRef.current;
+    if (!video) return;
+
+    const tryPlay = () => {
+      const p = video.play();
+      if (p && typeof p.catch === "function") {
+        p.catch(() => {/* será retentado em próxima interação */});
+      }
+    };
+
+    const onCanPlay = () => tryPlay();
+    const onStalled = () => { try { video.load(); } catch {} };
+    const onVisibility = () => { if (document.visibilityState === "visible") tryPlay(); };
+    const onUserGesture = () => tryPlay();
+
+    video.addEventListener("canplay", onCanPlay);
+    video.addEventListener("loadeddata", onCanPlay);
+    video.addEventListener("stalled", onStalled);
+    video.addEventListener("error", onStalled);
+    document.addEventListener("visibilitychange", onVisibility);
+    window.addEventListener("pointerdown", onUserGesture, { once: true });
+    window.addEventListener("keydown", onUserGesture, { once: true });
+
+    tryPlay();
+
+    return () => {
+      video.removeEventListener("canplay", onCanPlay);
+      video.removeEventListener("loadeddata", onCanPlay);
+      video.removeEventListener("stalled", onStalled);
+      video.removeEventListener("error", onStalled);
+      document.removeEventListener("visibilitychange", onVisibility);
+      window.removeEventListener("pointerdown", onUserGesture);
+      window.removeEventListener("keydown", onUserGesture);
+    };
+  }, []);
+
   const [resetOpen, setResetOpen] = useState(false);
   const [resetEmail, setResetEmail] = useState("");
   const [resetNote, setResetNote] = useState("");
