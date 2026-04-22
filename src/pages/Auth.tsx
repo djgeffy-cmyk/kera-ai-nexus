@@ -138,7 +138,7 @@ const Auth = () => {
   const [resetEmail, setResetEmail] = useState("");
   const [resetNote, setResetNote] = useState("");
   const [resetLoading, setResetLoading] = useState(false);
-   const rainVideoUrl = keraAvatarVideoV2;
+   const rainVideoUrl = "https://ytixqgkzqgeoxrbmjqbo.supabase.co/storage/v1/object/public/kera-videos//kera-avatar-rain.mp4";
     // Vídeo de chuva realista enviado pelo usuário (local, alta definição)
     const rainBgUrl = rainBgRealisticUrl;
 
