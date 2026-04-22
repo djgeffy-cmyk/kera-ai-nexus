@@ -10,7 +10,7 @@ import { toast } from "sonner";
 import { ShieldCheck, KeyRound, Mail, ScanFace, Eye, EyeOff, Sparkles, MousePointerClick, Volume2, VolumeX } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import keraAvatar from "@/assets/kera-avatar.png";
- import keraAvatarVideo from "@/assets/kera-avatar-rain.mp4.asset.json";
+ import keraAvatarVideoV2 from "@/assets/kera-avatar-rain-v2.mp4";
  import rainBgRealisticUrl from "@/assets/rain-bg-realistic.mp4";
 import rainAmbientUrl from "@/assets/rain-ambient.mp3";
 
@@ -121,7 +121,7 @@ const Auth = () => {
   const [resetEmail, setResetEmail] = useState("");
   const [resetNote, setResetNote] = useState("");
   const [resetLoading, setResetLoading] = useState(false);
-   const rainVideoUrl = assetUrl(keraAvatarVideo);
+   const rainVideoUrl = keraAvatarVideoV2;
     // Vídeo de chuva realista enviado pelo usuário (local, alta definição)
     const rainBgUrl = rainBgRealisticUrl;
 
