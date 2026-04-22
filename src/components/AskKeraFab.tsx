@@ -1,6 +1,6 @@
 import { useState, useMemo } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import { Sparkles, Send, MonitorDown, Info } from "lucide-react";
+import { Sparkles, Send, MonitorDown, Info, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -27,6 +27,7 @@ export const AskKeraFab = () => {
   const location = useLocation();
   const [open, setOpen] = useState(false);
   const [text, setText] = useState("");
+  const [sending, setSending] = useState(false);
   const desktop = isKeraDesktop();
 
   const filteredPrompts = useMemo(() => {
@@ -41,28 +42,44 @@ export const AskKeraFab = () => {
 
   const send = (frase: string) => {
     const q = frase.trim();
-    if (!q) return;
-    setOpen(false);
-    setText("");
+    if (!q || sending) return;
+    setSending(true);
     const isDesktopPrompt = QUICK_PROMPTS.find(p => p.label === q)?.desktop;
     const agentParam = isDesktopPrompt ? "&agent=kera" : "";
     // O chat é a rota raiz ("/"), não "/chat" — navegar para /chat dava 404.
     navigate(`/?ask=${encodeURIComponent(q)}${agentParam}`);
+    // Pequeno delay pra mostrar o loading antes da rota desmontar o componente.
+    setTimeout(() => {
+      setOpen(false);
+      setText("");
+      setSending(false);
+    }, 250);
   };
 
   return (
     <>
       <Button
-        onClick={() => setOpen(true)}
+        onClick={() => !sending && setOpen(true)}
         size="lg"
+        disabled={sending}
         className="fixed bottom-6 right-6 z-40 rounded-full h-14 px-6 gap-2 bg-primary text-primary-foreground hover:bg-primary/90 font-semibold text-base shadow-[0_8px_30px_-4px_hsl(var(--primary)/0.6)] ring-2 ring-primary-foreground/20 hover:ring-primary-foreground/40 transition-all"
-        aria-label="Pedir pra Kera"
+        aria-label={sending ? "Abrindo chat..." : "Pedir pra Kera"}
+        aria-busy={sending}
       >
-        <Sparkles className="h-5 w-5 shrink-0" />
-        <span className="hidden sm:inline">Pedir pra Kera</span>
+        {sending ? (
+          <>
+            <Loader2 className="h-5 w-5 shrink-0 animate-spin" />
+            <span className="hidden sm:inline">Abrindo chat...</span>
+          </>
+        ) : (
+          <>
+            <Sparkles className="h-5 w-5 shrink-0" />
+            <span className="hidden sm:inline">Pedir pra Kera</span>
+          </>
+        )}
       </Button>
 
-      <Dialog open={open} onOpenChange={setOpen}>
+      <Dialog open={open} onOpenChange={(v) => !sending && setOpen(v)}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
@@ -120,6 +137,7 @@ export const AskKeraFab = () => {
                 ? "Ex.: Abre o Firefox, qual o status do PC, instala o Spotify..."
                 : "Ex.: Gera uma imagem de um cachorro robô, consulta a licitação X..."
             }
+            disabled={sending}
             className="min-h-[100px]"
           />
 
@@ -129,6 +147,7 @@ export const AskKeraFab = () => {
                 key={p.label}
                 variant="outline"
                 size="sm"
+                disabled={sending}
                 onClick={() => send(p.label)}
               >
                 {p.label}
@@ -137,9 +156,22 @@ export const AskKeraFab = () => {
           </div>
 
           <div className="flex justify-end">
-            <Button onClick={() => send(text)} disabled={!text.trim()} className="gap-2">
-              <Send className="h-4 w-4" />
-              Enviar pro chat
+            <Button
+              onClick={() => send(text)}
+              disabled={!text.trim() || sending}
+              className="gap-2"
+            >
+              {sending ? (
+                <>
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  Abrindo chat...
+                </>
+              ) : (
+                <>
+                  <Send className="h-4 w-4" />
+                  Enviar pro chat
+                </>
+              )}
             </Button>
           </div>
         </DialogContent>
