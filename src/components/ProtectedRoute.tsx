@@ -74,8 +74,11 @@ export const ProtectedRoute = ({ children, requireAdmin = false }: Props) => {
     return <Navigate to="/security" replace />;
   }
 
-  // Se ainda não escolheu áreas, manda pro onboarding (exceto se já está nele)
-  if (needsOnboarding && location.pathname !== "/onboarding") {
+  // Se ainda não escolheu áreas, manda pro onboarding.
+  // Exceções: já está no onboarding, ou em rotas "neutras" que devem
+  // funcionar sem precisar completar (planos, manual, segurança, desktop).
+  const ONBOARDING_BYPASS = ["/onboarding", "/planos", "/manual", "/security", "/desktop"];
+  if (needsOnboarding && !ONBOARDING_BYPASS.includes(location.pathname)) {
     return <Navigate to="/onboarding" replace />;
   }
   if (requireAdmin && !isAdmin) {
