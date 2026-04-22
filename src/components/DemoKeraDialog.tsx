@@ -149,8 +149,16 @@ export const DemoKeraDialog = ({ open, onOpenChange, onWantToSignUp }: DemoKeraD
     setGreetingDone(false);
   }, [fullGreeting]);
 
+  // Reset quando o dialog abre (para que a animação comece toda vez do zero).
   useEffect(() => {
-    if (!isFirstAssistantOnly || greetingDone) return;
+    if (open) {
+      setTypedGreeting("");
+      setGreetingDone(false);
+    }
+  }, [open]);
+
+  useEffect(() => {
+    if (!open || !isFirstAssistantOnly || greetingDone) return;
     if (userStartedTyping) {
       // Usuário assumiu — completa a saudação na hora.
       setTypedGreeting(fullGreeting);
@@ -163,9 +171,9 @@ export const DemoKeraDialog = ({ open, onOpenChange, onWantToSignUp }: DemoKeraD
     }
     const t = window.setTimeout(() => {
       setTypedGreeting(fullGreeting.slice(0, typedGreeting.length + 1));
-    }, 22);
+    }, 28);
     return () => window.clearTimeout(t);
-  }, [typedGreeting, fullGreeting, isFirstAssistantOnly, greetingDone, userStartedTyping]);
+  }, [open, typedGreeting, fullGreeting, isFirstAssistantOnly, greetingDone, userStartedTyping]);
 
   const remaining = Math.max(0, DEMO_LIMIT - used);
   const exhausted = remaining === 0;
