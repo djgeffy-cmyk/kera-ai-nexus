@@ -1339,6 +1339,7 @@ Por favor, analise: há perda de pacote? jitter alto sugere instabilidade de rot
                   { label: "Kera Tecnologia", keys: KERA_TECH_AGENT_KEYS },
                   { label: "Kera Jurídica", keys: KERA_JURIDICO_AGENT_KEYS },
                   { label: "Kera Fit", keys: KERA_FIT_AGENT_KEYS },
+                  { label: "Kera Diversão", keys: KERA_DIVERSAO_AGENT_KEYS },
                 ];
                 const groupedKeys = new Set<string>(groupOrder.flatMap(g => [...g.keys] as string[]));
                 const others = visible.filter(a => !groupedKeys.has(a.key));
@@ -1370,11 +1371,23 @@ Por favor, analise: há perda de pacote? jitter alto sugere instabilidade de rot
                     {groupOrder.map((group, idx) => {
                       const items = visible.filter(a => (group.keys as readonly string[]).includes(a.key));
                       if (items.length === 0) return null;
+                      const isOpen = !!openAgentGroups[group.label];
                       return (
                         <div key={group.label}>
                           {(idx > 0 || others.length > 0) && <DropdownMenuSeparator />}
-                          <DropdownMenuLabel className="text-[10px] text-primary/70 uppercase tracking-[0.15em] font-bold">{group.label}</DropdownMenuLabel>
-                          {items.map(renderItem)}
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.preventDefault();
+                              e.stopPropagation();
+                              setOpenAgentGroups(prev => ({ ...prev, [group.label]: !prev[group.label] }));
+                            }}
+                            className="w-full flex items-center justify-between px-2 py-1.5 text-[10px] text-primary/70 uppercase tracking-[0.15em] font-bold hover:bg-primary/5 rounded-sm transition-colors"
+                          >
+                            <span>{group.label}</span>
+                            <ChevronDown className={`size-3 transition-transform ${isOpen ? "rotate-180" : ""}`} />
+                          </button>
+                          {isOpen && items.map(renderItem)}
                         </div>
                       );
                     })}
