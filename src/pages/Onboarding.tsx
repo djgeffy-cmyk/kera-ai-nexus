@@ -108,9 +108,9 @@ const Onboarding = () => {
    const techKeys = new Set<string>(KERA_TECH_AGENT_KEYS);
    const groupedKeys = new Set([...KERA_FIT_AGENT_KEYS, ...KERA_JURIDICO_AGENT_KEYS, ...KERA_TECH_AGENT_KEYS]);
  
-   // ordena: Kera principal primeiro, depois o resto. Remove os agrupados.
-   const ordered = [...BUILTIN_AGENTS]
-     .filter((a) => canSee(a.key) && !groupedKeys.has(a.key))
+    // ordena: Kera principal primeiro, depois o resto. Remove os agrupados.
+    const ordered = [...BUILTIN_AGENTS]
+      .filter((a) => canSee(a.key) && !groupedKeys.has(a.key as any))
     .sort((a, b) => {
       if (a.key === "kera") return -1;
       if (b.key === "kera") return 1;
