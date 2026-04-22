@@ -1,21 +1,51 @@
 name: Build Kera Desktop
 
+# Builda os 3 sistemas. Quando rodar com tag (v*) OU quando a versão do
+# package.json mudar na main, faz upload pro GitHub Release pra que o
+# electron-updater detecte os arquivos latest*.yml e os instaladores.
+
 env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: 'true'
 
 on:
   push:
     branches: [main]
+    tags: ['v*']
     paths:
       - 'electron/**'
       - 'src/**'
       - 'package.json'
+      - 'electron-builder.config.cjs'
       - '.github/workflows/electron-build.yml'
   workflow_dispatch:
 
+permissions:
+  contents: write
+
 jobs:
-  build-windows:
-    runs-on: windows-latest
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: windows-latest
+            platform: win32
+            arch: x64
+            artifact: KeraDesktop-win
+          - os: ubuntu-latest
+            platform: linux
+            arch: x64
+            artifact: KeraDesktop-linux
+          - os: macos-13
+            platform: darwin
+            arch: x64
+            artifact: KeraDesktop-mac-x64
+          - os: macos-latest
+            platform: darwin
+            arch: arm64
+            artifact: KeraDesktop-mac-arm64
+
+    runs-on: ${{ matrix.os }}
 
     steps:
       - name: Checkout
@@ -30,98 +60,43 @@ jobs:
       - name: Install Dependencies
         run: npm install --no-audit --no-fund
 
-      - name: Run Build Script
+      - name: Build (electron-builder)
         run: npm run electron:build
         env:
           ELECTRON_BUILD: 'true'
-          BUILD_PLATFORM: 'win32'
-          BUILD_ARCH: 'x64'
-
-      - name: Upload ZIP Artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: KeraDesktop-win32-x64
-          path: release-builds/KeraDesktop-win32-x64.zip
-          if-no-files-found: error
-          retention-days: 30
-
-  build-linux:
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '24'
-          cache: 'npm'
-
-      - name: Install Dependencies
-        run: npm install --no-audit --no-fund
-
-      - name: Run Build Script
-        run: npm run electron:build
-        env:
-          ELECTRON_BUILD: 'true'
-          BUILD_PLATFORM: 'linux'
-          BUILD_ARCH: 'x64'
-
-      - name: Upload ZIP Artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: KeraDesktop-linux-x64
-          path: release-builds/KeraDesktop-linux-x64.zip
-          if-no-files-found: error
-          retention-days: 30
-
-  build-mac-x64:
-    runs-on: macos-13
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: '24'
-          cache: 'npm'
-      - name: Install Dependencies
-        run: npm install --no-audit --no-fund
-      - name: Run Build Script
-        run: npm run electron:build
-        env:
-          ELECTRON_BUILD: 'true'
-          BUILD_PLATFORM: 'darwin'
-          BUILD_ARCH: 'x64'
+          BUILD_PLATFORM: ${{ matrix.platform }}
+          BUILD_ARCH: ${{ matrix.arch }}
           CSC_IDENTITY_AUTO_DISCOVERY: 'false'
-      - name: Upload ZIP Artifact
+
+      # Sobe TODOS os artefatos relevantes pro CI (auditoria/debug)
+      - name: Upload CI artifact
         uses: actions/upload-artifact@v4
         with:
-          name: KeraDesktop-darwin-x64
-          path: release-builds/KeraDesktop-darwin-x64.zip
-          if-no-files-found: error
+          name: ${{ matrix.artifact }}
+          path: |
+            release-builds/*.exe
+            release-builds/*.dmg
+            release-builds/*.zip
+            release-builds/*.AppImage
+            release-builds/*.blockmap
+            release-builds/latest*.yml
+          if-no-files-found: warn
           retention-days: 30
 
-  build-mac-arm64:
-    runs-on: macos-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      # Quando o push trouxer uma tag v*, anexa os artefatos no Release.
+      # ESSE é o passo que habilita o auto-update: o electron-updater dos
+      # usuários instalados busca os latest*.yml na release "latest".
+      - name: Publish to GitHub Release
+        if: startsWith(github.ref, 'refs/tags/v')
+        uses: softprops/action-gh-release@v2
         with:
-          node-version: '24'
-          cache: 'npm'
-      - name: Install Dependencies
-        run: npm install --no-audit --no-fund
-      - name: Run Build Script
-        run: npm run electron:build
+          fail_on_unmatched_files: false
+          files: |
+            release-builds/*.exe
+            release-builds/*.dmg
+            release-builds/*-mac.zip
+            release-builds/*.AppImage
+            release-builds/*.blockmap
+            release-builds/latest*.yml
         env:
-          ELECTRON_BUILD: 'true'
-          BUILD_PLATFORM: 'darwin'
-          BUILD_ARCH: 'arm64'
-          CSC_IDENTITY_AUTO_DISCOVERY: 'false'
-      - name: Upload ZIP Artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: KeraDesktop-darwin-arm64
-          path: release-builds/KeraDesktop-darwin-arm64.zip
-          if-no-files-found: error
-          retention-days: 30
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

@@ -1,9 +1,19 @@
-// Build local opcional. No CI, prefira `npm run electron:release`
-// que usa electron-builder direto e publica no GitHub Releases.
+// Build local + empacotamento por sistema.
+// Em CI (electron-build.yml) este script roda em runners win/mac/linux.
+//
+// IMPORTANTE pro auto-update:
+// - electron-updater precisa dos arquivos `latest.yml` (Win),
+//   `latest-mac.yml` (macOS), `latest-linux.yml` (Linux) no Release.
+// - Os instaladores (.exe, .dmg, .zip mac, .AppImage) ficam SOLTOS no Release,
+//   NÃO podem estar dentro de um zip-coletor.
+// - .blockmap são opcionais mas habilitam delta-updates → manter.
 const { execSync } = require("child_process");
+const fs = require("fs");
 const path = require("path");
+const archiver = require("archiver");
 
 const ROOT = path.resolve(__dirname, "..");
+const OUT = path.join(ROOT, "release-builds");
 
 console.log("[1/2] Vite build...");
 execSync("npm run build", {
@@ -12,99 +22,87 @@ execSync("npm run build", {
   env: { ...process.env, ELECTRON_BUILD: "true" },
 });
 
-let platform;
+let platformFlag;
 if (process.env.BUILD_PLATFORM === "win32") {
-  platform = "--win";
+  platformFlag = "--win";
 } else if (process.env.BUILD_PLATFORM === "darwin") {
+  // Builda DMG + ZIP nos dois archs — necessário pro updater do macOS
   const arch = process.env.BUILD_ARCH === "arm64" ? "--arm64" : "--x64";
-  platform = `--mac zip ${arch}`;
+  platformFlag = `--mac dmg zip ${arch}`;
 } else {
-  platform = "--linux AppImage";
-}
-console.log(`[2/2] electron-builder (${platform})...`);
-execSync(`npx electron-builder ${platform} --config electron-builder.config.cjs --publish never`, {
-  stdio: "inherit",
-  cwd: ROOT,
-  // Remove variáveis de CI para o electron-builder não tentar publicar sozinho
-  env: { ...process.env, CI: "", GITHUB_ACTIONS: "", BUILD_NUMBER: "" },
-});
-
-// Empacota saída em ZIP para o workflow electron-build.yml (cross-platform via archiver)
-const fs = require("fs");
-const archiver = require("archiver");
-
-const outDir = path.join(ROOT, "release-builds");
-
-function shouldSkip(name) {
-  const lower = name.toLowerCase();
-  if (lower.endsWith(".zip")) return true;
-  if (lower.endsWith(".blockmap")) return true;
-  if (lower.startsWith("builder-") && lower.endsWith(".yml")) return true;
-  if (lower.startsWith("latest") && lower.endsWith(".yml")) return true;
-  return false;
+  platformFlag = "--linux AppImage";
 }
 
-async function zipArtifacts() {
-  if (!fs.existsSync(outDir)) {
-    console.warn("[zip] release-builds não existe — pulando.");
-    return;
+console.log(`[2/2] electron-builder (${platformFlag})...`);
+execSync(
+  `npx electron-builder ${platformFlag} --config electron-builder.config.cjs --publish never`,
+  {
+    stdio: "inherit",
+    cwd: ROOT,
+    // Limpa env de CI pra evitar publicação implícita (release.yml cuida disso)
+    env: { ...process.env, CI: "", GITHUB_ACTIONS: "", BUILD_NUMBER: "" },
+  },
+);
+
+// Empacota um ZIP de "snapshot" pra inspeção/CI artifact — mantém TODOS os
+// arquivos originais (incluindo latest*.yml e .blockmap) intactos no disco
+// pra serem subidos no Release pelo workflow.
+function listOutputs() {
+  if (!fs.existsSync(OUT)) return [];
+  return fs.readdirSync(OUT).filter((f) => {
+    const lower = f.toLowerCase();
+    if (lower.endsWith(".zip") && lower.startsWith("keradesktop-snapshot")) return false;
+    return true;
+  });
+}
+
+async function snapshotZip() {
+  const entries = listOutputs();
+  if (entries.length === 0) {
+    console.error("[snapshot] nada em release-builds!");
+    process.exit(1);
   }
 
   let target;
   if (process.env.BUILD_PLATFORM === "win32") {
-    target = "KeraDesktop-win32-x64.zip";
+    target = "KeraDesktop-snapshot-win32-x64.zip";
   } else if (process.env.BUILD_PLATFORM === "darwin") {
     const a = process.env.BUILD_ARCH === "arm64" ? "arm64" : "x64";
-    target = `KeraDesktop-darwin-${a}.zip`;
+    target = `KeraDesktop-snapshot-darwin-${a}.zip`;
   } else {
-    target = "KeraDesktop-linux-x64.zip";
+    target = "KeraDesktop-snapshot-linux-x64.zip";
   }
-  const targetPath = path.join(outDir, target);
+  const targetPath = path.join(OUT, target);
 
-  // Remove ZIPs antigos
-  for (const f of fs.readdirSync(outDir)) {
-    if (f.toLowerCase().endsWith(".zip")) {
-      try { fs.unlinkSync(path.join(outDir, f)); } catch {}
-    }
-  }
-
-  const entries = fs.readdirSync(outDir).filter((f) => !shouldSkip(f));
-  if (entries.length === 0) {
-    console.error("[zip] nenhum artefato encontrado em release-builds!");
-    process.exit(1);
-  }
-
-  console.log(`[zip] criando ${target} com ${entries.length} item(s):`);
+  console.log(`[snapshot] criando ${target} com ${entries.length} item(s):`);
   entries.forEach((e) => console.log("  -", e));
 
   await new Promise((resolve, reject) => {
     const output = fs.createWriteStream(targetPath);
     const archive = archiver("zip", { zlib: { level: 9 } });
-
     output.on("close", resolve);
     archive.on("error", reject);
     archive.pipe(output);
-
     for (const entry of entries) {
-      const full = path.join(outDir, entry);
+      const full = path.join(OUT, entry);
       const stat = fs.statSync(full);
-      if (stat.isDirectory()) {
-        archive.directory(full, entry);
-      } else {
-        archive.file(full, { name: entry });
-      }
+      if (stat.isDirectory()) archive.directory(full, entry);
+      else archive.file(full, { name: entry });
     }
-
     archive.finalize();
   });
 
   const sizeMb = (fs.statSync(targetPath).size / (1024 * 1024)).toFixed(2);
-  console.log(`[zip] ✅ ${target} criado (${sizeMb} MB)`);
+  console.log(`[snapshot] ✅ ${target} (${sizeMb} MB)`);
 }
 
-zipArtifacts()
-  .then(() => console.log("\n✅ Pronto! Veja em release-builds/"))
+snapshotZip()
+  .then(() => {
+    console.log("\n✅ Pronto! Veja em release-builds/");
+    console.log("   Os instaladores e os arquivos latest*.yml ficaram SOLTOS — ");
+    console.log("   o workflow de release deve subir todos pro GitHub Release.");
+  })
   .catch((e) => {
-    console.error("[zip] erro:", e);
+    console.error("[snapshot] erro:", e);
     process.exit(1);
   });
