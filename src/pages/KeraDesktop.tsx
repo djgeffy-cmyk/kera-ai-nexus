@@ -280,6 +280,40 @@ const KeraDesktopPage = () => {
   };
 
   if (!desktop) {
+    // Releases publicados pelo electron-builder no GitHub. A URL "latest/download"
+    // sempre redireciona para o último release publicado — não precisa atualizar
+    // a versão aqui quando sair uma nova build.
+    const GH_OWNER = "djgeffy-cmyk";
+    const GH_REPO = "kera-ai-nexus";
+    const releasesBase = `https://github.com/${GH_OWNER}/${GH_REPO}/releases/latest/download`;
+    const downloads = [
+      {
+        os: "Windows",
+        icon: Monitor,
+        // Nome definido em electron-builder.config.cjs (win.artifactName)
+        // KeraDesktop-Setup-${version}.exe — usamos a tag /releases/latest e
+        // listamos pelo padrão. Como o nome inclui versão, apontamos para a
+        // página de releases para o usuário pegar o .exe.
+        href: `https://github.com/${GH_OWNER}/${GH_REPO}/releases/latest`,
+        ext: ".exe",
+        hint: "Windows 10/11",
+      },
+      {
+        os: "macOS",
+        icon: Apple,
+        href: `https://github.com/${GH_OWNER}/${GH_REPO}/releases/latest`,
+        ext: ".dmg",
+        hint: "Intel & Apple Silicon",
+      },
+      {
+        os: "Linux",
+        icon: Terminal,
+        href: `https://github.com/${GH_OWNER}/${GH_REPO}/releases/latest`,
+        ext: ".AppImage",
+        hint: "Ubuntu, Fedora, Arch…",
+      },
+    ];
+
     return (
       <div className="min-h-screen flex items-center justify-center p-6 bg-background text-foreground">
         <div className="w-full max-w-2xl space-y-4">
@@ -290,14 +324,53 @@ const KeraDesktopPage = () => {
               Esta página só funciona quando você abre a Kera pelo <strong>app desktop</strong>{" "}
               (Windows/Mac/Linux). No navegador, o acesso ao sistema do PC é bloqueado.
             </p>
-            <p className="text-sm text-muted-foreground/80">
-              Baixe o instalador na sua área de admin e rode o <code className="text-primary">KeraDesktop.exe</code>.
-            </p>
             <Link to="/">
               <Button variant="outline" className="gap-2">
                 <ArrowLeft className="size-4" /> Voltar ao chat
               </Button>
             </Link>
+          </Card>
+
+          {/* DOWNLOADS — instaladores diretos do GitHub Releases */}
+          <Card className="p-5 space-y-4">
+            <div className="flex items-center gap-2">
+              <Download className="size-4 text-primary" />
+              <h2 className="text-sm uppercase tracking-wider text-muted-foreground">
+                Baixar instalador
+              </h2>
+            </div>
+            <p className="text-xs text-muted-foreground">
+              Escolha seu sistema. Você será levado à página da última versão publicada no GitHub —
+              baixe o arquivo correspondente e abra para instalar.
+            </p>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+              {downloads.map((d) => {
+                const Icon = d.icon;
+                return (
+                  <a
+                    key={d.os}
+                    href={d.href}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="group flex flex-col items-center gap-2 p-4 rounded-xl border border-border hover:border-primary/60 hover:bg-primary/5 transition-all"
+                  >
+                    <Icon className="size-8 text-primary group-hover:scale-110 transition-transform" />
+                    <div className="text-sm font-semibold text-foreground">{d.os}</div>
+                    <div className="text-[11px] text-muted-foreground">{d.hint}</div>
+                    <div className="mt-1 inline-flex items-center gap-1 text-[11px] text-primary font-mono">
+                      <Download className="size-3" />
+                      {d.ext}
+                    </div>
+                  </a>
+                );
+              })}
+            </div>
+            <div className="text-[11px] text-muted-foreground/70 italic border-t border-border/50 pt-2">
+              ⚠️ macOS e Windows podem mostrar aviso de "desenvolvedor não verificado" no primeiro
+              uso. É normal — o app é assinado pelo nosso domínio mas não tem certificado pago de
+              loja oficial. Em macOS: <em>Configurações → Privacidade & Segurança → Abrir mesmo assim</em>.
+              Em Windows: <em>Mais informações → Executar mesmo assim</em>.
+            </div>
           </Card>
 
           {/* ATUALIZAÇÕES — preview desabilitado no navegador */}
