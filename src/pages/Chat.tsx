@@ -179,12 +179,6 @@ const AGENT_SUGGESTIONS: Record<string, Array<{ q: string; icon: typeof Sparkles
     { q: "Estratégia pro Malenia (Elden Ring).", icon: Sparkles },
     { q: "Melhores jogos exclusivos do PS5 em 2025.", icon: Gamepad2 },
   ],
-  "kera-tradutora": [
-    { q: "Traduz esse trecho de livro pro PT-BR.", icon: Languages },
-    { q: "Como adaptar gírias americanas em diálogos?", icon: BookOpen },
-    { q: "Diferença entre tradução literal e literária.", icon: FileText },
-    { q: "Glossário de termos pra série de fantasia.", icon: BookOpen },
-  ],
   "kera-familia": [
     { q: "Como funciona partilha em comunhão parcial?", icon: Heart },
     { q: "Pensão alimentícia: como calcular?", icon: Scale },
