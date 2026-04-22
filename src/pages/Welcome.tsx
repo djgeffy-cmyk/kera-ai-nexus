@@ -76,6 +76,7 @@ const Welcome = () => {
     <main className="relative min-h-screen flex items-center justify-center p-4 overflow-hidden bg-background">
       <video
         ref={bgVideoRef}
+        key={bgUrl}
         aria-hidden
         autoPlay
         loop
@@ -160,6 +161,13 @@ const Welcome = () => {
         open={demoOpen}
         onOpenChange={setDemoOpen}
         onWantToSignUp={() => navigate("/auth")}
+      />
+
+      <DevVideoSwitcher
+        storageKey="kera:welcome:bg-video"
+        options={bgVideoOptions}
+        defaultId="rain"
+        onChange={(url) => setBgUrl(url)}
       />
     </main>
   );
