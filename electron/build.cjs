@@ -11,6 +11,7 @@ const { execSync } = require("child_process");
 const fs = require("fs");
 const path = require("path");
 const archiver = require("archiver");
+const crypto = require("crypto");
 
 const ROOT = path.resolve(__dirname, "..");
 const OUT = path.join(ROOT, "release-builds");
@@ -98,6 +99,29 @@ async function snapshotZip() {
 
 snapshotZip()
   .then(() => {
+    // Gera SHA256SUMS.txt com hashes de TODOS os instaladores produzidos
+    // (.exe, .dmg, .zip, .deb, .AppImage). O install-kera.sh usa esse
+    // arquivo pra verificar a integridade do binário baixado e abortar
+    // se houver divergência (mitigação contra MITM / asset trocado).
+    try {
+      const all = fs.readdirSync(OUT).filter((f) =>
+        /\.(exe|dmg|zip|deb|AppImage)$/i.test(f) && !f.startsWith("KeraDesktop-snapshot"),
+      );
+      if (all.length === 0) {
+        console.log("[sha256] nenhum instalador pra hashear");
+      } else {
+        const lines = all.map((name) => {
+          const buf = fs.readFileSync(path.join(OUT, name));
+          const h = crypto.createHash("sha256").update(buf).digest("hex");
+          return `${h}  ${name}`;
+        });
+        const sumsPath = path.join(OUT, "SHA256SUMS.txt");
+        fs.writeFileSync(sumsPath, lines.join("\n") + "\n", "utf-8");
+        console.log(`[sha256] ✅ SHA256SUMS.txt (${lines.length} arquivo(s))`);
+      }
+    } catch (e) {
+      console.error("[sha256] falhou:", e);
+    }
     console.log("\n✅ Pronto! Veja em release-builds/");
     console.log("   Os instaladores e os arquivos latest*.yml ficaram SOLTOS — ");
     console.log("   o workflow de release deve subir todos pro GitHub Release.");
