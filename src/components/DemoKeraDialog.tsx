@@ -345,43 +345,106 @@ export const DemoKeraDialog = ({ open, onOpenChange, onWantToSignUp }: DemoKeraD
           </div>
 
           {/* Seletor de agentes — agrupado por pacote (Kera Fit, Tecnologia, Jurídica…) */}
-          <div className="mt-5 -mx-1 px-1 overflow-x-auto scrollbar-thin">
-            <div className="flex items-end gap-4 pb-1 min-w-max">
+          <div className="mt-4">
+            <div className="flex flex-wrap gap-2">
               {DEMO_GROUPS.map((group) => {
                 const groupAgents = group.keys
                   .map((k) => BUILTIN_AGENTS.find((a) => a.key === k))
                   .filter((a): a is NonNullable<typeof a> => Boolean(a));
                 if (groupAgents.length === 0) return null;
+
+                // Grupo de 1 agente só (ex: "Kera"): vira botão direto, sem expandir.
+                if (groupAgents.length === 1) {
+                  const ag = groupAgents[0];
+                  const Icon = ag.icon;
+                  const active = ag.key === agentKey;
+                  return (
+                    <button
+                      key={group.label}
+                      type="button"
+                      onClick={() => switchAgent(ag.key)}
+                      disabled={loading}
+                      title={ag.description}
+                      className={cn(
+                        "flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs whitespace-nowrap border transition-all duration-300 backdrop-blur-md",
+                        active
+                          ? "bg-primary/15 border-primary/60 text-primary shadow-[0_0_18px_-2px_hsl(var(--primary)/0.45)] scale-[1.02]"
+                          : "bg-foreground/5 border-white/10 text-muted-foreground hover:border-primary/40 hover:text-foreground hover:bg-foreground/10",
+                        loading && "opacity-50 cursor-not-allowed",
+                      )}
+                    >
+                      <Icon className={cn("size-3.5", active ? "text-primary" : ag.iconColor)} />
+                      {ag.name}
+                    </button>
+                  );
+                }
+
+                const isOpen = openGroup === group.label;
+                const hasActive = groupAgents.some((a) => a.key === agentKey);
                 return (
-                  <div key={group.label} className="flex flex-col gap-1.5">
-                    <span className="text-[9px] uppercase tracking-[0.14em] text-primary/60 font-semibold pl-1">
-                      {group.label}
-                    </span>
-                    <div className="flex gap-2">
-                      {groupAgents.map((ag) => {
-                        const Icon = ag.icon;
-                        const active = ag.key === agentKey;
-                        return (
-                          <button
-                            key={ag.key}
-                            type="button"
-                            onClick={() => switchAgent(ag.key)}
-                            disabled={loading}
-                            title={ag.description}
-                            className={cn(
-                              "flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs whitespace-nowrap border transition-all duration-300 backdrop-blur-md",
-                              active
-                                ? "bg-primary/15 border-primary/60 text-primary shadow-[0_0_18px_-2px_hsl(var(--primary)/0.45)] scale-[1.02]"
-                                : "bg-foreground/5 border-white/10 text-muted-foreground hover:border-primary/40 hover:text-foreground hover:bg-foreground/10",
-                              loading && "opacity-50 cursor-not-allowed",
-                            )}
-                          >
-                            <Icon className={cn("size-3.5", active ? "text-primary" : ag.iconColor)} />
-                            {ag.name}
-                          </button>
-                        );
-                      })}
-                    </div>
+                  <div key={group.label} className="relative">
+                    <button
+                      type="button"
+                      onClick={() => setOpenGroup(isOpen ? null : group.label)}
+                      disabled={loading}
+                      className={cn(
+                        "flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs whitespace-nowrap border transition-all duration-300 backdrop-blur-md",
+                        hasActive
+                          ? "bg-primary/15 border-primary/60 text-primary shadow-[0_0_18px_-2px_hsl(var(--primary)/0.45)]"
+                          : "bg-foreground/5 border-white/10 text-muted-foreground hover:border-primary/40 hover:text-foreground hover:bg-foreground/10",
+                        isOpen && "ring-1 ring-primary/40",
+                        loading && "opacity-50 cursor-not-allowed",
+                      )}
+                    >
+                      <span className="font-medium">{group.label}</span>
+                      <span className="text-[10px] opacity-60">
+                        {groupAgents.length}
+                      </span>
+                      <ChevronDown
+                        className={cn(
+                          "size-3 transition-transform",
+                          isOpen && "rotate-180",
+                        )}
+                      />
+                    </button>
+
+                    <AnimatePresence>
+                      {isOpen && (
+                        <motion.div
+                          initial={{ opacity: 0, y: -4, scale: 0.98 }}
+                          animate={{ opacity: 1, y: 0, scale: 1 }}
+                          exit={{ opacity: 0, y: -4, scale: 0.98 }}
+                          transition={{ duration: 0.15 }}
+                          className="absolute left-0 top-full mt-2 z-30 min-w-[200px] rounded-2xl border border-primary/30 bg-background/95 backdrop-blur-xl shadow-[0_20px_50px_-10px_hsl(220_60%_4%/0.8)] p-1.5"
+                        >
+                          {groupAgents.map((ag) => {
+                            const Icon = ag.icon;
+                            const active = ag.key === agentKey;
+                            return (
+                              <button
+                                key={ag.key}
+                                type="button"
+                                onClick={() => {
+                                  switchAgent(ag.key);
+                                  setOpenGroup(null);
+                                }}
+                                disabled={loading}
+                                title={ag.description}
+                                className={cn(
+                                  "w-full flex items-center gap-2 px-3 py-2 rounded-xl text-xs text-left transition-colors",
+                                  active
+                                    ? "bg-primary/15 text-primary"
+                                    : "text-foreground/85 hover:bg-foreground/10",
+                                )}
+                              >
+                                <Icon className={cn("size-3.5 shrink-0", active ? "text-primary" : ag.iconColor)} />
+                                <span className="flex-1">{ag.name}</span>
+                              </button>
+                            );
+                          })}
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
                   </div>
                 );
               })}
