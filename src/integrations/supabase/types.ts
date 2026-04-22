@@ -113,6 +113,30 @@ export type Database = {
         }
         Relationships: []
       }
+      demo_usage: {
+        Row: {
+          count: number
+          first_seen_at: string
+          id: string
+          ip_hash: string
+          last_seen_at: string
+        }
+        Insert: {
+          count?: number
+          first_seen_at?: string
+          id?: string
+          ip_hash: string
+          last_seen_at?: string
+        }
+        Update: {
+          count?: number
+          first_seen_at?: string
+          id?: string
+          ip_hash?: string
+          last_seen_at?: string
+        }
+        Relationships: []
+      }
       image_quota_usage: {
         Row: {
           count: number

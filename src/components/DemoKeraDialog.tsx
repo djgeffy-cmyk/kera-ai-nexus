@@ -81,6 +81,38 @@ export const DemoKeraDialog = ({ open, onOpenChange, onWantToSignUp }: DemoKeraD
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" });
   }, [messages, loading]);
 
+  // Ao abrir o diálogo, sincroniza com o servidor (controle por IP).
+  // Usa o MAIOR entre localStorage (este device) e servidor (este IP).
+  // Assim trocar navegador/abrir anônimo não zera o contador.
+  useEffect(() => {
+    if (!open) return;
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await fetch(`${SUPABASE_URL}/functions/v1/check-demo-quota`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            apikey: SUPABASE_KEY,
+            Authorization: `Bearer ${SUPABASE_KEY}`,
+          },
+          body: JSON.stringify({ action: "check" }),
+        });
+        if (!res.ok) return;
+        const data = await res.json();
+        if (cancelled) return;
+        const localUsed = parseInt(localStorage.getItem(DEMO_KEY) || "0", 10);
+        const serverUsed = typeof data.used === "number" ? data.used : 0;
+        const merged = Math.max(localUsed, serverUsed);
+        setUsed(merged);
+        localStorage.setItem(DEMO_KEY, String(merged));
+      } catch {
+        /* offline / falha — segue com valor local */
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [open]);
+
   const switchAgent = (key: string) => {
     if (key === agentKey || loading) return;
     const ag = DEMO_AGENTS.find((a) => a.key === key);
@@ -99,6 +131,28 @@ export const DemoKeraDialog = ({ open, onOpenChange, onWantToSignUp }: DemoKeraD
     setLoading(true);
 
     try {
+      // 1) Tenta consumir quota no servidor (controle por IP).
+      //    Se o IP já bateu o limite, bloqueia mesmo se o localStorage estiver zerado.
+      const quotaRes = await fetch(`${SUPABASE_URL}/functions/v1/check-demo-quota`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          apikey: SUPABASE_KEY,
+          Authorization: `Bearer ${SUPABASE_KEY}`,
+        },
+        body: JSON.stringify({ action: "consume" }),
+      });
+      const quota = await quotaRes.json().catch(() => ({} as any));
+      if (quotaRes.status === 429 || quota?.blocked === true) {
+        const serverUsed = typeof quota.used === "number" ? quota.used : DEMO_LIMIT;
+        setUsed(Math.max(serverUsed, DEMO_LIMIT));
+        localStorage.setItem(DEMO_KEY, String(Math.max(serverUsed, DEMO_LIMIT)));
+        setMessages((m) => m.slice(0, -1)); // tira a pergunta que não foi enviada
+        setInput(text); // devolve o texto pro input
+        return;
+      }
+      if (!quotaRes.ok) throw new Error("Falha ao validar quota");
+
       const res = await fetch(`${SUPABASE_URL}/functions/v1/chat-kera`, {
         method: "POST",
         headers: {
@@ -165,7 +219,9 @@ export const DemoKeraDialog = ({ open, onOpenChange, onWantToSignUp }: DemoKeraD
         });
       }
 
-      const newUsed = used + 1;
+      // Servidor já incrementou; usamos o valor canônico dele.
+      const serverUsed = typeof quota.used === "number" ? quota.used : used + 1;
+      const newUsed = Math.max(used + 1, serverUsed);
       setUsed(newUsed);
       localStorage.setItem(DEMO_KEY, String(newUsed));
     } catch (err: any) {
@@ -296,9 +352,12 @@ export const DemoKeraDialog = ({ open, onOpenChange, onWantToSignUp }: DemoKeraD
 
         {exhausted ? (
           <div className="border-t border-border/40 px-5 py-4 space-y-3">
-            <div className="flex items-center gap-2 text-sm text-amber-400">
-              <Lock className="size-4" />
-              Você usou suas 3 perguntas grátis. Crie sua conta pra liberar tudo.
+            <div className="flex items-start gap-2 text-sm text-amber-400">
+              <Lock className="size-4 mt-0.5 shrink-0" />
+              <span>
+                Suas 3 perguntas grátis acabaram. Pra continuar conversando com a Kera,
+                escolhe um plano — sem mais teste grátis por aqui.
+              </span>
             </div>
             <Button
               onClick={() => {
@@ -307,7 +366,7 @@ export const DemoKeraDialog = ({ open, onOpenChange, onWantToSignUp }: DemoKeraD
               }}
               className="w-full bg-gradient-cyber text-primary-foreground font-display tracking-wider shadow-glow"
             >
-              Criar conta grátis
+              Ver planos e assinar
             </Button>
           </div>
         ) : (
