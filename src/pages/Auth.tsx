@@ -290,7 +290,11 @@ const Auth = () => {
         // o topo E o chão. Alinhar pelo bottom garante que o solo com as gotas
         // batendo SEMPRE fique visível.
         className="absolute inset-0 w-full h-full object-cover object-bottom"
-        src={rainBgUrl}
+        // Tela inicial (locked) = chuva pura. Após "Já tenho conta" (unlocked) =
+        // Kera realista com gotas. Trocamos o `key` pra forçar o <video> a
+        // recarregar o novo `src` em vez de continuar tocando o anterior.
+        key={isUnlocked ? "bg-kera" : "bg-rain"}
+        src={isUnlocked ? rainVideoUrl : rainBgUrl}
         // Sem filtros: mostra o vídeo de chuva original, com as gotas no chão visíveis
       />
 
