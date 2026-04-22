@@ -1,6 +1,6 @@
 import { useState, useMemo } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import { Sparkles, Send } from "lucide-react";
+import { Sparkles, Send, MonitorDown, Info } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -71,9 +71,40 @@ export const AskKeraFab = () => {
               Pedir pra Kera
             </DialogTitle>
             <DialogDescription>
-              Digite o que você quer e a Kera responde no chat.
+              {desktop
+                ? "Digite o que você quer e a Kera responde no chat — incluindo ações no seu PC."
+                : "Digite uma pergunta e a Kera responde no chat."}
             </DialogDescription>
           </DialogHeader>
+
+          {!desktop && (
+            <div className="flex items-start gap-2 rounded-lg border border-primary/30 bg-primary/5 p-3 text-xs text-foreground/80">
+              <Info className="h-4 w-4 text-primary shrink-0 mt-0.5" />
+              <div className="space-y-1.5">
+                <p>
+                  No navegador a Kera <strong>não consegue</strong> ver o status do seu PC,
+                  abrir programas ou organizar pastas — o navegador isola o site do sistema
+                  por segurança.
+                </p>
+                <p>
+                  Para isso você precisa do <strong>Kera Desktop</strong> (app instalado no PC),
+                  que dá à Kera acesso a CPU/RAM, arquivos do Desktop, abrir apps, etc.
+                </p>
+                <a
+                  href="/desktop"
+                  className="inline-flex items-center gap-1 text-primary hover:underline font-medium"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    setOpen(false);
+                    navigate("/desktop");
+                  }}
+                >
+                  <MonitorDown className="h-3.5 w-3.5" />
+                  Ver como instalar o Kera Desktop
+                </a>
+              </div>
+            </div>
+          )}
 
           <Textarea
             autoFocus
@@ -85,7 +116,11 @@ export const AskKeraFab = () => {
                 send(text);
               }
             }}
-            placeholder="Ex.: Abre o Firefox, qual o status do PC, instala o Spotify..."
+            placeholder={
+              desktop
+                ? "Ex.: Abre o Firefox, qual o status do PC, instala o Spotify..."
+                : "Ex.: Gera uma imagem de um cachorro robô, consulta a licitação X..."
+            }
             className="min-h-[100px]"
           />
 
