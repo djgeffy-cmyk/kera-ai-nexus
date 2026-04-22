@@ -23,6 +23,16 @@ const rainVideoUrl =
   "https://ytixqgkzqgeoxrbmjqbo.supabase.co/storage/v1/object/public/kera-videos/kera-avatar-rain.mp4?v=2026-04-22";
 import DemoKeraDialog from "@/components/DemoKeraDialog";
 import { assetUrl } from "@/lib/assetUrl";
+import DevVideoSwitcher from "@/components/DevVideoSwitcher";
+
+const authBgOptions = [
+  { id: "kera-rain", label: "Kera com chuva (full bg)", url: rainVideoUrl },
+  { id: "rain", label: "Chuva pura", url: rainBgUrl },
+];
+const authAvatarOptions = [
+  { id: "kera-rain", label: "Kera com chuva", url: rainVideoUrl },
+  { id: "rain", label: "Chuva pura", url: rainBgUrl },
+];
 import { MissionCriticalSchema } from "@/lib/missionCriticalSchemas";
 import { PasswordStrengthMeter } from "@/components/PasswordStrengthMeter";
 import {
