@@ -48,7 +48,7 @@ const SCHEMA = {
 
 const PROMPTS: Record<string, string> = {
   meus_chamados:
-    "Liste TODOS os chamados/protocolos do usuário logado visíveis nesta página: número, assunto, secretaria, status (aberto/em andamento/concluído), data de abertura, última atualização e link. Não invente — só o que está visível.",
+    "Liste ABSOLUTAMENTE TODOS os chamados/protocolos/solicitações do usuário logado visíveis nesta página, sem omitir nenhum. Para cada um extraia: número/protocolo, assunto, secretaria, status (aberto, em andamento, aguardando, concluído, cancelado etc.), data de abertura, última atualização, descrição curta e link. Inclua itens de todas as abas/seções visíveis (abertos, em andamento, concluídos, históricos). Não invente nada — só o que está literalmente na página. Se houver paginação visível, liste o que aparece na página atual e mencione em 'observacoes' que existem mais páginas.",
   detalhe:
     "Extraia os detalhes completos do chamado/protocolo aberto nesta página: número, assunto, descrição, secretaria, status, data de abertura, última atualização, histórico de movimentações e link.",
   generico:
@@ -226,6 +226,26 @@ Deno.serve(async (req) => {
       );
     }
 
+    // Ordena: abertos/em andamento/aguardando primeiro, concluídos/cancelados por último.
+    if (Array.isArray(items)) {
+      const statusRank = (s: unknown): number => {
+        const t = typeof s === "string" ? s.toLowerCase() : "";
+        if (/(^|\s)(aberto|novo|pendente)/.test(t)) return 0;
+        if (/(em\s*andamento|em\s*análise|aguardando|tramita)/.test(t)) return 1;
+        if (/(respondid|atendid)/.test(t)) return 2;
+        if (/(conclu|finaliz|encerrad|resolvid)/.test(t)) return 3;
+        if (/(cancelad|arquivad|indeferid)/.test(t)) return 4;
+        return 1; // status desconhecido fica no meio
+      };
+      items = [...items].sort((a: any, b: any) => statusRank(a?.status) - statusRank(b?.status));
+    }
+
+    // Conta abertos pra colocar no topo do resumo
+    const abertos = Array.isArray(items)
+      ? items.filter((it: any) => /^(aberto|novo|pendente|em\s*andamento|aguardando|tramita)/i.test(String(it?.status ?? "")))
+          .length
+      : 0;
+
     return new Response(
       JSON.stringify({
         success: !r.error,
@@ -235,6 +255,7 @@ Deno.serve(async (req) => {
         tipo,
         filtro_status: filtro_status ?? null,
         total: items.length,
+        total_abertos: abertos,
         items,
         raw_preview: r.raw_preview,
         error: r.error,
