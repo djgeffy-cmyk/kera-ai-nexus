@@ -138,7 +138,8 @@ const Auth = () => {
   const [resetEmail, setResetEmail] = useState("");
   const [resetNote, setResetNote] = useState("");
   const [resetLoading, setResetLoading] = useState(false);
-   const rainVideoUrl = "https://ytixqgkzqgeoxrbmjqbo.supabase.co/storage/v1/object/public/kera-videos//kera-avatar-rain.mp4";
+   // `?v=` quebra o cache do navegador/CDN para garantir o vídeo novo do avatar.
+   const rainVideoUrl = "https://ytixqgkzqgeoxrbmjqbo.supabase.co/storage/v1/object/public/kera-videos//kera-avatar-rain.mp4?v=2026-04-22";
     // Vídeo de chuva realista enviado pelo usuário (local, alta definição)
     const rainBgUrl = rainBgRealisticUrl;
 
@@ -254,21 +255,44 @@ const Auth = () => {
   }, [audioStarted, audioMuted]);
 
   // Sincroniza mute com estado e persiste a preferência no localStorage.
-  // Usa GainNode quando disponível para evitar cortes bruscos
-  // (fade de 500ms entre mute/unmute).
+  // Mutar PARA o áudio de verdade (pausa o elemento <audio>) — não basta
+  // zerar o gain, pois o elemento continuaria decodificando. Faz fade de
+  // 400ms via GainNode antes de pausar para evitar corte brusco.
   useEffect(() => {
     try {
       window.localStorage.setItem(RAIN_MUTE_KEY, audioMuted ? "1" : "0");
     } catch { /* ignore */ }
+    const a = audioRef.current;
     const ctx = audioCtxRef.current;
     const master = gainNodeRef.current;
-    if (ctx && master) {
-      const now = ctx.currentTime;
-      master.gain.cancelScheduledValues(now);
-      master.gain.setValueAtTime(master.gain.value, now);
-      master.gain.linearRampToValueAtTime(audioMuted ? 0 : 0.2, now + 0.5);
-    } else if (audioRef.current) {
-      audioRef.current.muted = audioMuted;
+
+    if (audioMuted) {
+      // Fade-out + pause real do elemento de áudio
+      if (ctx && master) {
+        const now = ctx.currentTime;
+        master.gain.cancelScheduledValues(now);
+        master.gain.setValueAtTime(master.gain.value, now);
+        master.gain.linearRampToValueAtTime(0, now + 0.4);
+      }
+      window.setTimeout(() => {
+        if (a) {
+          try { a.pause(); } catch { /* ignore */ }
+          a.muted = true;
+        }
+      }, 450);
+    } else {
+      // Desmutar: retoma o play (se já houve gesto) e fade-in
+      if (a) {
+        a.muted = false;
+        const p = a.play?.();
+        if (p && typeof p.catch === "function") p.catch(() => { /* aguarda gesto */ });
+      }
+      if (ctx && master) {
+        const now = ctx.currentTime;
+        master.gain.cancelScheduledValues(now);
+        master.gain.setValueAtTime(master.gain.value, now);
+        master.gain.linearRampToValueAtTime(0.2, now + 0.5);
+      }
     }
   }, [audioMuted]);
 
