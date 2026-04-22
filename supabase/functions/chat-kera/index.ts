@@ -73,19 +73,28 @@ Você TEM capacidade de gerar imagens — não é só texto. O frontend tem um d
 - Se o usuário pedir uma imagem e por algum motivo a mensagem chegou até você (detector falhou), responda: "manda assim ó: 'cria uma imagem de [descrição]' que eu gero na hora" — instrua ele a usar o gatilho certo.
 - Pode discutir o conceito visual, sugerir prompt, descrever estilo. Mas NUNCA negue a capacidade.
 
-FERRAMENTA ipm_query (USO RESTRITO):
-Você TEM acesso à ferramenta **ipm_query** (dados ao vivo do portal da Prefeitura de Guaramirim).
-- Você NÃO é monitor automático de licitação. Não traz "novidade" sem pedirem.
-- Usa ipm_query SÓ quando o usuário PERGUNTAR EXPLICITAMENTE sobre licitação, protocolo, contrato, edital, vencedor, receita/despesa, transparência de Guaramirim.
+FERRAMENTAS DE DADOS (USO RESTRITO):
+Você TEM duas ferramentas de dados ao vivo:
+1. **ipm_query** — dados públicos do portal IPM/atende.net da Prefeitura (licitações, contratos, transparência). Sem login.
+2. **govdigital_query** — portal Guaramirim na Mão (chamados/ouvidoria do cidadão). EXIGE login do usuário.
+
+Regras gerais:
+- Você NÃO é monitor automático. Não traz "novidade" sem pedirem.
+- Use as ferramentas SÓ quando o usuário PERGUNTAR EXPLICITAMENTE sobre o tema (licitação, protocolo, contrato, edital, chamado, ouvidoria, transparência, despesa).
 - Outro assunto = não chama ferramenta nenhuma, só responde.
 - Não oferece proativamente "quer que eu busque?". Só age quando provocada.
 - Ao usar: resume direto, cita números/datas/valores reais, sem inventar.
+
+Específico do govdigital_query:
+- Quando o usuário pedir pra ver chamados dele / status de protocolo da ouvidoria, CHAME a tool com tipo="meus_chamados" mesmo sem ter login na conversa — a função responde "needs_credentials" e aí você pede no chat de forma direta: "manda teu login e senha do Guaramirim na Mão que eu busco — não guardo nada".
+- Quando o usuário mandar usuário e senha numa mensagem, REUTILIZE eles na próxima chamada da tool (passando username/password). Não peça duas vezes.
+- Se a tool retornar erro do tipo "Login parece ter falhado...", avisa direto: "credencial não bateu, confere usuário/senha".
 
 INTEGRAÇÕES DISPONÍVEIS (FONTES DE DADOS REAIS) — seja honesta sobre o que tem e o que NÃO tem:
 - ✅ **IPM Sistemas (atende.net)** — Prefeitura de Guaramirim/SC: licitações, protocolos, contratos, transparência. Acesso via ferramenta ipm_query + scraping Firecrawl.
 - ✅ **IPM SOAP - WPTProcessoDigital (Guaramirim)**: serviço SOAP/WSDL do atende.net para Consulta de Processo Digital. Endpoint: \`https://guaramirim.atende.net/?pg=services&service=WPTProcessoDigital&wsdl\`. Provedor IPM, código 18518, responsável Geverson Carlos Dalpra (CNPJ 18.298.772/0001-17). Cliente SOAP nativo ainda não implementado — por enquanto serve como referência e pode ser consultado via scraping do WSDL.
 - ✅ **APIs públicas/abertas** que aceitam scraping ou expõem JSON sem chave (Diário Oficial dos Municípios SC, Portal da Transparência federal, dados.gov.br, etc.) — pode tentar via scraping quando pedirem.
-- ✅ **GovDigital - Guaramirim na Mão** (\`https://guaramirimnamao.govdigital.app/\`): portal onde ficam os **chamados/ouvidoria** do município (registro e acompanhamento de solicitações do cidadão). Acesso requer login. Quando o usuário pedir pra consultar/listar chamados, status de protocolo da ouvidoria ou abrir solicitação por lá, **peça usuário e senha do portal** ("me passa teu login do Guaramirim na Mão que eu busco"). Sem credencial, não inventa dado — explica que precisa de acesso autenticado e oferece o link.
+- ✅ **GovDigital - Guaramirim na Mão** (\`https://guaramirimnamao.govdigital.app/\`): portal de **chamados/ouvidoria** do cidadão. Acesso via tool **govdigital_query** (scraping autenticado). Quando o usuário pedir pra ver chamados/status de protocolo, CHAME a tool — se faltar credencial ela pede e aí você repassa o pedido ao usuário. Credenciais NÃO são salvas, só usadas na requisição.
 - ❌ **Olostech (Saúde de Guaramirim)**: SEM integração, SEM API, SEM scraping. Pergunta sobre Olostech (protocolo da Saúde, agendamento, prontuário, fila SUS, marcação de consulta via Olos) → resposta direta: "Olostech não tem API aberta pra mim. Não tenho acesso. Vai no sistema deles." NUNCA invente número de protocolo, status, resumo de atendimento ou qualquer dado da Olostech.
 - ❌ **e-SUS / DataSUS / sistemas próprios de Saúde do município**: idem — sem API, sem acesso. NÃO inventa "despesas da saúde", "atendimentos do mês", "fila de espera" etc. Se quiserem dado **financeiro/orçamentário** da Secretaria de Saúde, aí sim tenta via Portal da Transparência IPM (atende.net) usando ipm_query com tipo "receitas" e filtra por secretaria — isso é dado contábil público, não é dado clínico.
 - ❌ Qualquer outro sistema proprietário de prefeitura (Betha, Fiorilli, Elotech, GovBR específicos sem API pública etc.): mesma regra — diz que não tem e segue.
@@ -284,7 +293,7 @@ function getProviderChain(requested: Provider | undefined): ProviderConfig[] {
   return chain;
 }
 
-// ===== TOOL CALLING: ipm_query =====
+// ===== TOOL CALLING: ipm_query + govdigital_query =====
 const TOOLS = [
   {
     type: "function",
@@ -313,6 +322,35 @@ const TOOLS = [
       },
     },
   },
+  {
+    type: "function",
+    function: {
+      name: "govdigital_query",
+      description:
+        "Consulta o portal GovDigital 'Guaramirim na Mão' (https://guaramirimnamao.govdigital.app/) — chamados/ouvidoria do cidadão. EXIGE login (username + password) que o usuário fornece no chat. USO: quando o usuário pedir pra ver chamados dele, status de protocolo da ouvidoria, ou abrir solicitação. Se ainda não tiver as credenciais na conversa, chame mesmo assim com username/password vazios — a função vai responder 'needs_credentials' e aí você pede educadamente.",
+      parameters: {
+        type: "object",
+        properties: {
+          username: { type: "string", description: "Login/email do usuário no portal Guaramirim na Mão (fornecido pelo usuário no chat)." },
+          password: { type: "string", description: "Senha do usuário no portal (fornecida pelo usuário no chat). Não é armazenada." },
+          tipo: {
+            type: "string",
+            enum: ["meus_chamados", "detalhe", "generico"],
+            description: "meus_chamados = lista os chamados do usuário; detalhe = um chamado específico (use path); generico = página qualquer.",
+          },
+          path: {
+            type: "string",
+            description: "Path opcional dentro do portal (ex '/meus-chamados', '/protocolo/12345'). Padrão: /meus-chamados.",
+          },
+          filtro_status: {
+            type: "string",
+            description: "Filtra chamados cujo status contenha este texto (ex 'aberto', 'andamento', 'concluido'). Opcional.",
+          },
+        },
+        required: ["tipo"],
+      },
+    },
+  },
 ];
 
 // Heurística leve: só roda probe de tool calling se a última mensagem do usuário
@@ -322,6 +360,10 @@ const IPM_KEYWORDS = [
   "dispensa", "homologa", "protocolo", "contrato", "vencedor", "contratada",
   "transparência", "transparenc", "atende.net", "ipm", "guaramirim",
   "receita", "despesa", "empenho", "secretaria",
+  // GovDigital / Guaramirim na Mão
+  "chamado", "chamados", "ouvidoria", "guaramirim na mão", "guaramirim na mao",
+  "govdigital", "guaramirimnamao", "minha solicitação", "minhas solicitações",
+  "abri um chamado", "abrir chamado",
 ];
 
 function shouldProbeIpm(messages: Array<{ role: string; content: unknown }>): boolean {
@@ -334,15 +376,19 @@ function shouldProbeIpm(messages: Array<{ role: string; content: unknown }>): bo
 }
 
 async function executeTool(name: string, args: Record<string, unknown>): Promise<string> {
-  if (name !== "ipm_query") return JSON.stringify({ error: `Tool desconhecida: ${name}` });
+  const fnByName: Record<string, string> = {
+    ipm_query: "ipm-query",
+    govdigital_query: "govdigital-query",
+  };
+  const slug = fnByName[name];
+  if (!slug) return JSON.stringify({ error: `Tool desconhecida: ${name}` });
   try {
-    const r = await fetch(`${Deno.env.get("SUPABASE_URL")}/functions/v1/ipm-query`, {
+    const r = await fetch(`${Deno.env.get("SUPABASE_URL")}/functions/v1/${slug}`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(args),
     });
     const data = await r.json();
-    // Limita o tamanho da resposta pra não estourar contexto
     const str = JSON.stringify(data);
     return str.length > 12000 ? str.slice(0, 12000) + "\n...[truncado]" : str;
   } catch (e) {
