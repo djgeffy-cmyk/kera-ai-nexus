@@ -198,6 +198,20 @@ const MessageBubbleImpl = ({
           <div className="font-medium">{renderUserContent(msg.content)}</div>
         ) : (
           <>
+            {images.length > 0 && (
+              <div className={`grid gap-2 mb-3 ${images.length > 1 ? "grid-cols-2" : "grid-cols-1"}`}>
+                {images.map((img, i) => (
+                  <div key={i} className="relative group/img overflow-hidden rounded-xl border border-white/10 shadow-lg bg-black/20">
+                    <img
+                      src={img.image_url.url}
+                      alt="Geração Kera"
+                      className="w-full h-auto object-cover transition-transform duration-500 group-hover/img:scale-105"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent opacity-0 group-hover/img:opacity-100 transition-opacity" />
+                  </div>
+                ))}
+              </div>
+            )}
             <ReactMarkdown remarkPlugins={MD_REMARK_PLUGINS} components={MD_COMPONENTS}>{plainText || ""}</ReactMarkdown>
             {streaming && <span className="inline-block w-2.5 h-5 bg-primary/80 rounded-sm ml-1.5 align-middle animate-blink" />}
 
