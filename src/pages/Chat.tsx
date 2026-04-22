@@ -232,7 +232,7 @@ const Chat = () => {
   const [hasRemoteTTS, setHasRemoteTTS] = useState(false);
   const [attachments, setAttachments] = useState<Attachment[]>([]);
   const [dragging, setDragging] = useState(false);
-  const BG_KEY = "kera-chat-show-bg";
+  const BG_KEY = "kera:global:show-bg";
   const [showBackground, setShowBackground] = useState<boolean>(() => {
     try {
       const v = localStorage.getItem(BG_KEY);
