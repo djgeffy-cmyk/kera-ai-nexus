@@ -269,26 +269,37 @@ const Auth = () => {
     }
 
     if (audioMuted) {
-      // Fade-out + pause real do elemento de áudio
-      if (ctx && master) {
-        const now = ctx.currentTime;
-        master.gain.cancelScheduledValues(now);
-        master.gain.setValueAtTime(master.gain.value, now);
-        master.gain.linearRampToValueAtTime(0, now + 0.4);
+      // Silenciamento HARD imediato: corta no elemento <audio>, no GainNode
+      // e suspende o AudioContext. Isso evita qualquer "vazamento" de som
+      // mesmo se algum listener pendente disparar play() depois.
+      if (a) {
+        try {
+          a.muted = true;     // mute instantâneo no elemento
+          a.volume = 0;       // redundância caso o mute não pegue
+          a.pause();          // pausa imediata
+        } catch { /* ignore */ }
       }
-      muteTimeoutRef.current = window.setTimeout(() => {
-        if (a) {
-          try { a.pause(); } catch { /* ignore */ }
-          a.muted = true;
-        }
-        muteTimeoutRef.current = null;
-      }, 450);
+      if (ctx && master) {
+        try {
+          const now = ctx.currentTime;
+          master.gain.cancelScheduledValues(now);
+          master.gain.setValueAtTime(0, now);
+        } catch { /* ignore */ }
+      }
+      if (ctx && ctx.state === "running") {
+        // Suspender o contexto garante 0 saída de áudio do Web Audio graph
+        ctx.suspend().catch(() => { /* ignore */ });
+      }
     } else {
       // Desmutar: retoma o play (se já houve gesto) e fade-in
       if (a) {
         a.muted = false;
+        a.volume = 1;
         const p = a.play?.();
         if (p && typeof p.catch === "function") p.catch(() => { /* aguarda gesto */ });
+      }
+      if (ctx && ctx.state === "suspended") {
+        ctx.resume().catch(() => { /* ignore */ });
       }
       if (ctx && master) {
         const now = ctx.currentTime;
