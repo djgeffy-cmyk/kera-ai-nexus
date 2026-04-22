@@ -193,93 +193,95 @@ const Security = () => {
         </Card>
 
         {!mustChange && (
-          <section>
-            <h2 className="font-display text-xl text-glow mb-1 flex items-center gap-2">
-              <ShieldCheck className="size-5 text-primary" /> Autenticação em 2 fatores (TOTP)
-            </h2>
-            <p className="text-sm text-muted-foreground">
-              Use Google Authenticator, Authy, Microsoft Authenticator ou 1Password
-              para gerar códigos de 6 dígitos a cada login.
-            </p>
-          </section>
-        )}
-
-        {loading ? (
-          <p className="text-muted-foreground text-sm">Carregando...</p>
-        ) : verified.length > 0 ? (
-          <Card className="p-5 border-primary/40 bg-primary/5">
-            <div className="flex items-start gap-3">
-              <Badge className="bg-primary/20 text-primary border-primary/40">
-                <ShieldCheck className="size-3 mr-1" /> Ativado
-              </Badge>
-            </div>
-            <div className="mt-4 space-y-2">
-              {verified.map((f) => (
-                <div key={f.id} className="flex items-center justify-between text-sm border border-border rounded-md p-3">
-                  <div className="flex items-center gap-2">
-                    <Smartphone className="size-4 text-primary" />
-                    <span className="font-mono text-xs">{f.friendly_name || f.id.slice(0, 8)}</span>
-                  </div>
-                  <Button size="sm" variant="ghost" onClick={() => removeFactor(f.id)}>
-                    <ShieldOff className="size-4 mr-1" /> Remover
-                  </Button>
-                </div>
-              ))}
-            </div>
-          </Card>
-        ) : enrolling && qr ? (
-          <Card className="p-5 space-y-4 border-primary/30">
-            <p className="text-sm">
-              <strong>Passo 1:</strong> Escaneie o QR code com seu app autenticador.
-            </p>
-            <div className="flex justify-center bg-white p-4 rounded-md">
-              <img src={qr} alt="QR Code 2FA" className="w-56 h-56" />
-            </div>
-            {secret && (
-              <p className="text-xs text-muted-foreground text-center break-all">
-                Ou digite manualmente: <code className="text-primary">{secret}</code>
+          <>
+            <section>
+              <h2 className="font-display text-xl text-glow mb-1 flex items-center gap-2">
+                <ShieldCheck className="size-5 text-primary" /> Autenticação em 2 fatores (TOTP)
+              </h2>
+              <p className="text-sm text-muted-foreground">
+                Use Google Authenticator, Authy, Microsoft Authenticator ou 1Password
+                para gerar códigos de 6 dígitos a cada login.
               </p>
-            )}
-            <form onSubmit={verifyEnroll} className="space-y-3">
-              <div>
-                <Label htmlFor="code"><strong>Passo 2:</strong> Digite o código gerado</Label>
-                <Input
-                  id="code"
-                  inputMode="numeric"
-                  maxLength={6}
-                  value={code}
-                  onChange={(e) => setCode(e.target.value.replace(/\D/g, ""))}
-                  className="mt-1 bg-input/50 text-center text-2xl tracking-[0.5em] font-mono"
-                  placeholder="000000"
-                  autoFocus
-                />
-              </div>
-              <div className="flex gap-2">
-                <Button type="button" variant="ghost" onClick={() => { setEnrolling(false); setQr(null); setFactorId(null); }}>
-                  Cancelar
-                </Button>
+            </section>
+
+            {loading ? (
+              <p className="text-muted-foreground text-sm">Carregando...</p>
+            ) : verified.length > 0 ? (
+              <Card className="p-5 border-primary/40 bg-primary/5">
+                <div className="flex items-start gap-3">
+                  <Badge className="bg-primary/20 text-primary border-primary/40">
+                    <ShieldCheck className="size-3 mr-1" /> Ativado
+                  </Badge>
+                </div>
+                <div className="mt-4 space-y-2">
+                  {verified.map((f) => (
+                    <div key={f.id} className="flex items-center justify-between text-sm border border-border rounded-md p-3">
+                      <div className="flex items-center gap-2">
+                        <Smartphone className="size-4 text-primary" />
+                        <span className="font-mono text-xs">{f.friendly_name || f.id.slice(0, 8)}</span>
+                      </div>
+                      <Button size="sm" variant="ghost" onClick={() => removeFactor(f.id)}>
+                        <ShieldOff className="size-4 mr-1" /> Remover
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+              </Card>
+            ) : enrolling && qr ? (
+              <Card className="p-5 space-y-4 border-primary/30">
+                <p className="text-sm">
+                  <strong>Passo 1:</strong> Escaneie o QR code com seu app autenticador.
+                </p>
+                <div className="flex justify-center bg-white p-4 rounded-md">
+                  <img src={qr} alt="QR Code 2FA" className="w-56 h-56" />
+                </div>
+                {secret && (
+                  <p className="text-xs text-muted-foreground text-center break-all">
+                    Ou digite manualmente: <code className="text-primary">{secret}</code>
+                  </p>
+                )}
+                <form onSubmit={verifyEnroll} className="space-y-3">
+                  <div>
+                    <Label htmlFor="code"><strong>Passo 2:</strong> Digite o código gerado</Label>
+                    <Input
+                      id="code"
+                      inputMode="numeric"
+                      maxLength={6}
+                      value={code}
+                      onChange={(e) => setCode(e.target.value.replace(/\D/g, ""))}
+                      className="mt-1 bg-input/50 text-center text-2xl tracking-[0.5em] font-mono"
+                      placeholder="000000"
+                      autoFocus
+                    />
+                  </div>
+                  <div className="flex gap-2">
+                    <Button type="button" variant="ghost" onClick={() => { setEnrolling(false); setQr(null); setFactorId(null); }}>
+                      Cancelar
+                    </Button>
+                    <Button
+                      type="submit"
+                      disabled={verifying || code.length !== 6}
+                      className="flex-1 bg-gradient-cyber text-primary-foreground shadow-glow"
+                    >
+                      {verifying ? "Verificando..." : "Ativar 2FA"}
+                    </Button>
+                  </div>
+                </form>
+              </Card>
+            ) : (
+              <Card className="p-5 border-border">
+                <p className="text-sm text-muted-foreground mb-4">
+                  Você ainda não ativou 2FA. Clique abaixo para configurar.
+                </p>
                 <Button
-                  type="submit"
-                  disabled={verifying || code.length !== 6}
-                  className="flex-1 bg-gradient-cyber text-primary-foreground shadow-glow"
+                  onClick={startEnroll}
+                  className="bg-gradient-cyber text-primary-foreground shadow-glow"
                 >
-                  {verifying ? "Verificando..." : "Ativar 2FA"}
+                  <ShieldCheck className="size-4 mr-2" /> Ativar 2FA
                 </Button>
-              </div>
-            </form>
-          </Card>
-        ) : (
-          <Card className="p-5 border-border">
-            <p className="text-sm text-muted-foreground mb-4">
-              Você ainda não ativou 2FA. Clique abaixo para configurar.
-            </p>
-            <Button
-              onClick={startEnroll}
-              className="bg-gradient-cyber text-primary-foreground shadow-glow"
-            >
-              <ShieldCheck className="size-4 mr-2" /> Ativar 2FA
-            </Button>
-          </Card>
+              </Card>
+            )}
+          </>
         )}
       </main>
     </div>
