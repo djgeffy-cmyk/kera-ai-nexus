@@ -73,7 +73,7 @@ const PLANS = [
     icon: Rocket,
     color: "text-fuchsia-400",
     highlight: true,
-    features: ["Todos os especialistas", "10 imagens/dia", "Voz TTS premium", "Análise de código (50/mês)"],
+    features: ["Todos os especialistas", "3 imagens/dia", "Voz TTS premium", "Análise de código (50/mês)"],
   },
   {
     key: "master",
@@ -81,7 +81,7 @@ const PLANS = [
     price: "R$ 149,90",
     icon: Crown,
     color: "text-amber-400",
-    features: ["Tudo do Pro", "NASA + Sentinela ilimitados", "50 imagens/dia", "Suporte WhatsApp"],
+    features: ["Tudo do Pro", "NASA + Sentinela ilimitados", "10 imagens/dia", "Suporte WhatsApp"],
   },
 ];
 
