@@ -38,3 +38,9 @@ verify_jwt = false
 
 [functions.mp-webhook]
 verify_jwt = false
+
+[functions.check-stripe-access]
+verify_jwt = false
+
+[functions.spaceincloud-sync]
+verify_jwt = false
