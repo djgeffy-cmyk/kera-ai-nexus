@@ -101,10 +101,30 @@ export const WebserviceCredentialsManager = () => {
   const purge = async (apply: boolean) => {
     setBusy(apply ? "purge-apply" : "purge-scan");
     try {
-      const r = await authedFetch(PURGE_URL, { apply, limit: 5000 });
-      if (!r.ok) throw new Error(r.data?.error ?? `HTTP ${r.status}`);
-      setPurgeResult({ found: r.data.found, updated: r.data.updated, sample: r.data.sample });
-      toast.success(apply ? `${r.data.updated} mensagens mascaradas` : `${r.data.found} mensagens com credencial`);
+      let before: string | null = null;
+      let totalFound = 0;
+      let totalUpdated = 0;
+      let totalScanned = 0;
+      const sample: { hits: string[]; preview: string }[] = [];
+      // Loop em lotes pequenos pra não estourar CPU do edge.
+      for (let i = 0; i < 30; i++) {
+        const r = await authedFetch(PURGE_URL, { apply, limit: 200, before });
+        if (!r.ok) throw new Error(r.data?.error ?? `HTTP ${r.status}`);
+        totalScanned += r.data.scanned ?? 0;
+        totalFound += r.data.found ?? 0;
+        totalUpdated += r.data.updated ?? 0;
+        if (sample.length < 10 && Array.isArray(r.data.sample)) {
+          sample.push(...r.data.sample.slice(0, 10 - sample.length));
+        }
+        before = r.data.next_before ?? null;
+        if (!before) break;
+      }
+      setPurgeResult({ found: totalFound, updated: totalUpdated, sample });
+      toast.success(
+        apply
+          ? `${totalUpdated} mensagens mascaradas (${totalScanned} varridas)`
+          : `${totalFound} mensagens com credencial em ${totalScanned} varridas`
+      );
     } catch (e) {
       toast.error(e instanceof Error ? e.message : String(e));
     } finally { setBusy(null); }
@@ -195,7 +215,7 @@ export const WebserviceCredentialsManager = () => {
           <ShieldCheck className="size-4 text-primary" /> Limpeza retroativa do histórico
         </h3>
         <p className="text-xs text-muted-foreground">
-          Varre as últimas 5.000 mensagens do chat e mascara qualquer credencial colada no passado.
+          Varre o histórico em lotes de 200 mensagens (até 6.000 por execução) e mascara qualquer credencial colada no passado.
           Faça primeiro um <b>scan</b> (não altera nada) e depois <b>aplicar</b> se concordar com o resultado.
         </p>
         <div className="flex gap-2">
