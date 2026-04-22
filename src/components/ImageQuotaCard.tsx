@@ -3,7 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Card } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { Button } from "@/components/ui/button";
-import { Image as ImageIcon, Loader2, Crown, Sparkles } from "lucide-react";
+import { Image as ImageIcon, Loader2, Crown, Sparkles, Info } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
 const PLAN_LIMITS: Record<string, number> = {
@@ -134,6 +134,18 @@ export function ImageQuotaCard({ compact = false }: { compact?: boolean }) {
           <Button onClick={() => navigate("/planos")} className="w-full">
             Ver planos
           </Button>
+        </div>
+      )}
+
+      {!compact && (
+        <div className="pt-3 border-t border-border flex gap-2 text-xs text-muted-foreground">
+          <Info className="h-4 w-4 shrink-0 mt-0.5 text-primary/70" />
+          <p>
+            <strong className="text-foreground">Por que esse limite?</strong> O foco da Kera é
+            ser sua copiloto inteligente — chat, agentes especialistas, voz, análise de código
+            e segurança. Geração de imagem e vídeo é um <em>extra</em> — a Kera faz muito bem,
+            mas o limite diário existe pra manter os planos acessíveis sem inflar o preço.
+          </p>
         </div>
       )}
     </Card>
