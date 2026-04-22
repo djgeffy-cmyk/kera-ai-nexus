@@ -21,6 +21,7 @@ import { UserManager } from "@/components/admin/UserManager";
 import { WebserviceCredentialsManager } from "@/components/admin/WebserviceCredentialsManager";
 import { PaymentStatusCard } from "@/components/admin/PaymentStatusCard";
 import { MercadoPagoSetupWizard } from "@/components/admin/MercadoPagoSetupWizard";
+import { EngegovMunicipiosManager } from "@/components/admin/EngegovMunicipiosManager";
 
 type Status = Record<string, boolean>;
 
@@ -252,6 +253,8 @@ const Admin = () => {
         <PasswordResetRequests />
 
         <IpmEndpointsManager />
+
+        <EngegovMunicipiosManager />
 
         <MonitorTargetsManager />
 

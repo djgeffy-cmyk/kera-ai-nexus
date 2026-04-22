@@ -352,6 +352,41 @@ const TOOLS = [
       },
     },
   },
+  {
+    type: "function",
+    function: {
+      name: "engegov_query",
+      description:
+        "Consulta o Portal GEVO (engegov.net.br/portal-gevo) — sistema de governança e fiscalização de OBRAS PÚBLICAS de prefeituras brasileiras. Cada prefeitura tem um cidade_id único cadastrado no admin. USO: quando o usuário perguntar sobre obras públicas, andamento, fiscalização, valor, fiscal, medições, status de obra de algum município. Use 'lista' para o panorama geral e 'detalhe' (passando obra_url retornado na lista) para informações de uma obra específica.",
+      parameters: {
+        type: "object",
+        properties: {
+          tipo: {
+            type: "string",
+            enum: ["lista", "detalhe"],
+            description: "lista = todas as obras do município (dashboard); detalhe = uma obra específica (exige obra_url).",
+          },
+          cidade_nome: {
+            type: "string",
+            description: "Nome do município (ex.: 'Massaranduba', 'Pato Branco'). A função resolve para o cidade_id cadastrado.",
+          },
+          uf: {
+            type: "string",
+            description: "UF opcional para desambiguar municípios homônimos (ex.: 'SC', 'PR').",
+          },
+          cidade_id: {
+            type: "number",
+            description: "ID numérico do município no portal-gevo (alternativa ao nome). Aparece no final da URL do dashboard (?cidade=XXXX).",
+          },
+          obra_url: {
+            type: "string",
+            description: "URL completa da obra (apenas quando tipo='detalhe'). Use um dos 'links_obras' retornados em 'lista'.",
+          },
+        },
+        required: ["tipo"],
+      },
+    },
+  },
 ];
 
 // Heurística leve: só roda probe de tool calling se a última mensagem do usuário
@@ -365,6 +400,10 @@ const IPM_KEYWORDS = [
   "chamado", "chamados", "ouvidoria", "guaramirim na mão", "guaramirim na mao",
   "govdigital", "guaramirimnamao", "minha solicitação", "minhas solicitações",
   "abri um chamado", "abrir chamado",
+  // EngeGov / obras públicas
+  "obra", "obras", "engegov", "gevo", "fiscaliza", "medição", "medicao",
+  "andamento da obra", "obras públicas", "obras publicas", "fiscal de obra",
+  "sinapi", "sicro", "etpgov",
 ];
 
 function shouldProbeIpm(messages: Array<{ role: string; content: unknown }>): boolean {
@@ -380,6 +419,7 @@ async function executeTool(name: string, args: Record<string, unknown>): Promise
   const fnByName: Record<string, string> = {
     ipm_query: "ipm-query",
     govdigital_query: "govdigital-query",
+    engegov_query: "engegov-query",
   };
   const slug = fnByName[name];
   if (!slug) return JSON.stringify({ error: `Tool desconhecida: ${name}` });

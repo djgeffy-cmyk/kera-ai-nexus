@@ -164,6 +164,87 @@ export type Database = {
         }
         Relationships: []
       }
+      engegov_cache: {
+        Row: {
+          cache_key: string
+          cidade_id: number
+          created_at: string
+          expires_at: string
+          hit_count: number
+          id: string
+          last_hit_at: string
+          obra_id: string | null
+          response: Json
+          tipo: string
+          url: string | null
+        }
+        Insert: {
+          cache_key: string
+          cidade_id: number
+          created_at?: string
+          expires_at?: string
+          hit_count?: number
+          id?: string
+          last_hit_at?: string
+          obra_id?: string | null
+          response: Json
+          tipo: string
+          url?: string | null
+        }
+        Update: {
+          cache_key?: string
+          cidade_id?: number
+          created_at?: string
+          expires_at?: string
+          hit_count?: number
+          id?: string
+          last_hit_at?: string
+          obra_id?: string | null
+          response?: Json
+          tipo?: string
+          url?: string | null
+        }
+        Relationships: []
+      }
+      engegov_municipios: {
+        Row: {
+          cidade_id: number
+          created_at: string
+          created_by: string | null
+          enabled: boolean
+          id: string
+          nome: string
+          notes: string | null
+          slug: string | null
+          uf: string
+          updated_at: string
+        }
+        Insert: {
+          cidade_id: number
+          created_at?: string
+          created_by?: string | null
+          enabled?: boolean
+          id?: string
+          nome: string
+          notes?: string | null
+          slug?: string | null
+          uf: string
+          updated_at?: string
+        }
+        Update: {
+          cidade_id?: number
+          created_at?: string
+          created_by?: string | null
+          enabled?: boolean
+          id?: string
+          nome?: string
+          notes?: string | null
+          slug?: string | null
+          uf?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       image_quota_usage: {
         Row: {
           count: number
