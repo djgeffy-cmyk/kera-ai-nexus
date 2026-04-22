@@ -299,6 +299,11 @@ const Auth = () => {
         loop
         muted
         playsInline
+        preload="auto"
+        poster={keraAvatar}
+        disablePictureInPicture
+        // @ts-expect-error: atributo válido do HTML5
+        disableRemotePlayback
         className="absolute inset-0 w-full h-full object-cover"
         src={rainBgUrl}
         style={{ filter: "brightness(0.95) contrast(1.05) saturate(1)" }}
