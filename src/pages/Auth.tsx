@@ -346,9 +346,8 @@ const Auth = () => {
         disablePictureInPicture
         className="absolute inset-0 w-full h-full object-cover"
         src={rainBgUrl}
-        style={{ filter: "brightness(0.95) contrast(1.05) saturate(1)" }}
+        // Sem filtros: mostra o vídeo de chuva original, com as gotas no chão visíveis
       />
-      <div aria-hidden className="absolute inset-0 bg-background/10" />
 
       {/* Áudio ambiente de chuva — começa após primeira interação */}
       <audio
