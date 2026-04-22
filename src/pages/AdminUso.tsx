@@ -309,7 +309,7 @@ export default function AdminUso() {
                       <th className="px-3 py-2 text-right">Hoje</th>
                       <th className="px-3 py-2 text-right">Mês</th>
                       <th className="px-3 py-2 text-right">Custo</th>
-                      <th className="px-3 py-2 text-center w-28">FIT</th>
+                      <th className="px-3 py-2 text-center w-32" title="Pacote Kera Fit (Nutricionista + Treinador + Iron)">Kera Fit</th>
                       <th className="px-3 py-2 w-44">Mudar plano</th>
                     </tr>
                   </thead>
@@ -332,11 +332,27 @@ export default function AdminUso() {
                           <td className="px-3 py-3 text-right tabular-nums font-semibold">{r.images_month}</td>
                           <td className="px-3 py-3 text-right tabular-nums text-muted-foreground">R$ {cost}</td>
                           <td className="px-3 py-3">
-                            <div className="flex items-center justify-center gap-2">
-                              <Dumbbell className={`h-3.5 w-3.5 ${r.spaceincloud_active ? "text-fuchsia-300" : "text-muted-foreground/40"}`} />
+                            <div
+                              className="flex items-center justify-center gap-2"
+                              title={
+                                r.spaceincloud_active
+                                  ? "Pacote Kera Fit ATIVO — Nutricionista, Treinador e Iron liberados. Clique pra desativar."
+                                  : "Liberar Kera Fit — ativa Nutricionista, Treinador e Iron de uma vez."
+                              }
+                            >
+                              <Dumbbell
+                                className={`h-3.5 w-3.5 ${
+                                  r.spaceincloud_active ? "text-fuchsia-300" : "text-muted-foreground/40"
+                                }`}
+                              />
                               <Switch
                                 checked={!!r.spaceincloud_active}
                                 onCheckedChange={(v) => toggleFit(r.user_id, v)}
+                                aria-label={
+                                  r.spaceincloud_active
+                                    ? `Desativar pacote Kera Fit de ${r.email ?? r.user_id}`
+                                    : `Liberar pacote Kera Fit para ${r.email ?? r.user_id}`
+                                }
                               />
                             </div>
                           </td>
