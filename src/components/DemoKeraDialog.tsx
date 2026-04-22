@@ -3,7 +3,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
-import { Sparkles, Send, Lock, Loader2, ChevronDown } from "lucide-react";
+import { Sparkles, Send, Lock, Loader2, ChevronDown, Video, VideoOff } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { BUILTIN_AGENTS } from "@/lib/agents";
 import {
@@ -119,6 +119,52 @@ export const DemoKeraDialog = ({ open, onOpenChange, onWantToSignUp }: DemoKeraD
   const rainVideoUrl = KERA_RAIN_VIDEO_URL;
   // Grupo expandido no seletor (só um por vez). null = nenhum aberto.
   const [openGroup, setOpenGroup] = useState<string | null>(null);
+  // Preferência do visitante: mostrar vídeo da Kera atrás do chat ou fundo escuro limpo.
+  const BG_KEY = "kera-demo-show-bg";
+  const [showBackground, setShowBackground] = useState<boolean>(() => {
+    try {
+      const v = localStorage.getItem(BG_KEY);
+      return v === null ? true : v === "1";
+    } catch {
+      return true;
+    }
+  });
+  useEffect(() => {
+    try { localStorage.setItem(BG_KEY, showBackground ? "1" : "0"); } catch {}
+  }, [showBackground]);
+
+  // Auto-typing da saudação (só na primeira mensagem assistant, antes do user mandar algo).
+  // Pausa imediatamente se o usuário começar a digitar no input.
+  const [typedGreeting, setTypedGreeting] = useState("");
+  const [greetingDone, setGreetingDone] = useState(false);
+  const fullGreeting = greetingFor(agentKey, currentAgent?.name ?? "Kera");
+  const isFirstAssistantOnly =
+    messages.length === 1 && messages[0].role === "assistant";
+  const userStartedTyping = input.length > 0;
+
+  useEffect(() => {
+    // Reset quando a saudação muda (troca de agente).
+    setTypedGreeting("");
+    setGreetingDone(false);
+  }, [fullGreeting]);
+
+  useEffect(() => {
+    if (!isFirstAssistantOnly || greetingDone) return;
+    if (userStartedTyping) {
+      // Usuário assumiu — completa a saudação na hora.
+      setTypedGreeting(fullGreeting);
+      setGreetingDone(true);
+      return;
+    }
+    if (typedGreeting.length >= fullGreeting.length) {
+      setGreetingDone(true);
+      return;
+    }
+    const t = window.setTimeout(() => {
+      setTypedGreeting(fullGreeting.slice(0, typedGreeting.length + 1));
+    }, 22);
+    return () => window.clearTimeout(t);
+  }, [typedGreeting, fullGreeting, isFirstAssistantOnly, greetingDone, userStartedTyping]);
 
   const remaining = Math.max(0, DEMO_LIMIT - used);
   const exhausted = remaining === 0;
@@ -287,17 +333,21 @@ export const DemoKeraDialog = ({ open, onOpenChange, onWantToSignUp }: DemoKeraD
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="panel border-white/10 w-[96vw] max-w-5xl h-[94vh] max-h-[94vh] flex flex-col p-0 overflow-hidden rounded-3xl bg-background/40 backdrop-blur-xl shadow-[0_30px_80px_-20px_hsl(220_60%_4%/0.7)] animate-fade-in-up">
-        {/* Vídeo de fundo de chuva, igual ao login */}
-        <video
-          aria-hidden
-          autoPlay
-          loop
-          muted
-          playsInline
-          src={rainVideoUrl}
-          poster={keraAvatarPng}
-          className="absolute inset-0 w-full h-full object-cover object-bottom opacity-40 pointer-events-none"
-        />
+        {/* Fundo: vídeo da Kera (toggle) ou apenas escuro */}
+        {showBackground ? (
+          <video
+            aria-hidden
+            autoPlay
+            loop
+            muted
+            playsInline
+            src={rainVideoUrl}
+            poster={keraAvatarPng}
+            className="absolute inset-0 w-full h-full object-cover object-bottom opacity-40 pointer-events-none"
+          />
+        ) : (
+          <div aria-hidden className="absolute inset-0 bg-background pointer-events-none" />
+        )}
 
         {/* Glow ambiente sobre o vídeo */}
         <div
@@ -338,10 +388,21 @@ export const DemoKeraDialog = ({ open, onOpenChange, onWantToSignUp }: DemoKeraD
                 </DialogDescription>
               </DialogHeader>
             </div>
-            <span className="text-[11px] font-medium text-foreground/80 flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-primary/10 border border-primary/20 backdrop-blur-md shrink-0">
-              <Sparkles className="size-3 text-primary" />
-              {remaining}/{DEMO_LIMIT} grátis
-            </span>
+            <div className="flex items-center gap-1.5 shrink-0">
+              <button
+                type="button"
+                onClick={() => setShowBackground((v) => !v)}
+                title={showBackground ? "Ocultar vídeo de fundo" : "Mostrar vídeo de fundo"}
+                aria-label={showBackground ? "Ocultar vídeo de fundo" : "Mostrar vídeo de fundo"}
+                className="size-8 rounded-full bg-background/60 backdrop-blur-md border border-white/10 flex items-center justify-center text-foreground/70 hover:text-primary hover:border-primary/40 transition-colors"
+              >
+                {showBackground ? <Video className="size-3.5" /> : <VideoOff className="size-3.5" />}
+              </button>
+              <span className="text-[11px] font-medium text-foreground/80 flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-primary/10 border border-primary/20 backdrop-blur-md">
+                <Sparkles className="size-3 text-primary" />
+                {remaining}/{DEMO_LIMIT} grátis
+              </span>
+            </div>
           </div>
 
           {/* Seletor de agentes — agrupado por pacote (Kera Fit, Tecnologia, Jurídica…) */}
@@ -473,7 +534,23 @@ export const DemoKeraDialog = ({ open, onOpenChange, onWantToSignUp }: DemoKeraD
                       : "bg-foreground/5 border border-white/10 text-foreground backdrop-blur-md rounded-bl-md"
                   }`}
                 >
-                  {m.content || (loading && i === messages.length - 1 ? "…" : "")}
+                  {(() => {
+                    // Auto-typing apenas para a primeira mensagem assistant antes do user mandar algo.
+                    if (
+                      i === 0 &&
+                      m.role === "assistant" &&
+                      isFirstAssistantOnly &&
+                      !greetingDone
+                    ) {
+                      return (
+                        <>
+                          {typedGreeting}
+                          <span className="inline-block w-[2px] h-[1em] align-middle ml-0.5 bg-primary/80 animate-pulse" />
+                        </>
+                      );
+                    }
+                    return m.content || (loading && i === messages.length - 1 ? "…" : "");
+                  })()}
                 </div>
               </motion.div>
             ))}
