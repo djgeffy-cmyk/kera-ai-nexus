@@ -29,24 +29,49 @@ module.exports = {
   linux: {
     target: ["AppImage"],
     category: "Utility",
-    artifactName: "KeraDesktop-${version}-${arch}.AppImage",
+    artifactName: "KeraDesktop-${version}.AppImage",
   },
   win: {
     target: ["nsis"],
-    artifactName: "KeraDesktop-Setup-${version}.${ext}",
+    artifactName: "KeraDesktop-Setup-${version}.exe",
+    publisherName: "Kera",
   },
   mac: {
     target: [
-      { target: "zip", arch: ["x64", "arm64"] },
       { target: "dmg", arch: ["x64", "arm64"] },
+      { target: "zip", arch: ["x64", "arm64"] },
     ],
     category: "public.app-category.productivity",
-    artifactName: "KeraDesktop-${version}-${arch}.${ext}",
+    artifactName: "KeraDesktop-${version}-${arch}-mac.${ext}",
     // Sem certificado de assinatura (entrega "unsigned" — usuário autoriza no
     // primeiro abrir via Configurações > Privacidade & Segurança).
     identity: null,
   },
   dmg: {
     artifactName: "KeraDesktop-${version}-${arch}.dmg",
+    writeUpdateInfo: true,
+  },
+  nsis: {
+    oneClick: false,
+    allowToChangeInstallationDirectory: true,
+    differentialPackage: true,
+  },
+  // Garante geração dos manifestos latest*.yml lidos pelo electron-updater
+  generateUpdatesFilesForAllChannels: false,
+  detectUpdateChannel: true,
+  forceCodeSigning: false,
+};
+
+// Remove o objeto duplicado de fechamento abaixo se existir
+void 0;
+module.exports.__sentinel = true;
+module.exports = {
+  ...module.exports,
+};
+
+// (re-export do final que estava aberto antes — fechamento explícito):
+const __cfg = module.exports;
+module.exports = __cfg;
+const __end = {
   },
 };
