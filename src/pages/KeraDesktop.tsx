@@ -40,6 +40,40 @@ const KeraDesktopPage = () => {
   const [videosDownloading, setVideosDownloading] = useState(false);
   const [videosProgress, setVideosProgress] = useState<{ name: string; received: number; total: number } | null>(null);
   const [mascotVisible, setMascotVisible] = useState(false);
+  const [latestRelease, setLatestRelease] = useState<{
+    version: string;
+    publishedAt: string;
+    htmlUrl: string;
+    name?: string;
+  } | null>(null);
+  const [loadingRelease, setLoadingRelease] = useState(true);
+  const [releaseError, setReleaseError] = useState<string | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await fetch(
+          "https://api.github.com/repos/djgeffy-cmyk/kera-ai-nexus/releases/latest",
+          { headers: { Accept: "application/vnd.github+json" } },
+        );
+        if (!res.ok) throw new Error(`GitHub ${res.status}`);
+        const data = await res.json();
+        if (cancelled) return;
+        setLatestRelease({
+          version: data.tag_name || data.name || "?",
+          publishedAt: data.published_at,
+          htmlUrl: data.html_url,
+          name: data.name,
+        });
+      } catch (e) {
+        if (!cancelled) setReleaseError(e instanceof Error ? e.message : "Erro");
+      } finally {
+        if (!cancelled) setLoadingRelease(false);
+      }
+    })();
+    return () => { cancelled = true; };
+  }, []);
 
   useEffect(() => {
     const k = getKera();
