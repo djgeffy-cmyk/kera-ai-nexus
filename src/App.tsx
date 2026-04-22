@@ -18,6 +18,7 @@ import NotFound from "./pages/NotFound.tsx";
 import KeraDesktopPage from "./pages/KeraDesktop.tsx";
 import Manual from "./pages/Manual.tsx";
 import Uso from "./pages/Uso.tsx";
+import Builds from "./pages/Builds.tsx";
 import { ProtectedRoute } from "./components/ProtectedRoute";
 import Footer from "./components/Footer";
 import { LicitacoesAlertsListener } from "./components/LicitacoesAlertsListener";
@@ -48,6 +49,7 @@ const App = () => (
           <Route path="/desktop" element={<ProtectedRoute><KeraDesktopPage /></ProtectedRoute>} />
           <Route path="/manual" element={<ProtectedRoute><Manual /></ProtectedRoute>} />
           <Route path="/uso" element={<ProtectedRoute><Uso /></ProtectedRoute>} />
+          <Route path="/builds" element={<ProtectedRoute><Builds /></ProtectedRoute>} />
           <Route path="*" element={<NotFound />} />
         </Routes>
         <Footer />
