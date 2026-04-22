@@ -747,7 +747,7 @@ ${intensityRules}`;
             }
 
             // Só tools server — executa e segue pro stream final.
-            const toolResults: Array<{ role: string; tool_call_id: string; content: string }> = [];
+            const toolResults: ChatMessage[] = [];
             for (const tc of serverCalls) {
               const args = JSON.parse(tc.function?.arguments || "{}");
               const result = await executeTool(tc.function?.name, args);
@@ -755,7 +755,7 @@ ${intensityRules}`;
             }
             workingMessages = [
               ...messages,
-              { role: "assistant", content: msg.content || "", tool_calls: toolCalls },
+              { role: "assistant", content: msg.content || "", tool_calls: toolCalls } as ChatMessage,
               ...toolResults,
             ];
           }
