@@ -49,18 +49,28 @@ Deno.serve(async (req) => {
     // Salt fixo + IP. O salt evita correlação cross-projeto se o hash vazar.
     const ipHash = await sha256Hex(`kera-demo:${ip}`);
 
-    let body: { action?: "check" | "consume" } = {};
+    // Fingerprint do navegador: user-agent + accept-language + (opcional) hash do client.
+    // Funciona como segunda chave de bloqueio — se o usuário trocar de IP (Wi-Fi → 4G)
+    // mas continuar no mesmo navegador, o limite continua valendo.
+    const userAgent = req.headers.get("user-agent") ?? "";
+    const acceptLang = req.headers.get("accept-language") ?? "";
+
+    let body: { action?: "check" | "consume"; clientFingerprint?: string } = {};
     try { body = await req.json(); } catch { /* ok */ }
     const action = body.action === "consume" ? "consume" : "check";
+    const clientFp = (body.clientFingerprint ?? "").slice(0, 256);
+    const fpHash = await sha256Hex(
+      `kera-demo-fp:${userAgent}|${acceptLang}|${clientFp}`,
+    );
 
-    // Lê estado atual
-    const { data: existing } = await supabase
-      .from("demo_usage")
-      .select("count")
-      .eq("ip_hash", ipHash)
-      .maybeSingle();
+    // Lê estado de AMBAS as chaves (IP e fingerprint) e usa o MAIOR — assim,
+    // bloquear por uma das vias é suficiente.
+    const [{ data: byIp }, { data: byFp }] = await Promise.all([
+      supabase.from("demo_usage").select("count").eq("ip_hash", ipHash).maybeSingle(),
+      supabase.from("demo_usage").select("count").eq("ip_hash", fpHash).maybeSingle(),
+    ]);
 
-    const used = existing?.count ?? 0;
+    const used = Math.max(byIp?.count ?? 0, byFp?.count ?? 0);
     const remaining = Math.max(0, DEMO_LIMIT - used);
 
     if (action === "check") {
@@ -70,19 +80,19 @@ Deno.serve(async (req) => {
     // action === "consume"
     if (used >= DEMO_LIMIT) {
       // Registra tentativa de abuso (já estava bloqueado e tentou de novo)
-      const userAgent = req.headers.get("user-agent") ?? null;
       const { error: logErr } = await supabase
         .from("demo_abuse_log")
         .insert({
           ip_hash: ipHash,
           attempted_count: used,
-          user_agent: userAgent,
+          user_agent: userAgent || null,
         });
       if (logErr) {
         console.error("[check-demo-quota] failed to log abuse attempt", logErr);
       } else {
         console.log("[check-demo-quota] abuse attempt logged", {
           ip_hash_prefix: ipHash.slice(0, 8),
+          fp_hash_prefix: fpHash.slice(0, 8),
           attempted_count: used,
         });
       }
@@ -97,19 +107,22 @@ Deno.serve(async (req) => {
     }
 
     const newCount = used + 1;
-    const { error: upsertErr } = await supabase
-      .from("demo_usage")
-      .upsert(
-        {
-          ip_hash: ipHash,
-          count: newCount,
-          last_seen_at: new Date().toISOString(),
-        },
+    const nowIso = new Date().toISOString();
+    // Grava nas DUAS chaves — IP e fingerprint — sempre com o maior count atual.
+    // Assim, qualquer tentativa futura por IP OU navegador detecta o bloqueio.
+    const [{ error: ipErr }, { error: fpErr }] = await Promise.all([
+      supabase.from("demo_usage").upsert(
+        { ip_hash: ipHash, count: newCount, last_seen_at: nowIso },
         { onConflict: "ip_hash" },
-      );
+      ),
+      supabase.from("demo_usage").upsert(
+        { ip_hash: fpHash, count: newCount, last_seen_at: nowIso },
+        { onConflict: "ip_hash" },
+      ),
+    ]);
 
-    if (upsertErr) {
-      console.error("[check-demo-quota] upsert failed", upsertErr);
+    if (ipErr || fpErr) {
+      console.error("[check-demo-quota] upsert failed", ipErr || fpErr);
       return json(500, { error: "internal" });
     }
 
