@@ -506,7 +506,6 @@ const Auth = () => {
               )}
             </Card>
           </motion.div>
-        )}
       </AnimatePresence>
 
       <Dialog open={resetOpen} onOpenChange={setResetOpen}>
