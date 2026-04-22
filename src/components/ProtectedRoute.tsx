@@ -77,7 +77,7 @@ export const ProtectedRoute = ({ children, requireAdmin = false }: Props) => {
   // Se ainda não escolheu áreas, manda pro onboarding.
   // Exceções: já está no onboarding, ou em rotas "neutras" que devem
   // funcionar sem precisar completar (planos, manual, segurança, desktop).
-  const ONBOARDING_BYPASS = ["/onboarding", "/planos", "/manual", "/security", "/desktop"];
+  const ONBOARDING_BYPASS = ["/onboarding", "/planos", "/manual", "/security", "/desktop", "/uso"];
   if (needsOnboarding && !ONBOARDING_BYPASS.includes(location.pathname)) {
     return <Navigate to="/onboarding" replace />;
   }
