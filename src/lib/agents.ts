@@ -59,6 +59,14 @@ export const KERA_FIT_LABEL = "Kera Fit";
  export const KERA_MUNICIPIO_DESCRIPTION =
    "Módulo Municipal — Kera Guaramirim e Kera Prefeituras. Foco em APIs governamentais, IPM, Olostech e e-SUS.";
  
+ /**
+  * Pacote "Kera Diversão" — agentes voltados a entretenimento.
+  */
+ export const KERA_DIVERSAO_AGENT_KEYS = ["kera-gamer"] as const;
+ export const KERA_DIVERSAO_LABEL = "Kera Diversão";
+ export const KERA_DIVERSAO_DESCRIPTION =
+   "Módulo de entretenimento — guias de jogos, troféus e cultura gamer.";
+
  // Helper to check access for grouped modules
  export const getGroupedModuleKeys = (module: 'juridico' | 'tech' | 'municipio') => {
    if (module === 'juridico') return KERA_JURIDICO_AGENT_KEYS;
