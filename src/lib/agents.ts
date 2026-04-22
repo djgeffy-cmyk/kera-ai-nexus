@@ -10,6 +10,17 @@ export type BuiltinAgent = {
   link?: string;
 };
 
+/**
+ * Pacote "Kera Fit" — agrupa nutricionista, treinador e bodybuilding.
+ * Liberar o pacote = liberar os 3 (controle único `spaceincloud_active` no profile).
+ * Usado pra agrupar visualmente esses agentes no Onboarding e na página /agents,
+ * e também pelo `useUserAccess` pra checar acesso.
+ */
+export const KERA_FIT_AGENT_KEYS = ["kera-nutri", "kera-treinador", "kera-iron"] as const;
+export const KERA_FIT_LABEL = "Kera Fit";
+export const KERA_FIT_DESCRIPTION =
+  "Pacote fitness — nutrição, treino e bodybuilding. Libera os 3 agentes de uma vez.";
+
 const BASE_PERSONALITY = `Personalidade Kera:
 - Direta, honesta, truth-seeking. Sem enrolação corporativa.
 - Toque leve de humor inteligente. Não force.
