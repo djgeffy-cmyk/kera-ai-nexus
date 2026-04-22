@@ -131,6 +131,28 @@ export const DemoKeraDialog = ({ open, onOpenChange, onWantToSignUp }: DemoKeraD
     setLoading(true);
 
     try {
+      // 1) Tenta consumir quota no servidor (controle por IP).
+      //    Se o IP já bateu o limite, bloqueia mesmo se o localStorage estiver zerado.
+      const quotaRes = await fetch(`${SUPABASE_URL}/functions/v1/check-demo-quota`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          apikey: SUPABASE_KEY,
+          Authorization: `Bearer ${SUPABASE_KEY}`,
+        },
+        body: JSON.stringify({ action: "consume" }),
+      });
+      const quota = await quotaRes.json().catch(() => ({} as any));
+      if (quotaRes.status === 429 || quota?.blocked === true) {
+        const serverUsed = typeof quota.used === "number" ? quota.used : DEMO_LIMIT;
+        setUsed(Math.max(serverUsed, DEMO_LIMIT));
+        localStorage.setItem(DEMO_KEY, String(Math.max(serverUsed, DEMO_LIMIT)));
+        setMessages((m) => m.slice(0, -1)); // tira a pergunta que não foi enviada
+        setInput(text); // devolve o texto pro input
+        return;
+      }
+      if (!quotaRes.ok) throw new Error("Falha ao validar quota");
+
       const res = await fetch(`${SUPABASE_URL}/functions/v1/chat-kera`, {
         method: "POST",
         headers: {
@@ -197,7 +219,9 @@ export const DemoKeraDialog = ({ open, onOpenChange, onWantToSignUp }: DemoKeraD
         });
       }
 
-      const newUsed = used + 1;
+      // Servidor já incrementou; usamos o valor canônico dele.
+      const serverUsed = typeof quota.used === "number" ? quota.used : used + 1;
+      const newUsed = Math.max(used + 1, serverUsed);
       setUsed(newUsed);
       localStorage.setItem(DEMO_KEY, String(newUsed));
     } catch (err: any) {
