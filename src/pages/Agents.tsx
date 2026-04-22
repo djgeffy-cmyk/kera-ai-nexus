@@ -6,15 +6,18 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Card } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog";
- import { ArrowLeft, Plus, Sparkles, Trash2, Pencil, Scale, Code2 } from "lucide-react";
+  import { ArrowLeft, Plus, Sparkles, Trash2, Pencil, Scale, Code2, Landmark } from "lucide-react";
 import { toast } from "sonner";
  import { 
    BUILTIN_AGENTS, 
    KERA_FIT_AGENT_KEYS, 
    KERA_JURIDICO_AGENT_KEYS, 
    KERA_TECH_AGENT_KEYS,
-   KERA_JURIDICO_LABEL,
-   KERA_TECH_LABEL
+    KERA_JURIDICO_LABEL,
+    KERA_TECH_LABEL,
+    KERA_MUNICIPIO_AGENT_KEYS,
+    KERA_MUNICIPIO_LABEL,
+    KERA_MUNICIPIO_DESCRIPTION
  } from "@/lib/agents";
 import { KeraFitGroup } from "@/components/KeraFitGroup";
 import { useUserAccess } from "@/hooks/useUserAccess";
