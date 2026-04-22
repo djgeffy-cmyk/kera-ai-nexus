@@ -6,6 +6,11 @@ import { toast } from "sonner";
 import { Sparkles, Send, Lock, Loader2 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import UmbrellaCorpLogo from "./UmbrellaCorpLogo";
+import { BUILTIN_AGENTS } from "@/lib/agents";
+import keraAvatarVideo from "@/assets/kera-avatar-rain.mp4.asset.json";
+import keraAvatarPng from "@/assets/kera-avatar.png";
+import { assetUrl } from "@/lib/assetUrl";
+import { cn } from "@/lib/utils";
 
 const DEMO_LIMIT = 3;
 const DEMO_KEY = "kera-demo-questions-used";
@@ -23,12 +28,41 @@ interface DemoKeraDialogProps {
   onWantToSignUp: () => void;
 }
 
+// Agentes que aparecem no demo (subset curado, em ordem)
+const DEMO_AGENT_KEYS = [
+  "kera",
+  "kera-dev",
+  "kera-sec",
+  "kera-security-nasa",
+  "kera-juridica",
+  "kera-familia",
+  "kera-sucessoes",
+  "kera-personalidade",
+  "kera-curatela",
+  "kera-sentinela",
+  "kera-nutri",
+  "kera-treinador",
+  "kera-iron",
+  "kera-gamer",
+  "kera-tradutora",
+] as const;
+
+const DEMO_AGENTS = DEMO_AGENT_KEYS
+  .map((k) => BUILTIN_AGENTS.find((a) => a.key === k))
+  .filter((a): a is NonNullable<typeof a> => Boolean(a));
+
+const greetingFor = (agentKey: string, name: string) => {
+  if (agentKey === "kera") {
+    return "E aí. Sou a Kera. Você tem 3 perguntas grátis pra me testar antes de criar conta. Manda a primeira.";
+  }
+  return `Aqui é a ${name}. Modo demo: 3 perguntas grátis. Manda a primeira que eu já resolvo.`;
+};
+
 export const DemoKeraDialog = ({ open, onOpenChange, onWantToSignUp }: DemoKeraDialogProps) => {
+  const [agentKey, setAgentKey] = useState<string>("kera");
+  const currentAgent = DEMO_AGENTS.find((a) => a.key === agentKey) ?? DEMO_AGENTS[0];
   const [messages, setMessages] = useState<Msg[]>([
-    {
-      role: "assistant",
-      content: "E aí. Sou a Kera. Você tem 3 perguntas grátis pra me testar antes de criar conta. Manda a primeira.",
-    },
+    { role: "assistant", content: greetingFor("kera", "Kera") },
   ]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
@@ -37,6 +71,7 @@ export const DemoKeraDialog = ({ open, onOpenChange, onWantToSignUp }: DemoKeraD
     return stored ? parseInt(stored, 10) : 0;
   });
   const scrollRef = useRef<HTMLDivElement>(null);
+  const rainVideoUrl = assetUrl(keraAvatarVideo);
 
   const remaining = Math.max(0, DEMO_LIMIT - used);
   const exhausted = remaining === 0;
@@ -44,6 +79,14 @@ export const DemoKeraDialog = ({ open, onOpenChange, onWantToSignUp }: DemoKeraD
   useEffect(() => {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" });
   }, [messages, loading]);
+
+  const switchAgent = (key: string) => {
+    if (key === agentKey || loading) return;
+    const ag = DEMO_AGENTS.find((a) => a.key === key);
+    if (!ag) return;
+    setAgentKey(key);
+    setMessages([{ role: "assistant", content: greetingFor(key, ag.name) }]);
+  };
 
   const send = async () => {
     const text = input.trim();
@@ -64,6 +107,9 @@ export const DemoKeraDialog = ({ open, onOpenChange, onWantToSignUp }: DemoKeraD
         },
         body: JSON.stringify({
           messages: newMessages.map((m) => ({ role: m.role, content: m.content })),
+          // Agente escolhido pelo visitante no demo
+          agentKey,
+          systemPrompt: currentAgent?.systemPrompt,
           // Modo demo: backend suprime apelidos pessoais e zoeiras internas (Rodrigo,
           // Tania, Doriana, Denis, etc). Visitante sem cadastro vê a Kera "limpa".
           demoMode: true,
