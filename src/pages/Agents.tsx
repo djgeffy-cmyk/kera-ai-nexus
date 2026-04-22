@@ -210,7 +210,7 @@ const AgentsPage = () => {
                    <KeraFitGroup
                      unlocked={fitUnlocked}
                      renderAgent={(key) => {
-                       const a = BUILTIN_AGENTS.find((x) => x.key === key);
+                       const a = BUILTIN_AGENTS.find((x) => x.key === key as any);
                        return a ? renderAgentCard(a) : null;
                      }}
                    />
@@ -221,7 +221,7 @@ const AgentsPage = () => {
                      label={KERA_JURIDICO_LABEL}
                      unlocked={juridicoUnlocked}
                      renderAgent={(key) => {
-                       const a = BUILTIN_AGENTS.find((x) => x.key === key);
+                       const a = BUILTIN_AGENTS.find((x) => x.key === key as any);
                        return a ? renderAgentCard(a) : null;
                      }}
                      customKeys={KERA_JURIDICO_AGENT_KEYS as unknown as string[]}
@@ -234,7 +234,7 @@ const AgentsPage = () => {
                      label={KERA_TECH_LABEL}
                      unlocked={techUnlocked}
                      renderAgent={(key) => {
-                       const a = BUILTIN_AGENTS.find((x) => x.key === key);
+                       const a = BUILTIN_AGENTS.find((x) => x.key === key as any);
                        return a ? renderAgentCard(a) : null;
                      }}
                      customKeys={KERA_TECH_AGENT_KEYS as unknown as string[]}

@@ -127,10 +127,10 @@ const Onboarding = () => {
    const techVisible = KERA_TECH_AGENT_KEYS.some((k) => canSee(k));
    const anyTechSelected = KERA_TECH_AGENT_KEYS.some((k) => selected.has(k));
 
-  // Renderiza um card de agente Fit dentro do grupo (mesmo visual dos demais cards)
-  const renderFitAgent = (agentKey: string) => {
-    const a = BUILTIN_AGENTS.find((x) => x.key === agentKey);
-    if (!a) return null;
+   // Renderiza um card de agente dentro de um grupo (mesmo visual dos demais cards)
+   const renderGroupedAgent = (agentKey: string) => {
+     const a = BUILTIN_AGENTS.find((x) => x.key === agentKey as any);
+     if (!a) return null;
     const Icon = a.icon;
     const isSelected = selected.has(a.key);
     return (
@@ -212,7 +212,7 @@ const Onboarding = () => {
          {fitVisible && (
            <div className="mb-4">
              <KeraFitGroup
-               renderAgent={renderFitAgent}
+               renderAgent={renderGroupedAgent}
                unlocked={anyFitSelected}
                badgeLabel={anyFitSelected ? `${KERA_FIT_AGENT_KEYS.filter((k) => selected.has(k)).length}/3 selecionados` : "Marque qualquer um pra incluir"}
              />
@@ -222,7 +222,7 @@ const Onboarding = () => {
          {juridicoVisible && (
            <div className="mb-4">
              <KeraFitGroup
-               renderAgent={renderFitAgent}
+               renderAgent={renderGroupedAgent}
                unlocked={anyJuridicoSelected}
                label={KERA_JURIDICO_LABEL}
                description={KERA_JURIDICO_DESCRIPTION}
@@ -236,7 +236,7 @@ const Onboarding = () => {
          {techVisible && (
            <div className="mb-4">
              <KeraFitGroup
-               renderAgent={renderFitAgent}
+               renderAgent={renderGroupedAgent}
                unlocked={anyTechSelected}
                label={KERA_TECH_LABEL}
                description={KERA_TECH_DESCRIPTION}
