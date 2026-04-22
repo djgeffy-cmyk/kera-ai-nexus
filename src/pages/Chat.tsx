@@ -1347,24 +1347,37 @@ Por favor, analise: há perda de pacote? jitter alto sugere instabilidade de rot
                 <FileText className="size-5" />
               </Button>
             )}
-            <Button
-              variant="ghost" size="icon"
-              onClick={() => {
-                const next = !voiceMode;
-                setVoiceMode(next);
-                try { localStorage.setItem("kera:voiceMode", next ? "1" : "0"); } catch {}
-                if (next) {
-                  voice.warmUpTTS();
-                  toast.success("Modo voz ativado — Kera vai falar as respostas");
-                } else {
-                  voice.stopSpeaking();
-                }
-              }}
-              aria-label="Modo voz"
-              className={`shrink-0 h-9 w-9 ${voiceMode ? "text-primary" : ""}`}
-            >
-              {voiceMode ? <Volume2 className="size-5" /> : <VolumeX className="size-5" />}
-            </Button>
+            <div className="flex items-center gap-1 bg-background/20 backdrop-blur-md rounded-full border border-white/5 p-0.5">
+              <Button
+                variant="ghost" size="icon"
+                onClick={() => setShowBackground(!showBackground)}
+                aria-label={showBackground ? "Desativar vídeo de fundo" : "Ativar vídeo de fundo"}
+                title={showBackground ? "Desativar vídeo de fundo" : "Ativar vídeo de fundo"}
+                className={`shrink-0 h-8 w-8 rounded-full transition-all ${showBackground ? "text-primary bg-primary/10" : "text-muted-foreground hover:text-foreground"}`}
+              >
+                {showBackground ? <Video className="size-4" /> : <VideoOff className="size-4" />}
+              </Button>
+
+              <Button
+                variant="ghost" size="icon"
+                onClick={() => {
+                  const next = !voiceMode;
+                  setVoiceMode(next);
+                  try { localStorage.setItem("kera:voiceMode", next ? "1" : "0"); } catch {}
+                  if (next) {
+                    voice.warmUpTTS();
+                    toast.success("Modo voz ativado — Kera vai falar as respostas");
+                  } else {
+                    voice.stopSpeaking();
+                  }
+                }}
+                aria-label="Modo voz"
+                title={voiceMode ? "Desativar modo voz" : "Ativar modo voz"}
+                className={`shrink-0 h-8 w-8 rounded-full transition-all ${voiceMode ? "text-primary bg-primary/10" : "text-muted-foreground hover:text-foreground"}`}
+              >
+                {voiceMode ? <Volume2 className="size-4" /> : <VolumeX className="size-4" />}
+              </Button>
+            </div>
           </div>
         </header>
 
