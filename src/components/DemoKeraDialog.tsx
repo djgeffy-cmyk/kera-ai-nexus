@@ -333,17 +333,21 @@ export const DemoKeraDialog = ({ open, onOpenChange, onWantToSignUp }: DemoKeraD
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="panel border-white/10 w-[96vw] max-w-5xl h-[94vh] max-h-[94vh] flex flex-col p-0 overflow-hidden rounded-3xl bg-background/40 backdrop-blur-xl shadow-[0_30px_80px_-20px_hsl(220_60%_4%/0.7)] animate-fade-in-up">
-        {/* Vídeo de fundo de chuva, igual ao login */}
-        <video
-          aria-hidden
-          autoPlay
-          loop
-          muted
-          playsInline
-          src={rainVideoUrl}
-          poster={keraAvatarPng}
-          className="absolute inset-0 w-full h-full object-cover object-bottom opacity-40 pointer-events-none"
-        />
+        {/* Fundo: vídeo da Kera (toggle) ou apenas escuro */}
+        {showBackground ? (
+          <video
+            aria-hidden
+            autoPlay
+            loop
+            muted
+            playsInline
+            src={rainVideoUrl}
+            poster={keraAvatarPng}
+            className="absolute inset-0 w-full h-full object-cover object-bottom opacity-40 pointer-events-none"
+          />
+        ) : (
+          <div aria-hidden className="absolute inset-0 bg-background pointer-events-none" />
+        )}
 
         {/* Glow ambiente sobre o vídeo */}
         <div
@@ -384,10 +388,21 @@ export const DemoKeraDialog = ({ open, onOpenChange, onWantToSignUp }: DemoKeraD
                 </DialogDescription>
               </DialogHeader>
             </div>
-            <span className="text-[11px] font-medium text-foreground/80 flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-primary/10 border border-primary/20 backdrop-blur-md shrink-0">
-              <Sparkles className="size-3 text-primary" />
-              {remaining}/{DEMO_LIMIT} grátis
-            </span>
+            <div className="flex items-center gap-1.5 shrink-0">
+              <button
+                type="button"
+                onClick={() => setShowBackground((v) => !v)}
+                title={showBackground ? "Ocultar vídeo de fundo" : "Mostrar vídeo de fundo"}
+                aria-label={showBackground ? "Ocultar vídeo de fundo" : "Mostrar vídeo de fundo"}
+                className="size-8 rounded-full bg-background/60 backdrop-blur-md border border-white/10 flex items-center justify-center text-foreground/70 hover:text-primary hover:border-primary/40 transition-colors"
+              >
+                {showBackground ? <Video className="size-3.5" /> : <VideoOff className="size-3.5" />}
+              </button>
+              <span className="text-[11px] font-medium text-foreground/80 flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-primary/10 border border-primary/20 backdrop-blur-md">
+                <Sparkles className="size-3 text-primary" />
+                {remaining}/{DEMO_LIMIT} grátis
+              </span>
+            </div>
           </div>
 
           {/* Seletor de agentes — agrupado por pacote (Kera Fit, Tecnologia, Jurídica…) */}
