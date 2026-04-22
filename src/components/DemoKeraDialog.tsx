@@ -234,14 +234,26 @@ export const DemoKeraDialog = ({ open, onOpenChange, onWantToSignUp }: DemoKeraD
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="panel border-primary/30 max-w-2xl max-h-[90vh] flex flex-col p-0 overflow-hidden">
+      <DialogContent
+        className="panel border-white/10 max-w-2xl max-h-[90vh] flex flex-col p-0 overflow-hidden rounded-3xl backdrop-blur-2xl bg-background/70 shadow-[0_30px_80px_-20px_hsl(220_60%_4%/0.7)] animate-fade-in-up"
+      >
+        {/* Glow ambiente atrás do dialog */}
+        <div
+          aria-hidden
+          className="pointer-events-none absolute inset-0 opacity-60"
+          style={{
+            background:
+              "radial-gradient(circle at 20% 0%, hsl(210 100% 60% / 0.18), transparent 55%), radial-gradient(circle at 80% 100%, hsl(265 90% 65% / 0.14), transparent 55%)",
+          }}
+        />
+
         {/* Header com avatar de vídeo */}
-        <div className="relative px-5 pt-5 pb-3 border-b border-primary/20 bg-gradient-to-b from-primary/10 to-transparent">
-          <div className="flex items-start gap-3">
+        <div className="relative px-6 pt-6 pb-4 border-b border-white/5">
+          <div className="flex items-start gap-4">
             <motion.div
               animate={{ y: [0, -4, 0] }}
               transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
-              className="relative size-16 sm:size-20 rounded-full overflow-hidden border-2 border-primary/70 shadow-glow ring-2 ring-primary/30 shrink-0 bg-background"
+              className="relative size-16 sm:size-20 rounded-full overflow-hidden border-2 border-primary/60 shadow-[0_0_30px_-4px_hsl(var(--primary)/0.55)] ring-2 ring-primary/20 shrink-0 bg-background"
             >
               <video
                 aria-hidden
@@ -256,16 +268,16 @@ export const DemoKeraDialog = ({ open, onOpenChange, onWantToSignUp }: DemoKeraD
             </motion.div>
             <div className="flex-1 min-w-0">
               <DialogHeader className="space-y-1 text-left">
-                <DialogTitle className="font-display text-glow text-lg">
+                <DialogTitle className="font-display text-glow text-xl tracking-tight">
                   Teste a Kera ao vivo
                 </DialogTitle>
-                <DialogDescription className="text-xs">
+                <DialogDescription className="text-xs text-muted-foreground/80">
                   Escolhe um agente e manda ver. Sem conta, sem cadastro.
                 </DialogDescription>
               </DialogHeader>
             </div>
-            <div className="flex flex-col items-end gap-1 shrink-0">
-              <span className="text-xs font-normal text-muted-foreground flex items-center gap-1">
+            <div className="flex flex-col items-end gap-1.5 shrink-0">
+              <span className="text-[11px] font-medium text-foreground/80 flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-primary/10 border border-primary/20 backdrop-blur-md">
                 <Sparkles className="size-3 text-primary" />
                 {remaining}/{DEMO_LIMIT} grátis
               </span>
@@ -274,7 +286,7 @@ export const DemoKeraDialog = ({ open, onOpenChange, onWantToSignUp }: DemoKeraD
                   onOpenChange(false);
                   onWantToSignUp();
                 }}
-                className="text-[10px] text-primary/70 hover:text-primary underline transition-colors"
+                className="text-[10px] text-muted-foreground hover:text-primary transition-colors story-link"
               >
                 Já tem conta? Entrar
               </button>
@@ -282,7 +294,7 @@ export const DemoKeraDialog = ({ open, onOpenChange, onWantToSignUp }: DemoKeraD
           </div>
 
           {/* Seletor de agentes — chips horizontais */}
-          <div className="mt-4 -mx-1 px-1 overflow-x-auto scrollbar-thin">
+          <div className="mt-5 -mx-1 px-1 overflow-x-auto scrollbar-thin">
             <div className="flex gap-2 pb-1 min-w-max">
               {DEMO_AGENTS.map((ag) => {
                 const Icon = ag.icon;
@@ -295,10 +307,10 @@ export const DemoKeraDialog = ({ open, onOpenChange, onWantToSignUp }: DemoKeraD
                     disabled={loading}
                     title={ag.description}
                     className={cn(
-                      "flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs whitespace-nowrap border transition-all",
+                      "flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs whitespace-nowrap border transition-all duration-300 backdrop-blur-md",
                       active
-                        ? "bg-primary/20 border-primary text-primary shadow-[0_0_12px_hsl(var(--primary)/0.4)]"
-                        : "bg-muted/30 border-border/40 text-muted-foreground hover:border-primary/50 hover:text-foreground",
+                        ? "bg-primary/15 border-primary/60 text-primary shadow-[0_0_18px_-2px_hsl(var(--primary)/0.45)] scale-[1.02]"
+                        : "bg-foreground/5 border-white/10 text-muted-foreground hover:border-primary/40 hover:text-foreground hover:bg-foreground/10",
                       loading && "opacity-50 cursor-not-allowed",
                     )}
                   >
@@ -311,7 +323,7 @@ export const DemoKeraDialog = ({ open, onOpenChange, onWantToSignUp }: DemoKeraD
           </div>
 
           {currentAgent && (
-            <p className="mt-2 text-[11px] text-muted-foreground/80 italic">
+            <p className="mt-3 text-[11px] text-muted-foreground/70 italic">
               {currentAgent.description}
             </p>
           )}
@@ -319,7 +331,7 @@ export const DemoKeraDialog = ({ open, onOpenChange, onWantToSignUp }: DemoKeraD
 
         <div
           ref={scrollRef}
-          className="flex-1 overflow-y-auto space-y-3 py-4 px-5 min-h-[260px] max-h-[42vh]"
+          className="relative flex-1 overflow-y-auto space-y-3 py-5 px-6 min-h-[260px] max-h-[42vh]"
         >
           <AnimatePresence initial={false}>
             {messages.map((m, i) => (
@@ -327,13 +339,14 @@ export const DemoKeraDialog = ({ open, onOpenChange, onWantToSignUp }: DemoKeraD
                 key={i}
                 initial={{ opacity: 0, y: 8 }}
                 animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.25, ease: "easeOut" }}
                 className={`flex ${m.role === "user" ? "justify-end" : "justify-start"}`}
               >
                 <div
-                  className={`max-w-[85%] rounded-2xl px-4 py-2.5 text-sm whitespace-pre-wrap ${
+                  className={`max-w-[85%] rounded-2xl px-4 py-2.5 text-sm whitespace-pre-wrap leading-relaxed transition-shadow ${
                     m.role === "user"
-                      ? "bg-primary text-primary-foreground"
-                      : "bg-muted/40 border border-border/50 text-foreground"
+                      ? "bg-gradient-to-br from-primary to-primary/80 text-primary-foreground shadow-[0_4px_18px_-4px_hsl(var(--primary)/0.55)] rounded-br-md"
+                      : "bg-foreground/5 border border-white/10 text-foreground backdrop-blur-md rounded-bl-md"
                   }`}
                 >
                   {m.content || (loading && i === messages.length - 1 ? "…" : "")}
@@ -342,17 +355,19 @@ export const DemoKeraDialog = ({ open, onOpenChange, onWantToSignUp }: DemoKeraD
             ))}
           </AnimatePresence>
           {loading && messages[messages.length - 1]?.role === "user" && (
-            <div className="flex justify-start">
-              <div className="rounded-2xl px-4 py-2.5 bg-muted/40 border border-border/50">
-                <Loader2 className="size-4 animate-spin text-primary" />
+            <div className="flex justify-start animate-fade-in-up">
+              <div className="rounded-2xl rounded-bl-md px-4 py-3 bg-foreground/5 border border-white/10 backdrop-blur-md flex items-center gap-1.5">
+                <span className="size-1.5 rounded-full bg-primary/80 animate-pulse" />
+                <span className="size-1.5 rounded-full bg-primary/80 animate-pulse [animation-delay:150ms]" />
+                <span className="size-1.5 rounded-full bg-primary/80 animate-pulse [animation-delay:300ms]" />
               </div>
             </div>
           )}
         </div>
 
         {exhausted ? (
-          <div className="border-t border-border/40 px-5 py-4 space-y-3">
-            <div className="flex items-start gap-2 text-sm text-amber-400">
+          <div className="relative border-t border-white/5 px-6 py-5 space-y-3">
+            <div className="flex items-start gap-2 text-sm text-amber-400/90">
               <Lock className="size-4 mt-0.5 shrink-0" />
               <span>
                 Suas 3 perguntas grátis acabaram. Pra continuar conversando com a Kera,
@@ -364,35 +379,46 @@ export const DemoKeraDialog = ({ open, onOpenChange, onWantToSignUp }: DemoKeraD
                 onOpenChange(false);
                 onWantToSignUp();
               }}
-              className="w-full bg-gradient-cyber text-primary-foreground font-display tracking-wider shadow-glow"
+              className="kera-ai-cta w-full h-12 rounded-xl font-display tracking-wider text-base"
             >
-              Ver planos e assinar
+              ✦ Ver planos e assinar
             </Button>
           </div>
         ) : (
-          <div className="border-t border-border/40 px-5 py-3 flex gap-2">
-            <Input
-              value={input}
-              onChange={(e) => setInput(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === "Enter" && !e.shiftKey) {
-                  e.preventDefault();
-                  send();
-                }
-              }}
-              placeholder={`Pergunta pra ${currentAgent?.name ?? "Kera"}…`}
-              disabled={loading}
-              className="bg-input/50 flex-1"
-              autoFocus
-            />
-            <Button
-              onClick={send}
-              disabled={!input.trim() || loading}
-              size="icon"
-              className="bg-gradient-cyber text-primary-foreground shadow-glow shrink-0"
-            >
-              {loading ? <Loader2 className="size-4 animate-spin" /> : <Send className="size-4" />}
-            </Button>
+          <div className="relative border-t border-white/5 px-6 py-4">
+            <div className="kera-ai-composer flex items-center gap-2 px-2 py-1.5">
+              <Input
+                value={input}
+                onChange={(e) => setInput(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" && !e.shiftKey) {
+                    e.preventDefault();
+                    send();
+                  }
+                }}
+                placeholder={`Pergunta pra ${currentAgent?.name ?? "Kera"}…`}
+                disabled={loading}
+                className="flex-1 border-0 bg-transparent shadow-none focus-visible:ring-0 focus-visible:ring-offset-0 focus:bg-transparent text-base placeholder:text-muted-foreground/50"
+                autoFocus
+              />
+              <Button
+                onClick={send}
+                disabled={!input.trim() || loading}
+                className="kera-ai-cta h-10 px-4 rounded-xl font-semibold shrink-0 gap-1.5"
+              >
+                {loading ? (
+                  <Loader2 className="size-4 animate-spin" />
+                ) : (
+                  <>
+                    <Sparkles className="size-3.5" />
+                    <span className="hidden sm:inline">Gerar</span>
+                  </>
+                )}
+              </Button>
+            </div>
+            <p className="mt-2 text-center text-[10px] text-muted-foreground/50">
+              Modo demo · respostas filtradas · sem histórico salvo
+            </p>
           </div>
         )}
       </DialogContent>
