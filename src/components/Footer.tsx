@@ -9,11 +9,10 @@ const Footer = () => {
         style={{ left: "var(--chat-sidebar-w, 0px)" }}
       >
         <div className="mx-auto w-fit max-w-[95vw] mb-2 px-4 py-1.5 rounded-full bg-background/80 backdrop-blur-md border border-border/60 pointer-events-auto flex items-center gap-3 shadow-lg shadow-background/40">
-          <p className="text-[11px] text-muted-foreground whitespace-nowrap leading-none">
-            Uso exclusivo de{" "}
-            <span className="text-primary font-medium">Geverson Carlos Dalpra</span>
-            {" "}— criador da personagem{" "}
-            <span className="font-display text-glow">Kera</span>
+          <p className="text-[11px] text-muted-foreground whitespace-nowrap leading-none flex items-center gap-1.5">
+            <span className="font-display text-glow text-primary">Kera AI</span>
+            <span className="opacity-70">·</span>
+            <span className="font-medium text-foreground/90">Space in Cloud</span>
             <sup className="text-primary ml-0.5 text-[8px] font-semibold tracking-wide">®</sup>
           </p>
 
