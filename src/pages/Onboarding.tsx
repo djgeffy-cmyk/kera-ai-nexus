@@ -36,34 +36,45 @@ const Onboarding = () => {
   const [selected, setSelected] = useState<Set<string>>(new Set(["kera"]));
   const [saving, setSaving] = useState(false);
   const [userId, setUserId] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
   const { canSee } = useUserAccess();
 
   useEffect(() => {
     document.title = isEditing ? "Kera AI — Minhas áreas" : "Kera AI — Escolha sua área";
     (async () => {
-      const { data } = await supabase.auth.getUser();
-      if (!data.user) {
-        navigate("/auth");
-        return;
-      }
-      setUserId(data.user.id);
-      const { data: profile } = await supabase
-        .from("profiles")
-        .select("onboarding_completed, selected_agents")
-        .eq("user_id", data.user.id)
-        .maybeSingle();
+      try {
+        const { data } = await supabase.auth.getUser();
+        if (!data.user) {
+          navigate("/auth", { replace: true });
+          return;
+        }
+        setUserId(data.user.id);
+        const { data: profile, error } = await supabase
+          .from("profiles")
+          .select("onboarding_completed, selected_agents")
+          .eq("user_id", data.user.id)
+          .maybeSingle();
 
-      // Se já completou e NÃO está editando, manda pro chat
-      if (profile?.onboarding_completed && !isEditing) {
-        navigate("/", { replace: true });
-        return;
-      }
+        if (error) {
+          console.error("[Onboarding] erro carregando profile:", error);
+        }
 
-      // Se está editando, pré-seleciona o que ele já tinha
-      if (isEditing && profile?.selected_agents) {
-        const current = new Set<string>(profile.selected_agents as string[]);
-        current.add("kera"); // Kera sempre marcada
-        setSelected(current);
+        // Se está editando, pré-seleciona o que ele já tinha
+        if (profile?.selected_agents) {
+          const current = new Set<string>(profile.selected_agents as string[]);
+          current.add("kera"); // Kera sempre marcada
+          setSelected(current);
+        }
+
+        // Se já completou e NÃO está editando, manda pro chat
+        if (profile?.onboarding_completed && !isEditing) {
+          navigate("/", { replace: true });
+          return;
+        }
+      } catch (e) {
+        console.error("[Onboarding] falha inesperada:", e);
+      } finally {
+        setLoading(false);
       }
     })();
   }, [navigate, isEditing]);
@@ -163,6 +174,14 @@ const Onboarding = () => {
       </Card>
     );
   };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <div className="font-display text-primary text-glow animate-pulse">KERA</div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background relative overflow-hidden">
