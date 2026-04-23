@@ -189,10 +189,10 @@ const MessageBubbleImpl = ({
           />
         )}
       </div>
-      <div className={`max-w-[88%] md:max-w-[80%] min-w-0 rounded-2xl px-5 py-4 text-[15px] leading-relaxed shadow-sm transition-all duration-300 ${
+      <div className={`max-w-[92%] md:max-w-[85%] min-w-0 rounded-2xl px-5 py-4 text-[15px] leading-relaxed shadow-sm transition-all duration-300 ${
         isUser
-          ? "bg-primary/5 text-foreground border border-primary/10 rounded-tr-sm hover:bg-primary/10"
-          : "panel border border-white/5 rounded-tl-sm prose-kera hover:shadow-md hover:border-white/10"
+          ? "bg-primary/[0.07] text-foreground border border-primary/20 rounded-tr-md hover:bg-primary/[0.11] hover:border-primary/30 shadow-[0_4px_18px_-8px_hsl(var(--primary)/0.25)]"
+          : "bg-card/40 backdrop-blur-md border border-primary/10 rounded-tl-md prose-kera hover:border-primary/25 hover:shadow-[0_8px_28px_-12px_hsl(var(--primary)/0.35)] ring-1 ring-inset ring-white/[0.03]"
       }`}>
         {isUser ? (
           <div className="font-medium">{renderUserContent(msg.content)}</div>

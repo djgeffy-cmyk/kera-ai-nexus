@@ -355,19 +355,18 @@
     position: relative;
     border-radius: 1.75rem;
     background:
-      linear-gradient(hsl(var(--background) / 0.55), hsl(var(--background) / 0.55)) padding-box,
+      linear-gradient(hsl(var(--background) / 0.7), hsl(var(--background) / 0.7)) padding-box,
       linear-gradient(120deg,
-        hsl(210 100% 60%) 0%,
-        hsl(265 90% 65%) 30%,
-        hsl(25 95% 60%) 60%,
-        hsl(190 100% 55%) 100%) border-box;
+        hsl(190 90% 55% / 0.9) 0%,
+        hsl(210 85% 55% / 0.7) 45%,
+        hsl(220 60% 35% / 0.5) 100%) border-box;
     background-size: 100% 100%, 300% 300%;
     border: 1.5px solid transparent;
     backdrop-filter: blur(18px);
     -webkit-backdrop-filter: blur(18px);
     box-shadow:
       0 10px 40px -10px hsl(220 60% 4% / 0.6),
-      inset 0 1px 0 0 hsl(0 0% 100% / 0.04);
+      inset 0 1px 0 0 hsl(190 100% 70% / 0.05);
     transition: box-shadow 0.35s ease, transform 0.25s ease;
     animation: kera-gradient-border-spin 8s ease-in-out infinite;
   }
@@ -375,16 +374,17 @@
   .kera-ai-composer:hover {
     box-shadow:
       0 14px 48px -10px hsl(220 60% 4% / 0.7),
-      0 0 0 1px hsl(var(--primary) / 0.15),
-      inset 0 1px 0 0 hsl(0 0% 100% / 0.06);
+      0 0 0 1px hsl(var(--primary) / 0.2),
+      0 0 24px -8px hsl(var(--primary) / 0.25),
+      inset 0 1px 0 0 hsl(190 100% 70% / 0.07);
   }
 
   .kera-ai-composer:focus-within {
     box-shadow:
-      0 0 0 3px hsl(var(--primary) / 0.18),
-      0 0 24px -2px hsl(265 90% 65% / 0.35),
-      0 0 60px -10px hsl(210 100% 60% / 0.4),
-      inset 0 1px 0 0 hsl(0 0% 100% / 0.08);
+      0 0 0 2px hsl(var(--primary) / 0.35),
+      0 0 32px -4px hsl(var(--primary) / 0.45),
+      0 0 64px -12px hsl(210 85% 55% / 0.35),
+      inset 0 1px 0 0 hsl(190 100% 70% / 0.1);
     animation-duration: 4s;
   }
 
