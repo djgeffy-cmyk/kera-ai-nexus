@@ -8,7 +8,9 @@ const corsHeaders = {
 
 // ElevenLabs - Sarah: voz feminina jovem, natural, excelente em PT-BR
 const ELEVEN_DEFAULT_VOICE = "EXAVITQu4vr4xnSDxMaL"; // Sarah
-const ELEVEN_DEFAULT_MODEL = "eleven_multilingual_v2";
+// Turbo v2.5: ~50% menos latência que multilingual_v2, qualidade quase igual em PT-BR.
+// Usado para reduzir o tempo entre o clique em "Ouvir" e o início da fala.
+const ELEVEN_DEFAULT_MODEL = "eleven_turbo_v2_5";
 
 // Pré-processador de pronúncia para PT-BR.
 // Carrega correções da tabela pronunciation_fixes (gerenciada no painel admin)
