@@ -8,24 +8,28 @@ import { useEffect, useRef } from "react";
  * - pointer-events: none — não bloqueia cliques.
  *
  * Props:
- *  - intensity: "soft" | "normal" | "storm"  (default: "soft")
- *  - className: classes extras (ex.: "opacity-80")
+ *  - intensity: "soft" | "normal" | "storm"  → tamanho MÁXIMO do pool de gotas
+ *  - level: 0..1 → fator dinâmico (densidade visível, opacidade e velocidade).
+ *           Use pra sincronizar com volume do som ambiente.
+ *           Transição é suavizada internamente (não dá "salto").
+ *  - className: classes extras
  */
 type Intensity = "soft" | "normal" | "storm";
 
 interface RainOverlayProps {
   intensity?: Intensity;
+  level?: number;
   className?: string;
 }
 
 interface Drop {
   x: number;
   y: number;
-  len: number;     // comprimento do traço
-  speed: number;   // px / frame
+  len: number;
+  speed: number;
   thickness: number;
   alpha: number;
-  layer: 0 | 1 | 2; // longe (0) ... perto (2)
+  layer: 0 | 1 | 2;
 }
 
 const INTENSITY_COUNT: Record<Intensity, number> = {
@@ -34,11 +38,22 @@ const INTENSITY_COUNT: Record<Intensity, number> = {
   storm: 360,
 };
 
-const RainOverlay = ({ intensity = "soft", className = "" }: RainOverlayProps) => {
+const clamp01 = (v: number) => (v < 0 ? 0 : v > 1 ? 1 : v);
+
+const RainOverlay = ({ intensity = "soft", level = 1, className = "" }: RainOverlayProps) => {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const rafRef = useRef<number | null>(null);
   const dropsRef = useRef<Drop[]>([]);
   const sizeRef = useRef({ w: 0, h: 0, dpr: 1 });
+
+  // level alvo (atualizado por prop) e level suavizado (usado no render)
+  const targetLevelRef = useRef(clamp01(level));
+  const smoothLevelRef = useRef(clamp01(level));
+
+  // Atualiza alvo quando a prop muda — sem reiniciar o canvas
+  useEffect(() => {
+    targetLevelRef.current = clamp01(level);
+  }, [level]);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -62,7 +77,6 @@ const RainOverlay = ({ intensity = "soft", className = "" }: RainOverlayProps) =
 
     const makeDrop = (initial: boolean): Drop => {
       const { w, h } = sizeRef.current;
-      // 3 camadas: 50% longe, 35% meio, 15% perto
       const r = Math.random();
       const layer: 0 | 1 | 2 = r < 0.5 ? 0 : r < 0.85 ? 1 : 2;
 
@@ -71,7 +85,6 @@ const RainOverlay = ({ intensity = "soft", className = "" }: RainOverlayProps) =
       const thickness = [0.5, 0.8, 1.2];
       const alphas = [0.18, 0.32, 0.5];
 
-      // Leve aleatoriedade pra não parecer regular
       const jitter = 0.6 + Math.random() * 0.8;
 
       return {
@@ -92,42 +105,61 @@ const RainOverlay = ({ intensity = "soft", className = "" }: RainOverlayProps) =
     resize();
     init();
 
-    // Vento suave que oscila com o tempo (senoidal)
     let t = 0;
 
     const tick = () => {
       const { w, h } = sizeRef.current;
-      // Limpa em vez de fazer trilhas: mantém o overlay leve e sem fundo escurecendo
       ctx.clearRect(0, 0, w, h);
 
-      t += 0.005;
-      const wind = Math.sin(t) * 0.6; // -0.6 .. 0.6 px/frame
+      // Smoothing exponencial do level (sobe rápido, desce mais devagar pra som
+      // que cai não cortar a chuva de uma vez)
+      const tgt = targetLevelRef.current;
+      const cur = smoothLevelRef.current;
+      const k = tgt > cur ? 0.06 : 0.025;
+      smoothLevelRef.current = cur + (tgt - cur) * k;
+      const lvl = smoothLevelRef.current;
 
-      for (const d of dropsRef.current) {
-        // Gotas perto sofrem mais vento; longe quase não mexem
+      // Mapeamentos não-lineares pra parecer natural
+      // - densidade: cresce mais rápido nos volumes baixos (pouco som já mostra umas gotas)
+      // - velocidade: chuva mais lenta quando está fraca
+      // - opacidade: idem
+      const densityFactor = Math.pow(lvl, 0.7);          // 0..1
+      const speedFactor = 0.55 + 0.55 * lvl;             // 0.55 .. 1.10
+      const alphaFactor = Math.pow(lvl, 0.85);           // 0..1
+      const visibleCount = Math.round(target * densityFactor);
+
+      t += 0.005;
+      const wind = Math.sin(t) * 0.6 * (0.5 + 0.5 * lvl);
+
+      // Só desenha as primeiras `visibleCount` gotas — mas TODAS continuam se movendo,
+      // então quando o som sobe de novo elas já estão em posição (sem "pop")
+      const drops = dropsRef.current;
+      for (let i = 0; i < drops.length; i++) {
+        const d = drops[i];
         const layerWind = wind * (0.3 + d.layer * 0.45);
 
-        // Traço com leve gradiente (mais transparente no topo)
+        const localSpeed = d.speed * speedFactor;
         const x2 = d.x + layerWind * (d.len / 6);
         const y2 = d.y + d.len;
 
-        const grad = ctx.createLinearGradient(d.x, d.y, x2, y2);
-        grad.addColorStop(0, `rgba(190, 220, 240, 0)`);
-        grad.addColorStop(1, `rgba(190, 220, 240, ${d.alpha})`);
-
-        ctx.strokeStyle = grad;
-        ctx.lineWidth = d.thickness;
-        ctx.lineCap = "round";
-        ctx.beginPath();
-        ctx.moveTo(d.x, d.y);
-        ctx.lineTo(x2, y2);
-        ctx.stroke();
+        if (i < visibleCount && alphaFactor > 0.01) {
+          const a = d.alpha * alphaFactor;
+          const grad = ctx.createLinearGradient(d.x, d.y, x2, y2);
+          grad.addColorStop(0, `rgba(190, 220, 240, 0)`);
+          grad.addColorStop(1, `rgba(190, 220, 240, ${a})`);
+          ctx.strokeStyle = grad;
+          ctx.lineWidth = d.thickness;
+          ctx.lineCap = "round";
+          ctx.beginPath();
+          ctx.moveTo(d.x, d.y);
+          ctx.lineTo(x2, y2);
+          ctx.stroke();
+        }
 
         d.x += layerWind;
-        d.y += d.speed;
+        d.y += localSpeed;
 
         if (d.y > h + 20) {
-          // recicla a gota
           const fresh = makeDrop(false);
           d.x = fresh.x;
           d.y = fresh.y;
@@ -149,7 +181,6 @@ const RainOverlay = ({ intensity = "soft", className = "" }: RainOverlayProps) =
       cancelAnimationFrame(resizeRaf);
       resizeRaf = requestAnimationFrame(() => {
         resize();
-        // re-densifica suavemente sem reiniciar tudo
         const diff = target - dropsRef.current.length;
         if (diff > 0) {
           for (let i = 0; i < diff; i++) dropsRef.current.push(makeDrop(true));
@@ -160,7 +191,6 @@ const RainOverlay = ({ intensity = "soft", className = "" }: RainOverlayProps) =
     };
     window.addEventListener("resize", onResize);
 
-    // Pausa quando aba perde foco (poupa bateria)
     const onVisibility = () => {
       if (document.hidden) {
         if (rafRef.current) cancelAnimationFrame(rafRef.current);

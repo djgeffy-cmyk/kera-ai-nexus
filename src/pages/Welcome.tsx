@@ -50,6 +50,26 @@ const Welcome = () => {
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const bgVideoRef = useRef<HTMLVideoElement | null>(null);
 
+  // Tenta tocar o áudio (após primeira interação) e mantém o volume
+  // sincronizado com o estado mute. O `level` da chuva escuta o mesmo estado.
+  useEffect(() => {
+    const audio = audioRef.current;
+    if (!audio) return;
+    audio.volume = audioMuted ? 0 : 0.55;
+    if (!audioMuted) {
+      const p = audio.play();
+      if (p && typeof p.catch === "function") p.catch(() => {});
+    }
+    const onFirstInteract = () => {
+      if (!audioMuted) {
+        const p = audio.play();
+        if (p && typeof p.catch === "function") p.catch(() => {});
+      }
+    };
+    window.addEventListener("pointerdown", onFirstInteract, { once: true });
+    return () => window.removeEventListener("pointerdown", onFirstInteract);
+  }, [audioMuted]);
+
   useEffect(() => {
     document.title = "Kera AI — Bem-vindo";
     supabase.auth.getSession().then(({ data }) => {
@@ -109,8 +129,10 @@ const Welcome = () => {
 
       <audio ref={audioRef} src={rainAmbientUrl} loop preload="auto" muted={audioMuted} aria-hidden />
 
-      {/* Chuva suave em canvas — sobre o vídeo, atrás do card */}
-      <RainOverlay intensity="soft" />
+      {/* Chuva suave em canvas — intensidade segue o som ambiente.
+          Mute = leve respingo (0.18), som ligado = chuva cheia (1.0).
+          O smoothing interno do componente faz a transição parecer natural. */}
+      <RainOverlay intensity="soft" level={audioMuted ? 0.18 : 1} />
 
       <div className="fixed top-4 right-4 z-40 flex flex-col gap-2">
         <button
