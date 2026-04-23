@@ -408,6 +408,194 @@ ipcMain.handle("kera:fs:pickFolder", async () => {
   return picked;
 });
 
+// ============= ORGANIZADOR DE PASTAS COM IA =============
+// Pastas-padrão do usuário que a Kera oferece pra organizar.
+function defaultUserFolders() {
+  const home = os.homedir();
+  const candidates =
+    process.platform === "win32"
+      ? [
+          { label: "Downloads", path: path.join(home, "Downloads") },
+          { label: "Documentos", path: path.join(home, "Documents") },
+          { label: "Área de Trabalho", path: path.join(home, "Desktop") },
+        ]
+      : process.platform === "darwin"
+      ? [
+          { label: "Downloads", path: path.join(home, "Downloads") },
+          { label: "Documentos", path: path.join(home, "Documents") },
+          { label: "Desktop", path: path.join(home, "Desktop") },
+        ]
+      : [
+          { label: "Downloads", path: path.join(home, "Downloads") },
+          { label: "Documentos", path: path.join(home, "Documentos") },
+          { label: "Documents", path: path.join(home, "Documents") },
+          { label: "Área de Trabalho", path: path.join(home, "Área de Trabalho") },
+          { label: "Desktop", path: path.join(home, "Desktop") },
+        ];
+  return candidates.filter((c) => fsSync.existsSync(c.path));
+}
+
+// Auto-autoriza as pastas padrão na primeira vez (idempotente).
+function ensureDefaultsAllowed() {
+  const list = loadAllowlist();
+  let changed = false;
+  for (const { path: p } of defaultUserFolders()) {
+    if (!list.some((x) => path.resolve(x) === path.resolve(p))) {
+      list.push(p);
+      changed = true;
+    }
+  }
+  if (changed) saveAllowlist(list);
+}
+
+ipcMain.handle("kera:organizer:defaults", () => {
+  ensureDefaultsAllowed();
+  return defaultUserFolders();
+});
+
+// Escaneia uma pasta (rasa: apenas arquivos no nível raiz, ignora subpastas).
+ipcMain.handle("kera:organizer:scan", async (_e, folderPath) => {
+  const target = path.resolve(folderPath);
+  assertAllowed(target);
+  const entries = await fs.readdir(target, { withFileTypes: true });
+  const files = [];
+  for (const d of entries) {
+    if (!d.isFile()) continue;
+    if (d.name.startsWith(".")) continue; // pula ocultos
+    const full = path.join(target, d.name);
+    try {
+      const stat = await fs.stat(full);
+      files.push({
+        name: d.name,
+        path: full,
+        ext: path.extname(d.name).replace(/^\./, "").toLowerCase(),
+        sizeBytes: stat.size,
+        modifiedAt: stat.mtime.toISOString(),
+      });
+    } catch {
+      /* ignora arquivos inacessíveis */
+    }
+  }
+  return { folder: target, files };
+});
+
+// Histórico de movimentações (para undo)
+const HISTORY_FILE = () => path.join(app.getPath("userData"), "kera-organizer-history.json");
+function loadHistory() {
+  try {
+    return JSON.parse(fsSync.readFileSync(HISTORY_FILE(), "utf-8"));
+  } catch {
+    return [];
+  }
+}
+function saveHistory(h) {
+  fsSync.mkdirSync(path.dirname(HISTORY_FILE()), { recursive: true });
+  fsSync.writeFileSync(HISTORY_FILE(), JSON.stringify(h.slice(-50), null, 2), "utf-8");
+}
+
+// Aplica o plano de organização. Recebe { rootFolder, plan: [{from, folder}] }
+// Move cada arquivo para subpasta criada dentro de rootFolder.
+ipcMain.handle("kera:organizer:apply", async (_e, payload) => {
+  const root = path.resolve(payload?.rootFolder || "");
+  const plan = Array.isArray(payload?.plan) ? payload.plan : [];
+  if (!root || plan.length === 0) return { ok: false, error: "Plano vazio" };
+  assertAllowed(root);
+
+  // Confirmação única, mostrando totais
+  const folders = [...new Set(plan.map((p) => p.folder))];
+  const { response } = await dialog.showMessageBox(mainWindow, {
+    type: "question",
+    buttons: ["Cancelar", `Mover ${plan.length} arquivo(s)`],
+    defaultId: 0,
+    cancelId: 0,
+    title: "Confirmar organização",
+    message: `A Kera vai mover ${plan.length} arquivo(s) em ${folders.length} pasta(s) novas dentro de:\n\n${root}\n\nPastas: ${folders.slice(0, 8).join(", ")}${folders.length > 8 ? "…" : ""}\n\nVocê pode desfazer depois.`,
+  });
+  if (response !== 1) return { ok: false, cancelled: true };
+
+  const safeName = (s) =>
+    String(s || "Diversos").replace(/[\\/:*?"<>|]/g, "").trim().slice(0, 60) || "Diversos";
+
+  const moved = [];
+  const errors = [];
+  for (const item of plan) {
+    try {
+      const from = path.resolve(item.from);
+      // Garante que o arquivo está dentro da raiz autorizada
+      const rel = path.relative(root, from);
+      if (rel.startsWith("..") || path.isAbsolute(rel)) {
+        errors.push({ from: item.from, error: "fora da raiz" });
+        continue;
+      }
+      const folder = path.join(root, safeName(item.folder));
+      await fs.mkdir(folder, { recursive: true });
+      let to = path.join(folder, path.basename(from));
+      // Resolve colisões: arquivo (1).ext, (2)…
+      if (fsSync.existsSync(to)) {
+        const ext = path.extname(to);
+        const base = path.basename(to, ext);
+        let i = 1;
+        while (fsSync.existsSync(path.join(folder, `${base} (${i})${ext}`))) i++;
+        to = path.join(folder, `${base} (${i})${ext}`);
+      }
+      await fs.rename(from, to);
+      moved.push({ from, to });
+    } catch (e) {
+      errors.push({ from: item.from, error: String(e?.message || e) });
+    }
+  }
+
+  if (moved.length > 0) {
+    const history = loadHistory();
+    history.push({ at: Date.now(), root, moves: moved });
+    saveHistory(history);
+  }
+
+  return { ok: errors.length === 0, moved: moved.length, errors };
+});
+
+ipcMain.handle("kera:organizer:history", () => loadHistory().slice(-10).reverse());
+
+// Desfaz o último lote
+ipcMain.handle("kera:organizer:undo", async () => {
+  const history = loadHistory();
+  const last = history.pop();
+  if (!last) return { ok: false, error: "Nada para desfazer" };
+  const { response } = await dialog.showMessageBox(mainWindow, {
+    type: "question",
+    buttons: ["Cancelar", `Desfazer ${last.moves.length} movimento(s)`],
+    defaultId: 0,
+    cancelId: 0,
+    title: "Desfazer organização",
+    message: `Devolver ${last.moves.length} arquivo(s) para o local original em:\n${last.root}?`,
+  });
+  if (response !== 1) return { ok: false, cancelled: true };
+
+  const errors = [];
+  let restored = 0;
+  for (const m of last.moves) {
+    try {
+      if (fsSync.existsSync(m.to)) {
+        let dest = m.from;
+        if (fsSync.existsSync(dest)) {
+          const ext = path.extname(dest);
+          const base = path.basename(dest, ext);
+          const dir = path.dirname(dest);
+          let i = 1;
+          while (fsSync.existsSync(path.join(dir, `${base} (restaurado ${i})${ext}`))) i++;
+          dest = path.join(dir, `${base} (restaurado ${i})${ext}`);
+        }
+        await fs.rename(m.to, dest);
+        restored++;
+      }
+    } catch (e) {
+      errors.push({ to: m.to, error: String(e?.message || e) });
+    }
+  }
+  saveHistory(history);
+  return { ok: errors.length === 0, restored, errors };
+});
+
 // ============= CLIPBOARD =============
 ipcMain.handle("kera:clipboard:read", () => clipboard.readText());
 ipcMain.handle("kera:clipboard:write", (_e, text) => {
