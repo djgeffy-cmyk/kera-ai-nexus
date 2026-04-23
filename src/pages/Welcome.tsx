@@ -2,14 +2,12 @@ import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
-import { Volume2, VolumeX, MousePointerClick, Video, VideoOff } from "lucide-react";
-import { ShieldCheck, ArrowRight, Lock } from "lucide-react";
+import { MousePointerClick, Video, VideoOff } from "lucide-react";
+import { ArrowRight, Lock } from "lucide-react";
 import { motion } from "framer-motion";
 import keraAvatar from "@/assets/kera-avatar.png";
-import rainAmbientUrl from "@/assets/rain-ambient.mp3";
 import DevVideoSwitcher from "@/components/DevVideoSwitcher";
 import RainOverlay from "@/components/RainOverlay";
-import { useAudioLevel } from "@/hooks/useAudioLevel";
 
 const STORAGE_BASE = "https://ytixqgkzqgeoxrbmjqbo.supabase.co/storage/v1/object/public/kera-videos";
 const VERSION = "2026-04-22";
