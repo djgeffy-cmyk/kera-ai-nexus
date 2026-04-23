@@ -102,6 +102,7 @@ export type KeraDesktopApi = {
       ok: boolean;
       cancelled?: boolean;
       moved?: number;
+      createdFolders?: string[];
       errors?: { from: string; error: string }[];
       error?: string;
     }>;
