@@ -188,18 +188,25 @@ const Auth = () => {
 
     let targetTime = 0;
     let currentTime = 0;
-    const SMOOTHING = 0.18; // 0..1 — quanto maior, mais responsivo
 
     const setTargetFromX = (clientX: number) => {
       const w = window.innerWidth || 1;
-      const ratio = Math.min(1, Math.max(0, clientX / w));
+      // `range` define a fração CENTRAL da tela usada para mapear o vídeo.
+      // range=1.0 → tela inteira; range=0.5 → só os 50% centrais.
+      const range = scrubSettingsRef.current.range;
+      const center = w / 2;
+      const half = (w * range) / 2;
+      const start = center - half;
+      const end = center + half;
+      const ratio = Math.min(1, Math.max(0, (clientX - start) / (end - start)));
       const dur = isFinite(video.duration) && video.duration > 0 ? video.duration : 10;
       // Mantém uma pequena margem nas pontas para evitar congelar no último frame
       targetTime = ratio * (dur - 0.05);
     };
 
     const tick = () => {
-      currentTime += (targetTime - currentTime) * SMOOTHING;
+      const smoothing = scrubSettingsRef.current.smoothing;
+      currentTime += (targetTime - currentTime) * smoothing;
       try {
         video.currentTime = currentTime;
       } catch {}
