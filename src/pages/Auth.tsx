@@ -12,6 +12,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import keraAvatar from "@/assets/kera-avatar.png";
  import keraAvatarVideoV2 from "@/assets/kera-avatar-rain-v2.mp4";
 import rainAmbientUrl from "@/assets/rain-ambient.mp3";
+import keraLookingSidesAsset from "@/assets/kera-avatar-looking-sides.mp4.asset.json";
 
 // Vídeos hospedados no storage. `?v=` força o CDN/navegador a baixar a versão
 // mais recente quando o arquivo for trocado no bucket.
@@ -21,15 +22,19 @@ const rainBgUrl =
 // Avatar circular dentro do botão/card: Kera realista com gotas de chuva.
 const rainVideoUrl =
   "https://ytixqgkzqgeoxrbmjqbo.supabase.co/storage/v1/object/public/kera-videos/kera-avatar-rain.mp4?v=2026-04-22";
+// Kera olhando para os dois lados (gerado por IA, hospedado em CDN).
+const keraLookingSidesUrl = (keraLookingSidesAsset as { url: string }).url;
 import { assetUrl } from "@/lib/assetUrl";
 import DevVideoSwitcher from "@/components/DevVideoSwitcher";
 
 const authBgOptions = [
   { id: "kera-rain", label: "Kera com chuva (full bg)", url: rainVideoUrl },
+  { id: "kera-sides", label: "Kera olhando os lados", url: keraLookingSidesUrl },
   { id: "rain", label: "Chuva pura", url: rainBgUrl },
 ];
 const authAvatarOptions = [
   { id: "kera-rain", label: "Kera com chuva", url: rainVideoUrl },
+  { id: "kera-sides", label: "Kera olhando os lados", url: keraLookingSidesUrl },
   { id: "rain", label: "Chuva pura", url: rainBgUrl },
 ];
 import { MissionCriticalSchema } from "@/lib/missionCriticalSchemas";
