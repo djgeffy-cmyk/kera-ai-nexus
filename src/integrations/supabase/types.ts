@@ -744,6 +744,7 @@ export type Database = {
           created_at: string
           display_name: string | null
           granted_agent_keys: string[] | null
+          grok_allowed: boolean
           id: string
           juridico_active: boolean
           municipio_active: boolean | null
@@ -764,6 +765,7 @@ export type Database = {
           created_at?: string
           display_name?: string | null
           granted_agent_keys?: string[] | null
+          grok_allowed?: boolean
           id?: string
           juridico_active?: boolean
           municipio_active?: boolean | null
@@ -784,6 +786,7 @@ export type Database = {
           created_at?: string
           display_name?: string | null
           granted_agent_keys?: string[] | null
+          grok_allowed?: boolean
           id?: string
           juridico_active?: boolean
           municipio_active?: boolean | null
@@ -1008,6 +1011,7 @@ export type Database = {
           created_at: string
           display_name: string
           email: string
+          grok_allowed: boolean
           images_month: number
           images_today: number
           onboarding_completed: boolean
@@ -1015,6 +1019,10 @@ export type Database = {
           selected_agents: string[]
           user_id: string
         }[]
+      }
+      admin_set_grok_allowed: {
+        Args: { _allowed: boolean; _target_user: string }
+        Returns: undefined
       }
       admin_set_juridico_active: {
         Args: { _active: boolean; _target_user: string }
