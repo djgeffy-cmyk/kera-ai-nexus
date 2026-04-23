@@ -116,11 +116,6 @@ const Welcome = () => {
         animate={{ opacity: 1, scale: 1, y: 0 }}
         className="relative z-20 flex flex-col items-center px-8 py-9 rounded-[2rem] bg-background/30 backdrop-blur-md border border-primary/15 shadow-[0_0_60px_-15px_hsl(var(--primary)/0.35)]"
       >
-        <div className="mb-5 inline-flex items-center gap-1.5 px-3 py-1 rounded-full border border-primary/30 bg-primary/5 text-[10px] uppercase tracking-[0.18em] text-primary/90">
-          <ShieldCheck className="size-3" />
-          Acesso restrito · Plataforma empresarial
-        </div>
-
         <motion.button
           type="button"
           onClick={() => navigate("/auth")}
