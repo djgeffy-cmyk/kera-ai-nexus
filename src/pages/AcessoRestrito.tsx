@@ -30,8 +30,46 @@ const AcessoRestrito = () => {
   const country = info.country && info.country !== "UNKNOWN" ? info.country : null;
 
   const clearGeoCache = () => {
+    // Lista de chaves conhecidas relacionadas ao gate de geo / bloqueio
+    const exactKeys = [
+      "kera:geo:v1",
+      "kera:geo",
+      "kera:geo:blocked",
+      "kera:geo:country",
+      "kera:geo:source",
+      "kera:geoblock",
+      "kera:access:blocked",
+    ];
+    // Prefixos a varrer para pegar variações futuras (ex.: kera:geo:v2)
+    const prefixes = ["kera:geo", "kera:geoblock", "kera:access"];
+
+    const purge = (storage: Storage | null) => {
+      if (!storage) return;
+      try {
+        for (const k of exactKeys) storage.removeItem(k);
+        const toRemove: string[] = [];
+        for (let i = 0; i < storage.length; i++) {
+          const key = storage.key(i);
+          if (!key) continue;
+          if (prefixes.some((p) => key.startsWith(p))) toRemove.push(key);
+        }
+        toRemove.forEach((k) => storage.removeItem(k));
+      } catch {}
+    };
+
     try {
-      localStorage.removeItem("kera:geo:v1");
+      purge(window.localStorage);
+      purge(window.sessionStorage);
+    } catch {}
+
+    // Limpa também cookies relacionados, caso existam
+    try {
+      document.cookie.split(";").forEach((c) => {
+        const name = c.split("=")[0]?.trim();
+        if (name && (name.startsWith("kera_geo") || name.startsWith("kera_access"))) {
+          document.cookie = `${name}=; Max-Age=0; path=/`;
+        }
+      });
     } catch {}
   };
 
