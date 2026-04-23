@@ -8,6 +8,7 @@ import { motion } from "framer-motion";
 import keraAvatar from "@/assets/kera-avatar.png";
 import DevVideoSwitcher from "@/components/DevVideoSwitcher";
 import RainOverlay from "@/components/RainOverlay";
+import keraEyesHoney from "@/assets/kera-avatar-eyes-honey.mp4.asset.json";
 
 const STORAGE_BASE = "https://ytixqgkzqgeoxrbmjqbo.supabase.co/storage/v1/object/public/kera-videos";
 const VERSION = "2026-04-22";
@@ -18,6 +19,7 @@ const bgVideoOptions = [
 ];
 
 const avatarVideoOptions = [
+  { id: "eyes-honey", label: "Kera olhos azul→mel", url: keraEyesHoney.url },
   { id: "kera-rain", label: "Kera com chuva", url: `${STORAGE_BASE}/kera-avatar-rain.mp4?v=${VERSION}` },
   { id: "rain", label: "Chuva pura", url: `${STORAGE_BASE}/kera-chuva.mp4?v=${VERSION}` },
 ];
