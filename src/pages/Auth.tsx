@@ -36,6 +36,7 @@ const keraFaceScrubUrl = (keraFaceScrubAsset as { url: string }).url;
 const MOUSE_SCRUB_IDS = new Set(["face-scrub"]);
 import { assetUrl } from "@/lib/assetUrl";
 import DevVideoSwitcher from "@/components/DevVideoSwitcher";
+import MouseScrubControls, { loadScrubSettings, type ScrubSettings } from "@/components/MouseScrubControls";
 
 const authBgOptions = [
   { id: "kera-rain", label: "Kera com chuva (full bg)", url: rainVideoUrl, group: "Cenas" },
