@@ -94,6 +94,14 @@ export type KeraDesktopApi = {
   };
   organizer: {
     defaults: () => Promise<{ label: string; path: string }[]>;
+    authorizeAll: () => Promise<{
+      ok: boolean;
+      cancelled?: boolean;
+      alreadyAuthorized?: boolean;
+      added?: { label: string; path: string }[];
+      list?: string[];
+      error?: string;
+    }>;
     scan: (folderPath: string) => Promise<{
       folder: string;
       files: { name: string; path: string; ext: string; sizeBytes: number; modifiedAt: string }[];
