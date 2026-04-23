@@ -42,6 +42,21 @@
 
   <body>
     <div id="root"></div>
+    <script>
+      // HashRouter rewrite: se entrarem em /acesso-restrito (ou outra rota
+      // sem '#'), convertemos para /#/acesso-restrito antes do React montar.
+      (function () {
+        try {
+          var p = window.location.pathname;
+          var h = window.location.hash;
+          // Não mexe na raiz, em assets, nem se já houver hash route
+          if (p && p !== "/" && !/\.[a-zA-Z0-9]+$/.test(p) && (!h || h === "#" || h === "")) {
+            var search = window.location.search || "";
+            window.location.replace("/#" + p + search);
+          }
+        } catch (e) {}
+      })();
+    </script>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>
