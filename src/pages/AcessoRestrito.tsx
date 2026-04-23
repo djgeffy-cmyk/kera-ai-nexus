@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import rainVideo from "@/assets/rain-bg-realistic.mp4";
-import { Mail, MessageCircle, ShieldAlert } from "lucide-react";
-import { useLocation } from "react-router-dom";
+import { ArrowRight, Mail, MessageCircle, RefreshCw, ShieldAlert } from "lucide-react";
+import { useLocation, useNavigate } from "react-router-dom";
 
 interface LocationState {
   country?: string;
@@ -10,8 +10,10 @@ interface LocationState {
 
 const AcessoRestrito = () => {
   const location = useLocation();
+  const navigate = useNavigate();
   const stateInfo = (location.state || {}) as LocationState;
   const [info, setInfo] = useState<LocationState>(stateInfo);
+  const [rechecking, setRechecking] = useState(false);
 
   // Se chegou direto na URL (sem state), tenta ler do cache do gate
   useEffect(() => {
@@ -26,6 +28,24 @@ const AcessoRestrito = () => {
   }, [info.country]);
 
   const country = info.country && info.country !== "UNKNOWN" ? info.country : null;
+
+  const clearGeoCache = () => {
+    try {
+      localStorage.removeItem("kera:geo:v1");
+    } catch {}
+  };
+
+  const handleRetry = () => {
+    setRechecking(true);
+    clearGeoCache();
+    // Recarrega a app na raiz para que o GeoBlockGate refaça a checagem
+    window.location.replace("/");
+  };
+
+  const handleBackToApp = () => {
+    clearGeoCache();
+    navigate("/", { replace: true });
+  };
 
   return (
     <main className="fixed inset-0 z-[9999] overflow-hidden bg-black text-white">
@@ -79,6 +99,31 @@ const AcessoRestrito = () => {
             space@kera.ia.br
           </a>
         </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 w-full max-w-md mb-10">
+          <button
+            type="button"
+            onClick={handleRetry}
+            disabled={rechecking}
+            className="flex items-center justify-center gap-2 px-4 sm:px-5 py-3 rounded-xl border border-primary/40 bg-primary/10 text-sm sm:text-base text-primary hover:bg-primary/20 transition disabled:opacity-60"
+          >
+            <RefreshCw className={`w-4 h-4 ${rechecking ? "animate-spin" : ""}`} />
+            {rechecking ? "Verificando..." : "Verificar novamente"}
+          </button>
+          <button
+            type="button"
+            onClick={handleBackToApp}
+            className="flex items-center justify-center gap-2 px-4 sm:px-5 py-3 rounded-xl border border-white/25 bg-white/5 text-sm sm:text-base text-white/90 hover:bg-white/10 backdrop-blur-sm transition"
+          >
+            Voltar ao app
+            <ArrowRight className="w-4 h-4" />
+          </button>
+        </div>
+
+        <p className="text-[11px] text-white/40 max-w-md mb-8 -mt-4">
+          Já foi autorizado ou está acessando do Brasil? Use “Verificar novamente” para refazer a
+          checagem ou “Voltar ao app” para limpar o bloqueio.
+        </p>
 
         <div className="pt-5 sm:pt-6 border-t border-white/10 w-full max-w-md">
           <p className="text-[10px] uppercase tracking-[0.3em] text-white/40 mb-1">Powered by</p>
