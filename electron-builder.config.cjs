@@ -36,6 +36,8 @@ module.exports = {
     ],
     category: "Utility",
     artifactName: "${productName}-${version}.${ext}",
+    maintainer: "Kera <contato@kera.ia.br>",
+    vendor: "Kera",
   },
 
   // Windows: NSIS gera `KeraDesktop-Setup-<v>.exe` + latest.yml + .blockmap.
