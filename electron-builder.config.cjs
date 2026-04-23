@@ -6,6 +6,15 @@ module.exports = {
   appId: "br.ia.kera.desktop",
   productName: "KeraDesktop",
   copyright: "© Kera",
+  // Fallbacks pra metadados ausentes em package.json (electron-builder exige
+  // pra empacotar .deb — senão FpmTarget aborta com "author email missing").
+  extraMetadata: {
+    description: "Kera Desktop — assistente de IA",
+    author: {
+      name: "Kera",
+      email: "contato@kera.ia.br",
+    },
+  },
   directories: {
     output: "release-builds",
     buildResources: "electron/build-resources",
@@ -38,6 +47,11 @@ module.exports = {
     artifactName: "${productName}-${version}.${ext}",
     maintainer: "Kera <contato@kera.ia.br>",
     vendor: "Kera",
+    description: "Kera Desktop — assistente de IA",
+    synopsis: "Assistente Kera para desktop",
+  },
+  deb: {
+    maintainer: "Kera <contato@kera.ia.br>",
   },
 
   // Windows: NSIS gera `KeraDesktop-Setup-<v>.exe` + latest.yml + .blockmap.
