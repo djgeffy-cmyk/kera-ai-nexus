@@ -37,44 +37,7 @@ const Welcome = () => {
     }
   });
 
-  const RAIN_MUTE_KEY = "kera:auth:rain-muted";
-  const [audioMuted, setAudioMuted] = useState<boolean>(() => {
-    if (typeof window === "undefined") return false;
-    try {
-      return window.localStorage.getItem(RAIN_MUTE_KEY) === "1";
-    } catch {
-      return false;
-    }
-  });
-  const audioRef = useRef<HTMLAudioElement | null>(null);
   const bgVideoRef = useRef<HTMLVideoElement | null>(null);
-
-  // Volume RMS efetivo do áudio (0..1) — alimenta a chuva.
-  const audioLevel = useAudioLevel(audioRef);
-  // Quando mutado deixa um respingo mínimo (visual ainda vive, sem ficar morto).
-  // Quando ligado, 65% vem do volume real + 35% de base, garantindo que sempre
-  // haja chuva visível mesmo em momentos silenciosos do loop.
-  const rainLevel = audioMuted ? 0.18 : Math.min(1, 0.35 + audioLevel * 0.85);
-
-  // Tenta tocar o áudio (após primeira interação) e mantém o volume
-  // sincronizado com o estado mute. O `level` da chuva escuta o mesmo estado.
-  useEffect(() => {
-    const audio = audioRef.current;
-    if (!audio) return;
-    audio.volume = audioMuted ? 0 : 0.55;
-    if (!audioMuted) {
-      const p = audio.play();
-      if (p && typeof p.catch === "function") p.catch(() => {});
-    }
-    const onFirstInteract = () => {
-      if (!audioMuted) {
-        const p = audio.play();
-        if (p && typeof p.catch === "function") p.catch(() => {});
-      }
-    };
-    window.addEventListener("pointerdown", onFirstInteract, { once: true });
-    return () => window.removeEventListener("pointerdown", onFirstInteract);
-  }, [audioMuted]);
 
   useEffect(() => {
     document.title = "Kera AI — Bem-vindo";
