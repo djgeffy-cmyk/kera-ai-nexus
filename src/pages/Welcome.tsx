@@ -2,14 +2,12 @@ import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
-import { Volume2, VolumeX, MousePointerClick, Video, VideoOff } from "lucide-react";
-import { ShieldCheck, ArrowRight, Lock } from "lucide-react";
+import { MousePointerClick, Video, VideoOff } from "lucide-react";
+import { ArrowRight, Lock } from "lucide-react";
 import { motion } from "framer-motion";
 import keraAvatar from "@/assets/kera-avatar.png";
-import rainAmbientUrl from "@/assets/rain-ambient.mp3";
 import DevVideoSwitcher from "@/components/DevVideoSwitcher";
 import RainOverlay from "@/components/RainOverlay";
-import { useAudioLevel } from "@/hooks/useAudioLevel";
 
 const STORAGE_BASE = "https://ytixqgkzqgeoxrbmjqbo.supabase.co/storage/v1/object/public/kera-videos";
 const VERSION = "2026-04-22";
@@ -39,44 +37,7 @@ const Welcome = () => {
     }
   });
 
-  const RAIN_MUTE_KEY = "kera:auth:rain-muted";
-  const [audioMuted, setAudioMuted] = useState<boolean>(() => {
-    if (typeof window === "undefined") return false;
-    try {
-      return window.localStorage.getItem(RAIN_MUTE_KEY) === "1";
-    } catch {
-      return false;
-    }
-  });
-  const audioRef = useRef<HTMLAudioElement | null>(null);
   const bgVideoRef = useRef<HTMLVideoElement | null>(null);
-
-  // Volume RMS efetivo do áudio (0..1) — alimenta a chuva.
-  const audioLevel = useAudioLevel(audioRef);
-  // Quando mutado deixa um respingo mínimo (visual ainda vive, sem ficar morto).
-  // Quando ligado, 65% vem do volume real + 35% de base, garantindo que sempre
-  // haja chuva visível mesmo em momentos silenciosos do loop.
-  const rainLevel = audioMuted ? 0.18 : Math.min(1, 0.35 + audioLevel * 0.85);
-
-  // Tenta tocar o áudio (após primeira interação) e mantém o volume
-  // sincronizado com o estado mute. O `level` da chuva escuta o mesmo estado.
-  useEffect(() => {
-    const audio = audioRef.current;
-    if (!audio) return;
-    audio.volume = audioMuted ? 0 : 0.55;
-    if (!audioMuted) {
-      const p = audio.play();
-      if (p && typeof p.catch === "function") p.catch(() => {});
-    }
-    const onFirstInteract = () => {
-      if (!audioMuted) {
-        const p = audio.play();
-        if (p && typeof p.catch === "function") p.catch(() => {});
-      }
-    };
-    window.addEventListener("pointerdown", onFirstInteract, { once: true });
-    return () => window.removeEventListener("pointerdown", onFirstInteract);
-  }, [audioMuted]);
 
   useEffect(() => {
     document.title = "Kera AI — Bem-vindo";
@@ -111,12 +72,6 @@ const Welcome = () => {
     } catch {}
   }, [showBackground]);
 
-  useEffect(() => {
-    try {
-      window.localStorage.setItem(RAIN_MUTE_KEY, audioMuted ? "1" : "0");
-    } catch {}
-  }, [audioMuted]);
-
   return (
     <main className="relative min-h-screen flex items-center justify-center p-4 overflow-hidden bg-background">
       {showBackground && (
@@ -135,11 +90,8 @@ const Welcome = () => {
         />
       )}
 
-      <audio ref={audioRef} src={rainAmbientUrl} loop preload="auto" muted={audioMuted} aria-hidden />
-
-      {/* Chuva suave em canvas — intensidade segue o VOLUME RMS real do áudio.
-          Quanto mais forte a chuva no .mp3 toca, mais densa fica visualmente. */}
-      <RainOverlay intensity="soft" level={rainLevel} />
+      {/* Chuva visual suave em canvas (sem áudio). */}
+      <RainOverlay intensity="soft" level={1} />
 
       <div className="fixed top-4 right-4 z-40 flex flex-col gap-2">
         <button
@@ -149,15 +101,6 @@ const Welcome = () => {
           className="size-10 rounded-full bg-background/40 backdrop-blur-md border border-white/10 flex items-center justify-center text-primary/80 hover:text-primary transition-all shadow-soft"
         >
           {showBackground ? <Video className="size-4" /> : <VideoOff className="size-4" />}
-        </button>
-
-        <button
-          type="button"
-          onClick={() => setAudioMuted((m) => !m)}
-          title={audioMuted ? "Ativar som ambiente" : "Desativar som ambiente"}
-          className="size-10 rounded-full bg-background/40 backdrop-blur-md border border-white/10 flex items-center justify-center text-primary/80 hover:text-primary transition-all shadow-soft"
-        >
-          {audioMuted ? <VolumeX className="size-4" /> : <Volume2 className="size-4" />}
         </button>
       </div>
 
@@ -173,11 +116,6 @@ const Welcome = () => {
         animate={{ opacity: 1, scale: 1, y: 0 }}
         className="relative z-20 flex flex-col items-center px-8 py-9 rounded-[2rem] bg-background/30 backdrop-blur-md border border-primary/15 shadow-[0_0_60px_-15px_hsl(var(--primary)/0.35)]"
       >
-        <div className="mb-5 inline-flex items-center gap-1.5 px-3 py-1 rounded-full border border-primary/30 bg-primary/5 text-[10px] uppercase tracking-[0.18em] text-primary/90">
-          <ShieldCheck className="size-3" />
-          Acesso restrito · Plataforma empresarial
-        </div>
-
         <motion.button
           type="button"
           onClick={() => navigate("/auth")}
