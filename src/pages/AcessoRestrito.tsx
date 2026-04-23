@@ -1,6 +1,6 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import rainVideo from "@/assets/rain-bg-realistic.mp4";
-import { ArrowRight, Mail, MessageCircle, RefreshCw, ShieldAlert } from "lucide-react";
+import { ArrowRight, Mail, MessageCircle, RefreshCw, ShieldAlert, Timer } from "lucide-react";
 import { useLocation, useNavigate } from "react-router-dom";
 
 interface LocationState {
@@ -8,12 +8,17 @@ interface LocationState {
   source?: string;
 }
 
+const BYPASS_KEY = "kera:geo:bypass";
+const BYPASS_TTL_MS = 30_000;
+
 const AcessoRestrito = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const stateInfo = (location.state || {}) as LocationState;
   const [info, setInfo] = useState<LocationState>(stateInfo);
   const [rechecking, setRechecking] = useState(false);
+  const [bypassRemaining, setBypassRemaining] = useState(0);
+  const tickRef = useRef<number | null>(null);
 
   // Se chegou direto na URL (sem state), tenta ler do cache do gate
   useEffect(() => {
@@ -28,6 +33,41 @@ const AcessoRestrito = () => {
   }, [info.country]);
 
   const country = info.country && info.country !== "UNKNOWN" ? info.country : null;
+
+  // Lê o tempo restante do bypass (em ms) a partir do sessionStorage
+  const readBypassRemaining = (): number => {
+    try {
+      const raw = sessionStorage.getItem(BYPASS_KEY);
+      if (!raw) return 0;
+      const ts = Number(raw);
+      if (!Number.isFinite(ts)) return 0;
+      return Math.max(0, BYPASS_TTL_MS - (Date.now() - ts));
+    } catch {
+      return 0;
+    }
+  };
+
+  // Mantém um tick de 1s atualizando o contador regressivo enquanto houver bypass
+  useEffect(() => {
+    const update = () => {
+      const remaining = readBypassRemaining();
+      setBypassRemaining(remaining);
+      if (remaining <= 0 && tickRef.current !== null) {
+        window.clearInterval(tickRef.current);
+        tickRef.current = null;
+      }
+    };
+    update();
+    if (tickRef.current === null) {
+      tickRef.current = window.setInterval(update, 1000) as unknown as number;
+    }
+    return () => {
+      if (tickRef.current !== null) {
+        window.clearInterval(tickRef.current);
+        tickRef.current = null;
+      }
+    };
+  }, []);
 
   const clearGeoCache = () => {
     // Lista de chaves conhecidas relacionadas ao gate de geo / bloqueio
@@ -79,6 +119,18 @@ const AcessoRestrito = () => {
     try {
       sessionStorage.setItem("kera:geo:bypass", String(Date.now()));
     } catch {}
+    // Atualiza o contador imediatamente após setar o bypass
+    setBypassRemaining(BYPASS_TTL_MS);
+    if (tickRef.current === null) {
+      tickRef.current = window.setInterval(() => {
+        const remaining = readBypassRemaining();
+        setBypassRemaining(remaining);
+        if (remaining <= 0 && tickRef.current !== null) {
+          window.clearInterval(tickRef.current);
+          tickRef.current = null;
+        }
+      }, 1000) as unknown as number;
+    }
   };
 
   const handleRetry = () => {
@@ -92,6 +144,16 @@ const AcessoRestrito = () => {
     clearGeoCache();
     navigate("/", { replace: true });
   };
+
+  // "Reexecutar checagem" — limpa cache + seta bypass, mas SEM reload (refaz na rota raiz)
+  const handleRecheckNoReload = () => {
+    clearGeoCache();
+    navigate("/", { replace: true });
+  };
+
+  const bypassSeconds = Math.ceil(bypassRemaining / 1000);
+  const bypassPct = Math.max(0, Math.min(100, (bypassRemaining / BYPASS_TTL_MS) * 100));
+  const bypassActive = bypassRemaining > 0;
 
   return (
     <main className="fixed inset-0 z-[9999] overflow-hidden bg-black text-white">
@@ -165,6 +227,32 @@ const AcessoRestrito = () => {
             <ArrowRight className="w-4 h-4" />
           </button>
         </div>
+
+        {bypassActive && (
+          <div className="w-full max-w-md mb-8 -mt-4 px-4 py-3 rounded-xl border border-primary/30 bg-primary/5 backdrop-blur-sm">
+            <div className="flex items-center justify-between mb-2 text-xs sm:text-sm">
+              <span className="inline-flex items-center gap-1.5 text-primary/90">
+                <Timer className="w-3.5 h-3.5" />
+                Janela de re-verificação ativa
+              </span>
+              <span className="font-mono text-primary tabular-nums">{bypassSeconds}s</span>
+            </div>
+            <div className="h-1.5 w-full rounded-full bg-white/10 overflow-hidden">
+              <div
+                className="h-full bg-primary transition-[width] duration-1000 ease-linear"
+                style={{ width: `${bypassPct}%` }}
+              />
+            </div>
+            <button
+              type="button"
+              onClick={handleRecheckNoReload}
+              className="mt-3 w-full inline-flex items-center justify-center gap-2 px-3 py-2 rounded-lg border border-primary/40 bg-primary/10 text-xs sm:text-sm text-primary hover:bg-primary/20 transition"
+            >
+              <RefreshCw className="w-3.5 h-3.5" />
+              Reexecutar checagem agora
+            </button>
+          </div>
+        )}
 
         <p className="text-[11px] text-white/40 max-w-md mb-8 -mt-4">
           Já foi autorizado ou está acessando do Brasil? Use “Verificar novamente” para refazer a
