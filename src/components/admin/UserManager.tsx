@@ -14,7 +14,7 @@ import {
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
-import { UserPlus, Users, Loader2, ShieldCheck, Mail, Key, Wand2, Copy, RotateCcw, Sparkles } from "lucide-react";
+import { UserPlus, Users, Loader2, ShieldCheck, Mail, Key, Wand2, Copy, RotateCcw, Sparkles, Zap } from "lucide-react";
 import { BUILTIN_AGENTS } from "@/lib/agents";
 
 // Gera senha forte no padrão Kera: 14 caracteres, com maiúscula, minúscula, número e símbolo.
@@ -126,6 +126,24 @@ export const UserManager = () => {
       toast.error(err.message || "Erro ao salvar agentes");
     } finally {
       setSavingAgents(false);
+    }
+  };
+
+  const toggleGrokAccess = async (u: any) => {
+    const next = !u.profile?.grok_allowed;
+    try {
+      const { error } = await supabase.functions.invoke("admin-user-management", {
+        body: {
+          action: "set_grok_allowed",
+          targetUserId: u.id,
+          grokAllowed: next,
+        },
+      });
+      if (error) throw error;
+      toast.success(next ? "Grok liberado para este usuário" : "Grok bloqueado para este usuário");
+      fetchUsers();
+    } catch (err: any) {
+      toast.error(err.message || "Erro ao alterar acesso ao Grok");
     }
   };
 

@@ -29,7 +29,7 @@ serve(async (req) => {
     if (!isAdmin) throw new Error('Forbidden')
 
     const body = await req.json()
-    const { action, email, password, displayName, targetUserId, agentKeys } = body
+    const { action, email, password, displayName, targetUserId, agentKeys, grokAllowed } = body
 
     if (action === 'create_user') {
       if (!email || !password) throw new Error('Email and password are required')
@@ -111,6 +111,22 @@ serve(async (req) => {
       if (gErr) throw gErr
 
       return new Response(JSON.stringify({ ok: true, granted_agent_keys: cleaned }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        status: 200,
+      })
+    }
+
+    if (action === 'set_grok_allowed') {
+      if (!targetUserId || typeof grokAllowed !== 'boolean') {
+        throw new Error('targetUserId and grokAllowed (boolean) required')
+      }
+      const { error: gErr } = await supabaseClient
+        .from('profiles')
+        .update({ grok_allowed: grokAllowed })
+        .eq('user_id', targetUserId)
+      if (gErr) throw gErr
+
+      return new Response(JSON.stringify({ ok: true, grok_allowed: grokAllowed }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         status: 200,
       })
