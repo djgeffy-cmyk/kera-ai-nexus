@@ -12,10 +12,11 @@ const DENYLIST_IDS = new Set<string>([
   "kera-sides",
   "looking-sides",
   "kera-looking-sides",
+  "kera-honey-eyes",
 ]);
 
 // Termos no ID que indicam enquadramento incompatível com a identidade.
-const BLOCKED_PATTERNS = [/looking-?sides/i, /olhando-?lados/i];
+const BLOCKED_PATTERNS = [/looking-?sides/i, /olhando-?lados/i, /honey-?eyes/i];
 
 export type KeraOptionLike = { id: string; label?: string };
 

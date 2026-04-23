@@ -14,7 +14,6 @@ import rainAmbientUrl from "@/assets/rain-ambient.mp3";
 import keraFaceLeftAsset from "@/assets/kera-face-left.mp4.asset.json";
 import keraFaceCenterAsset from "@/assets/kera-face-center.mp4.asset.json";
 import keraFaceRightAsset from "@/assets/kera-face-right.mp4.asset.json";
-import keraHoneyEyesAsset from "@/assets/kera-honey-eyes.mp4.asset.json";
 
 // Vídeos hospedados no storage. `?v=` força o CDN/navegador a baixar a versão
 // mais recente quando o arquivo for trocado no bucket.
@@ -27,10 +26,9 @@ const rainVideoUrl =
 const keraFaceLeftUrl = (keraFaceLeftAsset as { url: string }).url;
 const keraFaceCenterUrl = (keraFaceCenterAsset as { url: string }).url;
 const keraFaceRightUrl = (keraFaceRightAsset as { url: string }).url;
-const keraHoneyEyesUrl = (keraHoneyEyesAsset as { url: string }).url;
 // IDs dos vídeos de close-up de rosto — usam enquadramento adaptado à tela
 // (mostram o rosto inteiro sem cortar nas laterais).
-const CLOSEUP_IDS = new Set(["face-left", "face-center", "face-right", "kera-honey-eyes"]);
+const CLOSEUP_IDS = new Set(["face-left", "face-center", "face-right"]);
 import { assetUrl } from "@/lib/assetUrl";
 import DevVideoSwitcher from "@/components/DevVideoSwitcher";
 
@@ -40,7 +38,6 @@ const authBgOptions = [
   { id: "face-left", label: "Close-up · Esquerda", url: keraFaceLeftUrl, group: "Close-up" },
   { id: "face-center", label: "Close-up · Centro", url: keraFaceCenterUrl, group: "Close-up" },
   { id: "face-right", label: "Close-up · Direita", url: keraFaceRightUrl, group: "Close-up" },
-  { id: "kera-honey-eyes", label: "Kera · Olhos de mel", url: keraHoneyEyesUrl, group: "Close-up" },
 ];
 const authAvatarOptions = [
   { id: "kera-rain", label: "Kera com chuva", url: rainVideoUrl, group: "Cenas" },
@@ -48,7 +45,6 @@ const authAvatarOptions = [
   { id: "face-left", label: "Close-up · Esquerda", url: keraFaceLeftUrl, group: "Close-up" },
   { id: "face-center", label: "Close-up · Centro", url: keraFaceCenterUrl, group: "Close-up" },
   { id: "face-right", label: "Close-up · Direita", url: keraFaceRightUrl, group: "Close-up" },
-  { id: "kera-honey-eyes", label: "Kera · Olhos de mel", url: keraHoneyEyesUrl, group: "Close-up" },
 ];
 import { MissionCriticalSchema } from "@/lib/missionCriticalSchemas";
 import { PasswordStrengthMeter } from "@/components/PasswordStrengthMeter";
