@@ -720,6 +720,10 @@ const Auth = () => {
           setBgVideoId(id);
         }}
       />
+
+      {MOUSE_SCRUB_IDS.has(bgVideoId) && (
+        <MouseScrubControls value={scrubSettings} onChange={setScrubSettings} />
+      )}
     </main>
   );
 };
