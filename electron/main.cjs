@@ -514,10 +514,37 @@ ipcMain.handle("kera:organizer:apply", async (_e, payload) => {
   if (response !== 1) return { ok: false, cancelled: true };
 
   const safeName = (s) =>
-    String(s || "Diversos").replace(/[\\/:*?"<>|]/g, "").trim().slice(0, 60) || "Diversos";
+    String(s || "Diversos")
+      // Remove caracteres proibidos no Windows/macOS/Linux
+      .replace(/[\\/:*?"<>|\x00-\x1f]/g, " ")
+      // Colapsa espaços
+      .replace(/\s+/g, " ")
+      // Windows não aceita nome terminando em "." ou " "
+      .replace(/[.\s]+$/g, "")
+      .replace(/^[.\s]+/g, "")
+      .trim()
+      .slice(0, 60) || "Diversos";
+
+  // Pré-cria TODAS as pastas sugeridas (sanitizadas) antes de mover qualquer arquivo.
+  // Evita falhas no meio do plano por pasta inexistente.
+  const folderMap = new Map(); // raw -> safe absolute path
+  const createdFolders = [];
+  const folderErrors = [];
+  for (const raw of folders) {
+    const safe = safeName(raw);
+    const abs = path.join(root, safe);
+    folderMap.set(raw, abs);
+    try {
+      const existed = fsSync.existsSync(abs);
+      await fs.mkdir(abs, { recursive: true });
+      if (!existed) createdFolders.push(safe);
+    } catch (e) {
+      folderErrors.push({ folder: raw, error: String(e?.message || e) });
+    }
+  }
 
   const moved = [];
-  const errors = [];
+  const errors = [...folderErrors];
   for (const item of plan) {
     try {
       const from = path.resolve(item.from);
@@ -527,8 +554,9 @@ ipcMain.handle("kera:organizer:apply", async (_e, payload) => {
         errors.push({ from: item.from, error: "fora da raiz" });
         continue;
       }
-      const folder = path.join(root, safeName(item.folder));
-      await fs.mkdir(folder, { recursive: true });
+      const folder = folderMap.get(item.folder) || path.join(root, safeName(item.folder));
+      // Garantia extra (caso uma pasta não tenha entrado no Set por algum motivo)
+      if (!fsSync.existsSync(folder)) await fs.mkdir(folder, { recursive: true });
       let to = path.join(folder, path.basename(from));
       // Resolve colisões: arquivo (1).ext, (2)…
       if (fsSync.existsSync(to)) {
@@ -551,7 +579,12 @@ ipcMain.handle("kera:organizer:apply", async (_e, payload) => {
     saveHistory(history);
   }
 
-  return { ok: errors.length === 0, moved: moved.length, errors };
+  return {
+    ok: errors.length === 0,
+    moved: moved.length,
+    createdFolders,
+    errors,
+  };
 });
 
 ipcMain.handle("kera:organizer:history", () => loadHistory().slice(-10).reverse());

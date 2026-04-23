@@ -119,7 +119,10 @@ export const FolderOrganizer = () => {
       const r = await k.organizer.apply({ rootFolder, plan });
       if (r.cancelled) return;
       if (r.ok) {
-        toast.success(`✓ ${r.moved} arquivo(s) organizados!`);
+        const created = r.createdFolders?.length ?? 0;
+        toast.success(
+          `✓ ${r.moved} arquivo(s) organizados${created > 0 ? ` em ${created} pasta(s) nova(s)` : ""}!`
+        );
         setFiles([]);
         setSuggestions(new Map());
         setOverrides(new Map());
