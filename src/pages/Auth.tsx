@@ -16,6 +16,7 @@ import keraLookingSidesAsset from "@/assets/kera-avatar-looking-sides.mp4.asset.
 import keraFaceLeftAsset from "@/assets/kera-face-left.mp4.asset.json";
 import keraFaceCenterAsset from "@/assets/kera-face-center.mp4.asset.json";
 import keraFaceRightAsset from "@/assets/kera-face-right.mp4.asset.json";
+import keraFaceScrubAsset from "@/assets/kera-face-scrub.mp4.asset.json";
 
 // Vídeos hospedados no storage. `?v=` força o CDN/navegador a baixar a versão
 // mais recente quando o arquivo for trocado no bucket.
@@ -30,6 +31,9 @@ const keraLookingSidesUrl = (keraLookingSidesAsset as { url: string }).url;
 const keraFaceLeftUrl = (keraFaceLeftAsset as { url: string }).url;
 const keraFaceCenterUrl = (keraFaceCenterAsset as { url: string }).url;
 const keraFaceRightUrl = (keraFaceRightAsset as { url: string }).url;
+const keraFaceScrubUrl = (keraFaceScrubAsset as { url: string }).url;
+// IDs de vídeos que devem ser controlados pelo mouse (scrubbing horizontal).
+const MOUSE_SCRUB_IDS = new Set(["face-scrub"]);
 import { assetUrl } from "@/lib/assetUrl";
 import DevVideoSwitcher from "@/components/DevVideoSwitcher";
 
@@ -37,6 +41,7 @@ const authBgOptions = [
   { id: "kera-rain", label: "Kera com chuva (full bg)", url: rainVideoUrl, group: "Cenas" },
   { id: "kera-sides", label: "Kera olhando os lados", url: keraLookingSidesUrl, group: "Cenas" },
   { id: "rain", label: "Chuva pura", url: rainBgUrl, group: "Cenas" },
+  { id: "face-scrub", label: "🖱️ Seguir o mouse", url: keraFaceScrubUrl, group: "Close-up" },
   { id: "face-left", label: "Close-up · Esquerda", url: keraFaceLeftUrl, group: "Close-up" },
   { id: "face-center", label: "Close-up · Centro", url: keraFaceCenterUrl, group: "Close-up" },
   { id: "face-right", label: "Close-up · Direita", url: keraFaceRightUrl, group: "Close-up" },
@@ -77,6 +82,7 @@ const Auth = () => {
   const [inIframe] = useState(() => isInIframe());
   const [iosNonSafari] = useState(() => isIOSNonSafari());
   const [bgVideoUrl, setBgVideoUrl] = useState(authBgOptions[0].url);
+  const [bgVideoId, setBgVideoId] = useState<string>(authBgOptions[0].id);
   const [avatarVideoUrl, setAvatarVideoUrl] = useState(authAvatarOptions[0].url);
   // Lembra a preferência do usuário entre visitas (localStorage).
   const RAIN_MUTE_KEY = "kera:auth:rain-muted";
@@ -165,6 +171,62 @@ const Auth = () => {
       window.removeEventListener("keydown", onUserGesture);
     };
   }, []);
+
+  // Mouse scrubbing: quando o vídeo selecionado for um "scrub video"
+  // (ex.: face-scrub), mapeamos a posição X do mouse na tela para o
+  // currentTime do vídeo. O resultado: a Kera vira o rosto seguindo o cursor.
+  useEffect(() => {
+    const video = bgVideoRef.current;
+    if (!video) return;
+    if (!MOUSE_SCRUB_IDS.has(bgVideoId)) return;
+
+    let targetTime = 0;
+    let currentTime = 0;
+    const SMOOTHING = 0.18; // 0..1 — quanto maior, mais responsivo
+
+    const setTargetFromX = (clientX: number) => {
+      const w = window.innerWidth || 1;
+      const ratio = Math.min(1, Math.max(0, clientX / w));
+      const dur = isFinite(video.duration) && video.duration > 0 ? video.duration : 10;
+      // Mantém uma pequena margem nas pontas para evitar congelar no último frame
+      targetTime = ratio * (dur - 0.05);
+    };
+
+    const tick = () => {
+      currentTime += (targetTime - currentTime) * SMOOTHING;
+      try {
+        video.currentTime = currentTime;
+      } catch {}
+      rafRef.current = requestAnimationFrame(tick);
+    };
+
+    const onMove = (e: PointerEvent) => setTargetFromX(e.clientX);
+    const onLoaded = () => {
+      try {
+        video.pause();
+      } catch {}
+      // Inicia no centro
+      currentTime = (video.duration || 10) / 2;
+      targetTime = currentTime;
+      try {
+        video.currentTime = currentTime;
+      } catch {}
+    };
+
+    if (video.readyState >= 1) onLoaded();
+    video.addEventListener("loadedmetadata", onLoaded);
+    window.addEventListener("pointermove", onMove);
+    rafRef.current = requestAnimationFrame(tick);
+
+    return () => {
+      video.removeEventListener("loadedmetadata", onLoaded);
+      window.removeEventListener("pointermove", onMove);
+      if (rafRef.current) {
+        cancelAnimationFrame(rafRef.current);
+        rafRef.current = null;
+      }
+    };
+  }, [bgVideoId]);
 
   const [resetOpen, setResetOpen] = useState(false);
   const [resetEmail, setResetEmail] = useState("");
@@ -347,8 +409,8 @@ const Auth = () => {
       <video
         ref={bgVideoRef}
         aria-hidden
-        autoPlay
-        loop
+        autoPlay={!MOUSE_SCRUB_IDS.has(bgVideoId)}
+        loop={!MOUSE_SCRUB_IDS.has(bgVideoId)}
         muted
         playsInline
         preload="auto"
@@ -640,7 +702,10 @@ const Auth = () => {
         storageKey="kera:auth:bg-video"
         options={authBgOptions}
         defaultId="kera-rain"
-        onChange={(url) => setBgVideoUrl(url)}
+        onChange={(url, id) => {
+          setBgVideoUrl(url);
+          setBgVideoId(id);
+        }}
       />
     </main>
   );
