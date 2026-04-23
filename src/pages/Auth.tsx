@@ -442,10 +442,16 @@ const Auth = () => {
         preload="auto"
         poster={keraAvatar}
         disablePictureInPicture
-        // O vídeo é vertical (784x1168). Em telas widescreen `object-cover` corta
-        // o topo E o chão. Alinhar pelo bottom garante que o solo com as gotas
-        // batendo SEMPRE fique visível.
-        className="absolute inset-0 w-full h-full object-cover object-bottom"
+        // No modo "scrub" (close-up controlado pelo mouse), o vídeo é quadrado
+        // 1440x1440 — usamos `object-contain` para mostrar o rosto INTEIRO
+        // centralizado em telas widescreen, sem cortar as laterais. Nos demais
+        // vídeos (chuva vertical), mantemos `object-cover object-bottom` para
+        // garantir que o solo com as gotas fique sempre visível.
+        className={
+          MOUSE_SCRUB_IDS.has(bgVideoId)
+            ? "absolute inset-0 w-full h-full object-contain object-center bg-background"
+            : "absolute inset-0 w-full h-full object-cover object-bottom"
+        }
         key={bgVideoUrl}
         src={bgVideoUrl}
         // Sem filtros: mostra o vídeo de chuva original, com as gotas no chão visíveis
