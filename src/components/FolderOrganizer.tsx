@@ -1,8 +1,15 @@
 import { useEffect, useMemo, useState } from "react";
-import { Sparkles, FolderOpen, Wand2, RotateCcw, Loader2, Check, Folder, ShieldCheck } from "lucide-react";
+import { Sparkles, FolderOpen, Wand2, RotateCcw, Loader2, Check, Folder, ShieldCheck, Stethoscope, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from "@/components/ui/dialog";
 import { toast } from "sonner";
 import { getKera } from "@/lib/keraDesktop";
 import { supabase } from "@/integrations/supabase/client";
@@ -16,6 +23,18 @@ type ScannedFile = {
 };
 
 type Suggestion = { name: string; folder: string; reason: string };
+
+type DiagnoseResult = {
+  folder: string;
+  exists: boolean;
+  canList: boolean;
+  canWrite: boolean;
+  canRead: boolean;
+  canMove: boolean;
+  canDelete: boolean;
+  fileCount: number | null;
+  error: string | null;
+};
 
 const fmtSize = (b: number) => {
   if (b < 1024) return `${b} B`;
@@ -34,6 +53,8 @@ export const FolderOrganizer = () => {
   const [applying, setApplying] = useState(false);
   const [overrides, setOverrides] = useState<Map<string, string>>(new Map());
   const [authorizing, setAuthorizing] = useState(false);
+  const [diagnosing, setDiagnosing] = useState(false);
+  const [diagnostics, setDiagnostics] = useState<DiagnoseResult[] | null>(null);
 
   const refreshDefaults = async () => {
     const k = getKera();
@@ -67,6 +88,30 @@ export const FolderOrganizer = () => {
       await refreshDefaults();
     } finally {
       setAuthorizing(false);
+    }
+  };
+
+  const diagnose = async () => {
+    const k = getKera();
+    if (!k?.organizer?.diagnose) {
+      toast.error("Diagnóstico disponível apenas no Kera Desktop.");
+      return;
+    }
+    setDiagnosing(true);
+    try {
+      const r = await k.organizer.diagnose();
+      setDiagnostics(r.results);
+      if (r.total === 0) {
+        toast.info("Nenhuma pasta autorizada para testar.");
+      } else if (r.okCount === r.total) {
+        toast.success(`✓ Todas as ${r.total} pasta(s) passaram no teste.`);
+      } else {
+        toast.warning(`${r.okCount}/${r.total} pasta(s) OK — veja detalhes.`);
+      }
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Erro no diagnóstico");
+    } finally {
+      setDiagnosing(false);
     }
   };
 
@@ -192,6 +237,20 @@ export const FolderOrganizer = () => {
               <ShieldCheck className="size-3.5" />
             )}
             Autorizar pastas pessoais
+          </Button>
+          <Button
+            onClick={diagnose}
+            size="sm"
+            variant="outline"
+            className="gap-2"
+            disabled={diagnosing}
+          >
+            {diagnosing ? (
+              <Loader2 className="size-3.5 animate-spin" />
+            ) : (
+              <Stethoscope className="size-3.5" />
+            )}
+            Testar acesso
           </Button>
           <Button onClick={undo} size="sm" variant="ghost" className="gap-2">
             <RotateCcw className="size-3.5" /> Desfazer último
