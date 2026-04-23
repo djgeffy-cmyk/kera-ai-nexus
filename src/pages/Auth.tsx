@@ -353,8 +353,8 @@ const Auth = () => {
       <video
         ref={bgVideoRef}
         aria-hidden
-        autoPlay
-        loop
+        autoPlay={!MOUSE_SCRUB_IDS.has(bgVideoId)}
+        loop={!MOUSE_SCRUB_IDS.has(bgVideoId)}
         muted
         playsInline
         preload="auto"
