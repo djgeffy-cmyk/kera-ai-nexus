@@ -1703,7 +1703,7 @@ Por favor, analise: há perda de pacote? jitter alto sugere instabilidade de rot
         </div>
 
         <div className="chat-composer-wrap relative z-10 border-t border-border panel p-3 md:p-4">
-          <div className="max-w-6xl mx-auto space-y-2">
+          <div className="max-w-3xl mx-auto space-y-2">
              {isSentinela && (
                <div className="flex flex-wrap justify-center gap-3 animate-in slide-in-from-bottom-2 duration-500">
                  <Button
