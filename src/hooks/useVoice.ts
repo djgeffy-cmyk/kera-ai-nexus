@@ -15,15 +15,34 @@ type SR = {
 };
 
 const TTS_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/tts-kera`;
-// Backend (ElevenLabs/OpenAI) aceita até 4000 chars; mantemos uma única chamada
-// na maioria das mensagens para evitar que o iOS bloqueie autoplay entre chunks.
-const MAX_TTS_CHARS = 3500;
+const MAX_TTS_CHARS = 1200;
+const FAST_FIRST_CHUNK_CHARS = 220;
+
+function findBestSplitIndex(text: string, maxChars: number, minChars = Math.floor(maxChars * 0.55)) {
+  const head = text.slice(0, maxChars + 1);
+  const punctuationMatches = Array.from(head.matchAll(/[.!?…;:,]\s+/g));
+  for (let i = punctuationMatches.length - 1; i >= 0; i -= 1) {
+    const match = punctuationMatches[i];
+    const end = (match.index ?? 0) + match[0].length;
+    if (end >= minChars && end <= maxChars) return end;
+  }
+
+  const lastSpace = head.lastIndexOf(" ");
+  if (lastSpace >= minChars) return lastSpace;
+  return Math.min(maxChars, text.length);
+}
 
 function splitTextForTTS(text: string, maxChars = MAX_TTS_CHARS): string[] {
-  const normalized = text.replace(/\s+/g, " ").trim();
+  let normalized = text.replace(/\s+/g, " ").trim();
   if (!normalized) return [];
 
   const chunks: string[] = [];
+  if (normalized.length > FAST_FIRST_CHUNK_CHARS) {
+    const firstCut = findBestSplitIndex(normalized, FAST_FIRST_CHUNK_CHARS, 120);
+    chunks.push(normalized.slice(0, firstCut).trim());
+    normalized = normalized.slice(firstCut).trim();
+  }
+
   let current = "";
 
   const pushCurrent = () => {
@@ -104,6 +123,39 @@ export function useVoice(opts: { useElevenLabs?: boolean; useRemoteTTS?: boolean
     const reject = playbackRejectRef.current;
     playbackRejectRef.current = null;
     if (reject) reject(reason);
+  }, []);
+
+  const fetchTTSChunk = useCallback(async (chunk: string, sessionId: number) => {
+    if (!chunk.trim()) return null;
+
+    const ac = new AbortController();
+    inflightRef.current = ac;
+
+    try {
+      const resp = await fetch(TTS_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ text: chunk }),
+        signal: ac.signal,
+      });
+
+      if (resp.status === 204) {
+        console.warn("[useVoice] TTS retornou 204 (quota/limite).");
+        return null;
+      }
+
+      if (!resp.ok) {
+        const errText = await resp.text().catch(() => "");
+        throw new Error("TTS HTTP " + resp.status + " " + errText.slice(0, 200));
+      }
+
+      const blob = await resp.blob();
+      if (!blob.size) throw new Error("TTS retornou áudio vazio");
+      if (sessionRef.current !== sessionId) throw new Error("Playback interrompido");
+      return blob;
+    } finally {
+      if (inflightRef.current === ac) inflightRef.current = null;
+    }
   }, []);
 
   // ---------- STT (Web Speech) ----------
@@ -263,37 +315,23 @@ export function useVoice(opts: { useElevenLabs?: boolean; useRemoteTTS?: boolean
     let playedAny = false;
 
     try {
-      for (const chunk of chunks) {
-        if (sessionRef.current !== sessionId) return;
+      let nextChunkPromise: Promise<Blob | null> | null = chunks.length
+        ? fetchTTSChunk(chunks[0], sessionId)
+        : null;
 
-        const ac = new AbortController();
-        inflightRef.current = ac;
+      for (let i = 0; i < chunks.length; i += 1) {
+        if (!nextChunkPromise || sessionRef.current !== sessionId) return;
 
-        const resp = await fetch(TTS_URL, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ text: chunk }),
-          signal: ac.signal,
-        });
+        const blob = await nextChunkPromise;
+        if (!blob) break;
 
-        if (resp.status === 204) {
-          console.warn("[useVoice] TTS retornou 204 (quota/limite).");
-          break;
-        }
-
-        if (!resp.ok) {
-          const errText = await resp.text().catch(() => "");
-          throw new Error("TTS HTTP " + resp.status + " " + errText.slice(0, 200));
-        }
-
-        const blob = await resp.blob();
-        if (!blob.size) throw new Error("TTS retornou áudio vazio");
+        nextChunkPromise = i + 1 < chunks.length
+          ? fetchTTSChunk(chunks[i + 1], sessionId)
+          : null;
 
         await playAudioBlob(blob, sessionId);
         playedAny = true;
-        console.log("[useVoice] TTS tocando", { len: chunk.length, bytes: blob.size, chunked: chunks.length > 1 });
-
-        if (inflightRef.current === ac) inflightRef.current = null;
+        console.log("[useVoice] TTS tocando", { len: chunks[i].length, bytes: blob.size, chunked: chunks.length > 1 });
       }
     } catch (e) {
       if ((e as Error)?.name === "AbortError") return;
@@ -309,7 +347,7 @@ export function useVoice(opts: { useElevenLabs?: boolean; useRemoteTTS?: boolean
       }
       inflightRef.current = null;
     }
-  }, [cleanupAudio, clearPendingUnlock, playAudioBlob, rejectPendingPlayback]);
+  }, [cleanupAudio, clearPendingUnlock, fetchTTSChunk, playAudioBlob, rejectPendingPlayback]);
 
   // "Warm-up" do contexto de áudio: chamado dentro de um clique do usuário para
   // destravar reprodução de Audio() em iOS Safari.
