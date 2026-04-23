@@ -458,6 +458,72 @@ ipcMain.handle("kera:organizer:defaults", () => {
   return defaultUserFolders();
 });
 
+// Diagnóstico: testa leitura, escrita e movimentação dentro de cada pasta
+// autorizada. Cria um arquivo `.kera-test-<ts>.txt`, lê de volta, move pra
+// uma subpasta `.kera-diagnostic` (criada se não existir) e remove tudo.
+// Não toca em nenhum arquivo do usuário.
+ipcMain.handle("kera:organizer:diagnose", async () => {
+  const list = loadAllowlist();
+  const results = [];
+  for (const folder of list) {
+    const abs = path.resolve(folder);
+    const r = {
+      folder: abs,
+      exists: false,
+      canList: false,
+      canWrite: false,
+      canRead: false,
+      canMove: false,
+      canDelete: false,
+      fileCount: null,
+      error: null,
+    };
+    try {
+      const st = await fs.stat(abs).catch(() => null);
+      if (!st || !st.isDirectory()) {
+        r.error = "Pasta não existe ou não é um diretório.";
+        results.push(r);
+        continue;
+      }
+      r.exists = true;
+
+      const entries = await fs.readdir(abs, { withFileTypes: true });
+      r.canList = true;
+      r.fileCount = entries.filter((d) => d.isFile()).length;
+
+      const stamp = Date.now();
+      const probe = path.join(abs, `.kera-test-${stamp}.txt`);
+      const subdir = path.join(abs, ".kera-diagnostic");
+      const moved = path.join(subdir, `probe-${stamp}.txt`);
+      const payload = `kera diagnostic ${new Date(stamp).toISOString()}`;
+
+      await fs.writeFile(probe, payload, "utf-8");
+      r.canWrite = true;
+
+      const back = await fs.readFile(probe, "utf-8");
+      r.canRead = back === payload;
+
+      await fs.mkdir(subdir, { recursive: true });
+      await fs.rename(probe, moved);
+      r.canMove = true;
+
+      await fs.unlink(moved);
+      // Tenta limpar o subdir se estiver vazio (ignora se outras coisas estiverem lá).
+      try {
+        const left = await fs.readdir(subdir);
+        if (left.length === 0) await fs.rmdir(subdir);
+      } catch {}
+      r.canDelete = true;
+    } catch (e) {
+      r.error = String(e?.message || e);
+      // Tentativa de limpeza best-effort
+    }
+    results.push(r);
+  }
+  const okCount = results.filter((r) => r.canWrite && r.canMove && r.canDelete).length;
+  return { ok: true, total: results.length, okCount, results };
+});
+
 // Autoriza em lote todas as pastas pessoais comuns existentes (Downloads,
 // Documentos, Desktop, Imagens, Vídeos, Música — em PT/EN), com confirmação
 // nativa única.

@@ -1,8 +1,15 @@
 import { useEffect, useMemo, useState } from "react";
-import { Sparkles, FolderOpen, Wand2, RotateCcw, Loader2, Check, Folder, ShieldCheck } from "lucide-react";
+import { Sparkles, FolderOpen, Wand2, RotateCcw, Loader2, Check, Folder, ShieldCheck, Stethoscope, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from "@/components/ui/dialog";
 import { toast } from "sonner";
 import { getKera } from "@/lib/keraDesktop";
 import { supabase } from "@/integrations/supabase/client";
@@ -16,6 +23,18 @@ type ScannedFile = {
 };
 
 type Suggestion = { name: string; folder: string; reason: string };
+
+type DiagnoseResult = {
+  folder: string;
+  exists: boolean;
+  canList: boolean;
+  canWrite: boolean;
+  canRead: boolean;
+  canMove: boolean;
+  canDelete: boolean;
+  fileCount: number | null;
+  error: string | null;
+};
 
 const fmtSize = (b: number) => {
   if (b < 1024) return `${b} B`;
@@ -34,6 +53,8 @@ export const FolderOrganizer = () => {
   const [applying, setApplying] = useState(false);
   const [overrides, setOverrides] = useState<Map<string, string>>(new Map());
   const [authorizing, setAuthorizing] = useState(false);
+  const [diagnosing, setDiagnosing] = useState(false);
+  const [diagnostics, setDiagnostics] = useState<DiagnoseResult[] | null>(null);
 
   const refreshDefaults = async () => {
     const k = getKera();
@@ -67,6 +88,30 @@ export const FolderOrganizer = () => {
       await refreshDefaults();
     } finally {
       setAuthorizing(false);
+    }
+  };
+
+  const diagnose = async () => {
+    const k = getKera();
+    if (!k?.organizer?.diagnose) {
+      toast.error("Diagnóstico disponível apenas no Kera Desktop.");
+      return;
+    }
+    setDiagnosing(true);
+    try {
+      const r = await k.organizer.diagnose();
+      setDiagnostics(r.results);
+      if (r.total === 0) {
+        toast.info("Nenhuma pasta autorizada para testar.");
+      } else if (r.okCount === r.total) {
+        toast.success(`✓ Todas as ${r.total} pasta(s) passaram no teste.`);
+      } else {
+        toast.warning(`${r.okCount}/${r.total} pasta(s) OK — veja detalhes.`);
+      }
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Erro no diagnóstico");
+    } finally {
+      setDiagnosing(false);
     }
   };
 
@@ -193,6 +238,20 @@ export const FolderOrganizer = () => {
             )}
             Autorizar pastas pessoais
           </Button>
+          <Button
+            onClick={diagnose}
+            size="sm"
+            variant="outline"
+            className="gap-2"
+            disabled={diagnosing}
+          >
+            {diagnosing ? (
+              <Loader2 className="size-3.5 animate-spin" />
+            ) : (
+              <Stethoscope className="size-3.5" />
+            )}
+            Testar acesso
+          </Button>
           <Button onClick={undo} size="sm" variant="ghost" className="gap-2">
             <RotateCcw className="size-3.5" /> Desfazer último
           </Button>
@@ -311,6 +370,81 @@ export const FolderOrganizer = () => {
           </div>
         </div>
       )}
+
+      <Dialog open={diagnostics !== null} onOpenChange={(o) => !o && setDiagnostics(null)}>
+        <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Stethoscope className="size-4 text-primary" />
+              Resultado do diagnóstico
+            </DialogTitle>
+            <DialogDescription>
+              Teste de leitura, escrita, movimentação e exclusão em cada pasta autorizada.
+              Nenhum arquivo seu foi tocado.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-2">
+            {diagnostics?.length === 0 && (
+              <p className="text-sm text-muted-foreground">
+                Nenhuma pasta autorizada. Use "Autorizar pastas pessoais" primeiro.
+              </p>
+            )}
+            {diagnostics?.map((r) => {
+              const allOk = r.canList && r.canWrite && r.canRead && r.canMove && r.canDelete;
+              return (
+                <div
+                  key={r.folder}
+                  className={`rounded-lg border p-3 ${
+                    allOk
+                      ? "border-primary/30 bg-primary/5"
+                      : "border-destructive/40 bg-destructive/5"
+                  }`}
+                >
+                  <div className="flex items-center gap-2 mb-2">
+                    {allOk ? (
+                      <Check className="size-4 text-primary shrink-0" />
+                    ) : (
+                      <X className="size-4 text-destructive shrink-0" />
+                    )}
+                    <span className="font-mono text-xs truncate flex-1" title={r.folder}>
+                      {r.folder}
+                    </span>
+                    {r.fileCount !== null && (
+                      <span className="text-xs text-muted-foreground shrink-0">
+                        {r.fileCount} arquivo(s)
+                      </span>
+                    )}
+                  </div>
+                  <div className="grid grid-cols-2 sm:grid-cols-5 gap-1 text-[11px]">
+                    {[
+                      ["Existe", r.exists],
+                      ["Listar", r.canList],
+                      ["Ler", r.canRead],
+                      ["Escrever", r.canWrite],
+                      ["Mover", r.canMove],
+                    ].map(([label, ok]) => (
+                      <div
+                        key={label as string}
+                        className={`flex items-center gap-1 px-1.5 py-0.5 rounded ${
+                          ok ? "text-primary" : "text-muted-foreground/60"
+                        }`}
+                      >
+                        {ok ? <Check className="size-3" /> : <X className="size-3" />}
+                        {label}
+                      </div>
+                    ))}
+                  </div>
+                  {r.error && (
+                    <p className="mt-2 text-xs text-destructive font-mono break-all">
+                      {r.error}
+                    </p>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        </DialogContent>
+      </Dialog>
     </Card>
   );
 };
