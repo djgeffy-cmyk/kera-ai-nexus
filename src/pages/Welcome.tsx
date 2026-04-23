@@ -9,6 +9,7 @@ import keraAvatar from "@/assets/kera-avatar.png";
 import rainAmbientUrl from "@/assets/rain-ambient.mp3";
 import DevVideoSwitcher from "@/components/DevVideoSwitcher";
 import RainOverlay from "@/components/RainOverlay";
+import { useAudioLevel } from "@/hooks/useAudioLevel";
 
 const STORAGE_BASE = "https://ytixqgkzqgeoxrbmjqbo.supabase.co/storage/v1/object/public/kera-videos";
 const VERSION = "2026-04-22";
@@ -49,6 +50,13 @@ const Welcome = () => {
   });
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const bgVideoRef = useRef<HTMLVideoElement | null>(null);
+
+  // Volume RMS efetivo do áudio (0..1) — alimenta a chuva.
+  const audioLevel = useAudioLevel(audioRef);
+  // Quando mutado deixa um respingo mínimo (visual ainda vive, sem ficar morto).
+  // Quando ligado, 65% vem do volume real + 35% de base, garantindo que sempre
+  // haja chuva visível mesmo em momentos silenciosos do loop.
+  const rainLevel = audioMuted ? 0.18 : Math.min(1, 0.35 + audioLevel * 0.85);
 
   // Tenta tocar o áudio (após primeira interação) e mantém o volume
   // sincronizado com o estado mute. O `level` da chuva escuta o mesmo estado.
@@ -129,10 +137,9 @@ const Welcome = () => {
 
       <audio ref={audioRef} src={rainAmbientUrl} loop preload="auto" muted={audioMuted} aria-hidden />
 
-      {/* Chuva suave em canvas — intensidade segue o som ambiente.
-          Mute = leve respingo (0.18), som ligado = chuva cheia (1.0).
-          O smoothing interno do componente faz a transição parecer natural. */}
-      <RainOverlay intensity="soft" level={audioMuted ? 0.18 : 1} />
+      {/* Chuva suave em canvas — intensidade segue o VOLUME RMS real do áudio.
+          Quanto mais forte a chuva no .mp3 toca, mais densa fica visualmente. */}
+      <RainOverlay intensity="soft" level={rainLevel} />
 
       <div className="fixed top-4 right-4 z-40 flex flex-col gap-2">
         <button
