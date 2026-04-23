@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Volume2, VolumeX, MousePointerClick, Video, VideoOff } from "lucide-react";
+import { ShieldCheck, ArrowRight, Lock } from "lucide-react";
 import { motion } from "framer-motion";
 import keraAvatar from "@/assets/kera-avatar.png";
 import rainAmbientUrl from "@/assets/rain-ambient.mp3";
@@ -137,8 +138,13 @@ const Welcome = () => {
       <motion.div
         initial={{ opacity: 0, scale: 0.9, y: 20 }}
         animate={{ opacity: 1, scale: 1, y: 0 }}
-        className="relative z-20 flex flex-col items-center px-6 py-7 rounded-[2rem] bg-background/20 backdrop-blur-sm border border-white/5"
+        className="relative z-20 flex flex-col items-center px-8 py-9 rounded-[2rem] bg-background/30 backdrop-blur-md border border-primary/15 shadow-[0_0_60px_-15px_hsl(var(--primary)/0.35)]"
       >
+        <div className="mb-5 inline-flex items-center gap-1.5 px-3 py-1 rounded-full border border-primary/30 bg-primary/5 text-[10px] uppercase tracking-[0.18em] text-primary/90">
+          <ShieldCheck className="size-3" />
+          Acesso restrito · Plataforma empresarial
+        </div>
+
         <motion.button
           type="button"
           onClick={() => navigate("/auth")}
@@ -167,23 +173,30 @@ const Welcome = () => {
           </div>
         </motion.button>
 
-        <h2 className="mt-8 text-primary font-display tracking-widest text-3xl uppercase text-glow">Kera</h2>
-        <p className="mt-3 text-base text-foreground/90 tracking-wide text-center max-w-sm">
-          Clique sobre mim para entrar
+        <h2 className="mt-8 text-primary font-display tracking-[0.25em] text-4xl uppercase text-glow">
+          Kera
+        </h2>
+        <p className="mt-2 text-[11px] uppercase tracking-[0.3em] text-primary/60">
+          Inteligência operacional
+        </p>
+        <p className="mt-4 text-sm text-foreground/75 text-center max-w-xs leading-relaxed">
+          Ambiente exclusivo para usuários autorizados. Faça login com suas credenciais corporativas.
         </p>
 
-        <div className="mt-6 flex flex-col items-center gap-3">
-          <Button
-            variant="ghost"
-            onClick={() => navigate("/auth")}
-            className="text-sm text-primary underline underline-offset-4"
-          >
-            Já tenho conta — Entrar direto
-          </Button>
-          <p className="text-xs text-foreground/70 italic text-center">
-            Após entrar, as configurações de humor ficam na barra lateral.
-          </p>
-        </div>
+        <div className="my-6 h-px w-24 bg-gradient-to-r from-transparent via-primary/40 to-transparent" />
+
+        <Button
+          onClick={() => navigate("/auth")}
+          className="w-full bg-gradient-cyber text-primary-foreground shadow-glow hover:opacity-95 group"
+        >
+          <Lock className="size-4 mr-2" />
+          Entrar na plataforma
+          <ArrowRight className="size-4 ml-2 transition-transform group-hover:translate-x-0.5" />
+        </Button>
+
+        <p className="mt-4 text-[10px] text-muted-foreground/70 text-center max-w-xs">
+          Sem cadastro público. Solicite acesso ao administrador da sua organização.
+        </p>
       </motion.div>
 
       <DevVideoSwitcher
