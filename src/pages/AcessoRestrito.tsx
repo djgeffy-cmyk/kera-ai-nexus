@@ -199,7 +199,7 @@ const AcessoRestrito = () => {
             className="group flex items-center justify-center gap-2 px-4 sm:px-5 py-3 rounded-xl bg-primary text-primary-foreground text-sm sm:text-base font-medium hover:opacity-90 transition shadow-[0_0_30px_-5px_hsl(var(--primary))]"
           >
             <MessageCircle className="w-4 h-4" />
-            WhatsApp 47 99208-0916
+            WhatsApp
           </a>
           <a
             href="mailto:space@kera.ia.br"
