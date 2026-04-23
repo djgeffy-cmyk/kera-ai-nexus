@@ -16,6 +16,7 @@ import keraLookingSidesAsset from "@/assets/kera-avatar-looking-sides.mp4.asset.
 import keraFaceLeftAsset from "@/assets/kera-face-left.mp4.asset.json";
 import keraFaceCenterAsset from "@/assets/kera-face-center.mp4.asset.json";
 import keraFaceRightAsset from "@/assets/kera-face-right.mp4.asset.json";
+import keraFaceScrubAsset from "@/assets/kera-face-scrub.mp4.asset.json";
 
 // Vídeos hospedados no storage. `?v=` força o CDN/navegador a baixar a versão
 // mais recente quando o arquivo for trocado no bucket.
@@ -30,6 +31,9 @@ const keraLookingSidesUrl = (keraLookingSidesAsset as { url: string }).url;
 const keraFaceLeftUrl = (keraFaceLeftAsset as { url: string }).url;
 const keraFaceCenterUrl = (keraFaceCenterAsset as { url: string }).url;
 const keraFaceRightUrl = (keraFaceRightAsset as { url: string }).url;
+const keraFaceScrubUrl = (keraFaceScrubAsset as { url: string }).url;
+// IDs de vídeos que devem ser controlados pelo mouse (scrubbing horizontal).
+const MOUSE_SCRUB_IDS = new Set(["face-scrub"]);
 import { assetUrl } from "@/lib/assetUrl";
 import DevVideoSwitcher from "@/components/DevVideoSwitcher";
 
@@ -37,6 +41,7 @@ const authBgOptions = [
   { id: "kera-rain", label: "Kera com chuva (full bg)", url: rainVideoUrl, group: "Cenas" },
   { id: "kera-sides", label: "Kera olhando os lados", url: keraLookingSidesUrl, group: "Cenas" },
   { id: "rain", label: "Chuva pura", url: rainBgUrl, group: "Cenas" },
+  { id: "face-scrub", label: "🖱️ Seguir o mouse", url: keraFaceScrubUrl, group: "Close-up" },
   { id: "face-left", label: "Close-up · Esquerda", url: keraFaceLeftUrl, group: "Close-up" },
   { id: "face-center", label: "Close-up · Centro", url: keraFaceCenterUrl, group: "Close-up" },
   { id: "face-right", label: "Close-up · Direita", url: keraFaceRightUrl, group: "Close-up" },
