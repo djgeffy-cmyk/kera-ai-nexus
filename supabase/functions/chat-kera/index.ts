@@ -772,6 +772,52 @@ ${intensityRules}`;
     const directEngegovReply = await maybeDirectEngegovReply(agentKey, messages);
     if (directEngegovReply) return directEngegovReply;
 
+    // ===== GATE: Grok (xai) — só dj.geffy@gmail.com, admin ou usuários com grok_allowed=true =====
+    if (provider === "xai") {
+      const callerEmail = email; // já resolvido acima via getUserEmailFromAuth
+      const callerUserId = await getUserIdFromAuth(req);
+      let allowed = false;
+      if (callerEmail === "dj.geffy@gmail.com") {
+        allowed = true;
+      } else if (callerUserId) {
+        try {
+          const supaUrl = Deno.env.get("SUPABASE_URL");
+          const service = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+          if (supaUrl && service) {
+            // Admin?
+            const rRole = await fetch(
+              `${supaUrl}/rest/v1/user_roles?user_id=eq.${callerUserId}&role=eq.admin&select=role&limit=1`,
+              { headers: { apikey: service, Authorization: `Bearer ${service}` } },
+            );
+            if (rRole.ok && Array.isArray(await rRole.clone().json()) && (await rRole.json()).length > 0) {
+              allowed = true;
+            }
+            if (!allowed) {
+              // grok_allowed no profile?
+              const rProf = await fetch(
+                `${supaUrl}/rest/v1/profiles?user_id=eq.${callerUserId}&select=grok_allowed&limit=1`,
+                { headers: { apikey: service, Authorization: `Bearer ${service}` } },
+              );
+              if (rProf.ok) {
+                const rows = await rProf.json();
+                if (rows?.[0]?.grok_allowed === true) allowed = true;
+              }
+            }
+          }
+        } catch (e) {
+          console.warn("[chat-kera] grok gate check failed:", e);
+        }
+      }
+      if (!allowed) {
+        return new Response(
+          JSON.stringify({
+            error: "Acesso ao Grok (xAI) restrito. Solicite liberação ao administrador.",
+          }),
+          { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+        );
+      }
+    }
+
     const chain = getProviderChain(provider as Provider | undefined);
     if (chain.length === 0) {
       return new Response(JSON.stringify({ error: "Nenhuma chave de IA configurada. Adicione no painel admin." }), {

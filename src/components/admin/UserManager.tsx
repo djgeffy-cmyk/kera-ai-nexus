@@ -14,7 +14,7 @@ import {
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
-import { UserPlus, Users, Loader2, ShieldCheck, Mail, Key, Wand2, Copy, RotateCcw, Sparkles } from "lucide-react";
+import { UserPlus, Users, Loader2, ShieldCheck, Mail, Key, Wand2, Copy, RotateCcw, Sparkles, Zap } from "lucide-react";
 import { BUILTIN_AGENTS } from "@/lib/agents";
 
 // Gera senha forte no padrão Kera: 14 caracteres, com maiúscula, minúscula, número e símbolo.
@@ -126,6 +126,24 @@ export const UserManager = () => {
       toast.error(err.message || "Erro ao salvar agentes");
     } finally {
       setSavingAgents(false);
+    }
+  };
+
+  const toggleGrokAccess = async (u: any) => {
+    const next = !u.profile?.grok_allowed;
+    try {
+      const { error } = await supabase.functions.invoke("admin-user-management", {
+        body: {
+          action: "set_grok_allowed",
+          targetUserId: u.id,
+          grokAllowed: next,
+        },
+      });
+      if (error) throw error;
+      toast.success(next ? "Grok liberado para este usuário" : "Grok bloqueado para este usuário");
+      fetchUsers();
+    } catch (err: any) {
+      toast.error(err.message || "Erro ao alterar acesso ao Grok");
     }
   };
 
@@ -297,6 +315,12 @@ export const UserManager = () => {
                     {u.profile.granted_agent_keys.length} agente(s)
                   </span>
                 )}
+                {u.profile?.grok_allowed && (
+                  <span className="flex items-center gap-1 text-[10px] bg-fuchsia-500/10 text-fuchsia-400 px-2 py-0.5 rounded-full border border-fuchsia-500/20">
+                    <Zap className="size-2.5" />
+                    Grok
+                  </span>
+                )}
                 <Button
                   size="sm"
                   variant="outline"
@@ -305,6 +329,24 @@ export const UserManager = () => {
                   title="Liberar agentes específicos pra esse usuário"
                 >
                   <Sparkles className="size-3 mr-1" /> Agentes
+                </Button>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className={`h-7 text-xs ${
+                    u.profile?.grok_allowed
+                      ? "border-fuchsia-500/40 text-fuchsia-400 hover:bg-fuchsia-500/10"
+                      : "border-border text-muted-foreground hover:bg-muted/50"
+                  }`}
+                  onClick={() => toggleGrokAccess(u)}
+                  title={
+                    u.profile?.grok_allowed
+                      ? "Revogar acesso ao Grok (xAI)"
+                      : "Liberar acesso ao Grok (xAI) — consome créditos da sua conta paga"
+                  }
+                >
+                  <Zap className="size-3 mr-1" />
+                  {u.profile?.grok_allowed ? "Grok ON" : "Grok"}
                 </Button>
                 <Button
                   size="sm"
