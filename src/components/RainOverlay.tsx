@@ -268,6 +268,7 @@ const RainOverlay = ({ intensity = "soft", level = 1, className = "" }: RainOver
       cancelAnimationFrame(resizeRaf);
       window.removeEventListener("resize", onResize);
       document.removeEventListener("visibilitychange", onVisibility);
+      mql?.removeEventListener?.("change", onMotionChange);
     };
   }, [intensity]);
 
