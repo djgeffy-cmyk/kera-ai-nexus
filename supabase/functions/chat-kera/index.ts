@@ -267,7 +267,7 @@ function buildConfig(p: Provider, key: string): ProviderConfig {
     case "gemini":
       return { url: "https://generativelanguage.googleapis.com/v1beta/openai/chat/completions", apiKey: key, model: "gemini-2.0-flash", label: "Google Gemini 2.0 Flash" };
     case "xai":
-      return { url: "https://api.x.ai/v1/chat/completions", apiKey: key, model: "grok-2-latest", label: "xAI Grok 2" };
+      return { url: "https://api.x.ai/v1/chat/completions", apiKey: key, model: "grok-4-latest", label: "xAI Grok 4" };
   }
 }
 
