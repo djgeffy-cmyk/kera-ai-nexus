@@ -71,6 +71,14 @@ const AcessoRestrito = () => {
         }
       });
     } catch {}
+
+    // Sinaliza ao GeoBlockGate que acabamos de limpar o cache. Enquanto a flag
+    // estiver ativa (~30s), o gate evita redirecionar de volta para
+    // /acesso-restrito mesmo que a próxima checagem ainda venha bloqueada,
+    // dando tempo do reprocessamento sem cair em loop.
+    try {
+      sessionStorage.setItem("kera:geo:bypass", String(Date.now()));
+    } catch {}
   };
 
   const handleRetry = () => {

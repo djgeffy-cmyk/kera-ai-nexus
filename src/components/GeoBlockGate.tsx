@@ -10,10 +10,29 @@ const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL as string;
 const SUPABASE_KEY = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY as string;
 const CACHE_KEY = "kera:geo:v1";
 const CACHE_TTL_MS = 1000 * 60 * 60 * 6; // 6h
+const BYPASS_KEY = "kera:geo:bypass";
+const BYPASS_TTL_MS = 1000 * 30; // 30s — janela curta para evitar loop com /acesso-restrito
+
+const hasActiveBypass = () => {
+  try {
+    const raw = sessionStorage.getItem(BYPASS_KEY);
+    if (!raw) return false;
+    const ts = Number(raw);
+    if (!Number.isFinite(ts)) return false;
+    if (Date.now() - ts < BYPASS_TTL_MS) return true;
+    sessionStorage.removeItem(BYPASS_KEY);
+    return false;
+  } catch {
+    return false;
+  }
+};
 
 export const GeoBlockGate = ({ children }: { children: React.ReactNode }) => {
   const location = useLocation();
   const [state, setState] = useState<GeoState>(() => {
+    // Se o usuário acabou de limpar o cache em /acesso-restrito, não bloqueia
+    // imediatamente — deixa a checagem reprocessar sem redirecionar em loop.
+    if (hasActiveBypass()) return { status: "checking" };
     try {
       const raw = localStorage.getItem(CACHE_KEY);
       if (raw) {
@@ -54,6 +73,17 @@ export const GeoBlockGate = ({ children }: { children: React.ReactNode }) => {
               JSON.stringify({ allowed, country, source, ts: Date.now() }),
             );
           } catch {}
+        }
+        // Bypass acabou: se vier permitido, limpa para não interferir em sessões futuras.
+        // Se vier bloqueado e o bypass ainda estiver ativo, respeitamos o bypass
+        // (mantém em checking/allowed) para não redirecionar em loop.
+        if (allowed) {
+          try {
+            sessionStorage.removeItem(BYPASS_KEY);
+          } catch {}
+        } else if (hasActiveBypass()) {
+          setState({ status: "allowed" });
+          return;
         }
         setState(allowed ? { status: "allowed" } : { status: "blocked", country, source });
       } catch {
