@@ -370,6 +370,81 @@ export const FolderOrganizer = () => {
           </div>
         </div>
       )}
+
+      <Dialog open={diagnostics !== null} onOpenChange={(o) => !o && setDiagnostics(null)}>
+        <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Stethoscope className="size-4 text-primary" />
+              Resultado do diagnóstico
+            </DialogTitle>
+            <DialogDescription>
+              Teste de leitura, escrita, movimentação e exclusão em cada pasta autorizada.
+              Nenhum arquivo seu foi tocado.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-2">
+            {diagnostics?.length === 0 && (
+              <p className="text-sm text-muted-foreground">
+                Nenhuma pasta autorizada. Use "Autorizar pastas pessoais" primeiro.
+              </p>
+            )}
+            {diagnostics?.map((r) => {
+              const allOk = r.canList && r.canWrite && r.canRead && r.canMove && r.canDelete;
+              return (
+                <div
+                  key={r.folder}
+                  className={`rounded-lg border p-3 ${
+                    allOk
+                      ? "border-primary/30 bg-primary/5"
+                      : "border-destructive/40 bg-destructive/5"
+                  }`}
+                >
+                  <div className="flex items-center gap-2 mb-2">
+                    {allOk ? (
+                      <Check className="size-4 text-primary shrink-0" />
+                    ) : (
+                      <X className="size-4 text-destructive shrink-0" />
+                    )}
+                    <span className="font-mono text-xs truncate flex-1" title={r.folder}>
+                      {r.folder}
+                    </span>
+                    {r.fileCount !== null && (
+                      <span className="text-xs text-muted-foreground shrink-0">
+                        {r.fileCount} arquivo(s)
+                      </span>
+                    )}
+                  </div>
+                  <div className="grid grid-cols-2 sm:grid-cols-5 gap-1 text-[11px]">
+                    {[
+                      ["Existe", r.exists],
+                      ["Listar", r.canList],
+                      ["Ler", r.canRead],
+                      ["Escrever", r.canWrite],
+                      ["Mover", r.canMove],
+                    ].map(([label, ok]) => (
+                      <div
+                        key={label as string}
+                        className={`flex items-center gap-1 px-1.5 py-0.5 rounded ${
+                          ok ? "text-primary" : "text-muted-foreground/60"
+                        }`}
+                      >
+                        {ok ? <Check className="size-3" /> : <X className="size-3" />}
+                        {label}
+                      </div>
+                    ))}
+                  </div>
+                  {r.error && (
+                    <p className="mt-2 text-xs text-destructive font-mono break-all">
+                      {r.error}
+                    </p>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        </DialogContent>
+      </Dialog>
     </Card>
   );
 };
