@@ -63,6 +63,7 @@ contextBridge.exposeInMainWorld("kera", {
   },
   organizer: {
     defaults: () => ipcRenderer.invoke("kera:organizer:defaults"),
+    authorizeAll: () => ipcRenderer.invoke("kera:organizer:authorize-all"),
     scan: (folderPath) => ipcRenderer.invoke("kera:organizer:scan", folderPath),
     apply: (payload) => ipcRenderer.invoke("kera:organizer:apply", payload),
     history: () => ipcRenderer.invoke("kera:organizer:history"),
