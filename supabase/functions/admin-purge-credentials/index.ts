@@ -9,21 +9,25 @@ const corsHeaders = {
 };
 
 const PATTERNS: { type: string; rx: RegExp }[] = [
-  { type: "cnpj_pwd", rx: /\b\d{2}\.?\d{3}\.?\d{3}\/?\d{4}-?\d{2}\s*[:|\s]\s*\S{4,}/g },
-  { type: "cpf_pwd", rx: /\b\d{3}\.?\d{3}\.?\d{3}-?\d{2}\s*[:|]\s*\S{4,}/g },
-  { type: "kv_pwd", rx: /\b(?:senha|password|passwd|pwd|pass|secret|token|api[_-]?key)\s*[:=]\s*['"]?[^\s'"<>]{4,}/gi },
-  { type: "user_pwd", rx: /\b[A-Za-z0-9._-]{3,}@?[A-Za-z0-9.-]*\s*:\s*[^\s:]{6,32}(?=[#$@!%&*])/g },
-  { type: "bearer", rx: /\bBearer\s+[A-Za-z0-9._\-]{20,}/gi },
-  { type: "api_key", rx: /\b(?:sk|pk|rk)[-_](?:live|test)?[-_]?[A-Za-z0-9]{20,}/g },
+  { type: "cnpj_pwd", rx: /\b\d{2}\.?\d{3}\.?\d{3}\/?\d{4}-?\d{2}\s*[:|]\s*\S{4,64}/g },
+  { type: "cpf_pwd", rx: /\b\d{3}\.?\d{3}\.?\d{3}-?\d{2}\s*[:|]\s*\S{4,64}/g },
+  { type: "kv_pwd", rx: /\b(?:senha|password|passwd|pwd|pass|secret|token|api[_-]?key)\s*[:=]\s*['"]?[^\s'"<>]{4,128}/gi },
+  { type: "bearer", rx: /\bBearer\s+[A-Za-z0-9._\-]{20,256}/gi },
+  { type: "api_key", rx: /\b(?:sk|pk|rk)[-_](?:live|test)?[-_]?[A-Za-z0-9]{20,128}/g },
 ];
 
 function redact(text: string): { redacted: string; hits: string[] } {
-  let out = text;
   const hits: string[] = [];
+  let out = text.length > 8000 ? text.slice(0, 8000) + text.slice(8000).replace(/./g, "") : text;
+  // Cap to 8KB per message to avoid pathological regex CPU usage
+  if (text.length > 8000) out = text.slice(0, 8000);
   for (const { type, rx } of PATTERNS) {
-    if (rx.test(out)) hits.push(type);
-    out = out.replace(rx, "[REDACTED-CREDENTIAL]");
+    let matched = false;
+    out = out.replace(rx, () => { matched = true; return "[REDACTED-CREDENTIAL]"; });
+    if (matched) hits.push(type);
   }
+  // If we truncated, append the rest unredacted-safe marker
+  if (text.length > 8000) out = out + "…[truncated]";
   return { redacted: out, hits };
 }
 
@@ -58,7 +62,7 @@ Deno.serve(async (req) => {
 
     const body = await req.json().catch(() => ({}));
     const apply = body.apply === true;
-    const limit = Math.min(Number(body.limit ?? 200), 500);
+    const limit = Math.min(Number(body.limit ?? 100), 200);
     const before: string | null = body.before ?? null;
 
     let q = adminClient
