@@ -16,7 +16,6 @@ import keraLookingSidesAsset from "@/assets/kera-avatar-looking-sides.mp4.asset.
 import keraFaceLeftAsset from "@/assets/kera-face-left.mp4.asset.json";
 import keraFaceCenterAsset from "@/assets/kera-face-center.mp4.asset.json";
 import keraFaceRightAsset from "@/assets/kera-face-right.mp4.asset.json";
-import keraFaceScrubAsset from "@/assets/kera-face-scrub.mp4.asset.json";
 
 // Vídeos hospedados no storage. `?v=` força o CDN/navegador a baixar a versão
 // mais recente quando o arquivo for trocado no bucket.
@@ -31,18 +30,16 @@ const keraLookingSidesUrl = (keraLookingSidesAsset as { url: string }).url;
 const keraFaceLeftUrl = (keraFaceLeftAsset as { url: string }).url;
 const keraFaceCenterUrl = (keraFaceCenterAsset as { url: string }).url;
 const keraFaceRightUrl = (keraFaceRightAsset as { url: string }).url;
-const keraFaceScrubUrl = (keraFaceScrubAsset as { url: string }).url;
-// IDs de vídeos que devem ser controlados pelo mouse (scrubbing horizontal).
-const MOUSE_SCRUB_IDS = new Set(["face-scrub"]);
+// IDs dos vídeos de close-up de rosto — usam enquadramento adaptado à tela
+// (mostram o rosto inteiro sem cortar nas laterais).
+const CLOSEUP_IDS = new Set(["face-left", "face-center", "face-right", "kera-sides"]);
 import { assetUrl } from "@/lib/assetUrl";
 import DevVideoSwitcher from "@/components/DevVideoSwitcher";
-import MouseScrubControls, { loadScrubSettings, type ScrubSettings } from "@/components/MouseScrubControls";
 
 const authBgOptions = [
   { id: "kera-rain", label: "Kera com chuva (full bg)", url: rainVideoUrl, group: "Cenas" },
   { id: "kera-sides", label: "Kera olhando os lados", url: keraLookingSidesUrl, group: "Cenas" },
   { id: "rain", label: "Chuva pura", url: rainBgUrl, group: "Cenas" },
-  { id: "face-scrub", label: "🖱️ Seguir o mouse", url: keraFaceScrubUrl, group: "Close-up" },
   { id: "face-left", label: "Close-up · Esquerda", url: keraFaceLeftUrl, group: "Close-up" },
   { id: "face-center", label: "Close-up · Centro", url: keraFaceCenterUrl, group: "Close-up" },
   { id: "face-right", label: "Close-up · Direita", url: keraFaceRightUrl, group: "Close-up" },
@@ -85,11 +82,6 @@ const Auth = () => {
   const [bgVideoUrl, setBgVideoUrl] = useState(authBgOptions[0].url);
   const [bgVideoId, setBgVideoId] = useState<string>(authBgOptions[0].id);
   const [avatarVideoUrl, setAvatarVideoUrl] = useState(authAvatarOptions[0].url);
-  const [scrubSettings, setScrubSettings] = useState<ScrubSettings>(() => loadScrubSettings());
-  const scrubSettingsRef = useRef<ScrubSettings>(scrubSettings);
-  useEffect(() => {
-    scrubSettingsRef.current = scrubSettings;
-  }, [scrubSettings]);
   // Lembra a preferência do usuário entre visitas (localStorage).
   const RAIN_MUTE_KEY = "kera:auth:rain-muted";
   const [audioMuted, setAudioMuted] = useState<boolean>(() => {
@@ -177,82 +169,6 @@ const Auth = () => {
       window.removeEventListener("keydown", onUserGesture);
     };
   }, []);
-
-  // Mouse scrubbing: quando o vídeo selecionado for um "scrub video"
-  // (ex.: face-scrub), mapeamos a posição X do mouse na tela para o
-  // currentTime do vídeo. O resultado: a Kera vira o rosto seguindo o cursor.
-  useEffect(() => {
-    const video = bgVideoRef.current;
-    if (!video) return;
-    if (!MOUSE_SCRUB_IDS.has(bgVideoId)) return;
-
-    let targetTime = 0;
-    let currentTime = 0;
-
-    const setTargetFromX = (clientX: number) => {
-      const w = window.innerWidth || 1;
-      // `range` define a fração CENTRAL da tela usada para mapear o vídeo.
-      // range=1.0 → tela inteira; range=0.5 → só os 50% centrais.
-      const range = scrubSettingsRef.current.range;
-      const center = w / 2;
-      const half = (w * range) / 2;
-      const start = center - half;
-      const end = center + half;
-      const ratio = Math.min(1, Math.max(0, (clientX - start) / (end - start)));
-      const dur = isFinite(video.duration) && video.duration > 0 ? video.duration : 10;
-      // Mantém uma pequena margem nas pontas para evitar congelar no último frame
-      targetTime = ratio * (dur - 0.05);
-    };
-
-    const tick = () => {
-      const smoothing = scrubSettingsRef.current.smoothing;
-      currentTime += (targetTime - currentTime) * smoothing;
-      try {
-        video.currentTime = currentTime;
-      } catch {}
-      rafRef.current = requestAnimationFrame(tick);
-    };
-
-    const onMove = (e: PointerEvent) => setTargetFromX(e.clientX);
-    const onLoaded = () => {
-      try {
-        video.pause();
-      } catch {}
-      // Inicia no centro
-      currentTime = (video.duration || 10) / 2;
-      targetTime = currentTime;
-      try {
-        video.currentTime = currentTime;
-      } catch {}
-    };
-
-    if (video.readyState >= 1) onLoaded();
-    video.addEventListener("loadedmetadata", onLoaded);
-    // Em alguns navegadores o autoPlay roda mesmo com a prop falsa quando o
-    // vídeo já estava no DOM. Pausamos também a cada `play` para garantir que
-    // o controle pelo `currentTime` funcione sem briga com o playback.
-    const onPlay = () => {
-      try {
-        video.pause();
-      } catch {}
-    };
-    video.addEventListener("play", onPlay);
-    try {
-      video.pause();
-    } catch {}
-    window.addEventListener("pointermove", onMove);
-    rafRef.current = requestAnimationFrame(tick);
-
-    return () => {
-      video.removeEventListener("loadedmetadata", onLoaded);
-      video.removeEventListener("play", onPlay);
-      window.removeEventListener("pointermove", onMove);
-      if (rafRef.current) {
-        cancelAnimationFrame(rafRef.current);
-        rafRef.current = null;
-      }
-    };
-  }, [bgVideoId]);
 
   const [resetOpen, setResetOpen] = useState(false);
   const [resetEmail, setResetEmail] = useState("");
@@ -435,20 +351,20 @@ const Auth = () => {
       <video
         ref={bgVideoRef}
         aria-hidden
-        autoPlay={!MOUSE_SCRUB_IDS.has(bgVideoId)}
-        loop={!MOUSE_SCRUB_IDS.has(bgVideoId)}
+        autoPlay
+        loop
         muted
         playsInline
         preload="auto"
         poster={keraAvatar}
         disablePictureInPicture
-        // No modo "scrub" (close-up controlado pelo mouse), o vídeo é quadrado
-        // 1440x1440 — usamos `object-contain` para mostrar o rosto INTEIRO
-        // centralizado em telas widescreen, sem cortar as laterais. Nos demais
-        // vídeos (chuva vertical), mantemos `object-cover object-bottom` para
-        // garantir que o solo com as gotas fique sempre visível.
+        // Vídeos de close-up (rosto da Kera, 1440x1440): usamos `object-contain`
+        // para SEMPRE mostrar o rosto inteiro, adaptando às bordas da tela
+        // (com fundo escuro nas laterais em telas widescreen).
+        // Vídeos de chuva (verticais): `object-cover object-bottom` mantém o
+        // solo com as gotas sempre visível.
         className={
-          MOUSE_SCRUB_IDS.has(bgVideoId)
+          CLOSEUP_IDS.has(bgVideoId)
             ? "absolute inset-0 w-full h-full object-contain object-center bg-background"
             : "absolute inset-0 w-full h-full object-cover object-bottom"
         }
@@ -739,10 +655,6 @@ const Auth = () => {
           setBgVideoId(id);
         }}
       />
-
-      {MOUSE_SCRUB_IDS.has(bgVideoId) && (
-        <MouseScrubControls value={scrubSettings} onChange={setScrubSettings} />
-      )}
     </main>
   );
 };
