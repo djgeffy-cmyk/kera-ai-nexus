@@ -21,7 +21,6 @@ const rainBgUrl =
 // Avatar circular dentro do botão/card: Kera realista com gotas de chuva.
 const rainVideoUrl =
   "https://ytixqgkzqgeoxrbmjqbo.supabase.co/storage/v1/object/public/kera-videos/kera-avatar-rain.mp4?v=2026-04-22";
-import DemoKeraDialog from "@/components/DemoKeraDialog";
 import { assetUrl } from "@/lib/assetUrl";
 import DevVideoSwitcher from "@/components/DevVideoSwitcher";
 
@@ -60,7 +59,6 @@ const Auth = () => {
   const [supportsPasskey] = useState(() => webauthnSupported());
   const [inIframe] = useState(() => isInIframe());
   const [iosNonSafari] = useState(() => isIOSNonSafari());
-  const [demoOpen, setDemoOpen] = useState(false);
   const [bgVideoUrl, setBgVideoUrl] = useState(authBgOptions[0].url);
   const [avatarVideoUrl, setAvatarVideoUrl] = useState(authAvatarOptions[0].url);
   // Lembra a preferência do usuário entre visitas (localStorage).
@@ -568,22 +566,6 @@ const Auth = () => {
                   >
                     {mode === "signin" ? "Não tem conta? Cadastre-se" : "Já tem conta? Entrar"}
                   </button>
-
-                  <div className="flex items-center gap-3 my-4">
-                    <div className="flex-1 h-px bg-border/50" />
-                    <span className="text-xs text-muted-foreground uppercase tracking-widest">ou</span>
-                    <div className="flex-1 h-px bg-border/50" />
-                  </div>
-
-                  <Button
-                    type="button"
-                    onClick={() => setDemoOpen(true)}
-                    variant="outline"
-                    className="w-full border-primary/40 hover:bg-primary/10 hover:border-primary group"
-                  >
-                    <Sparkles className="size-4 mr-2 text-primary group-hover:animate-pulse" />
-                    Testar Kera antes (3 perguntas grátis)
-                  </Button>
                 </>
               )}
             </Card>
@@ -636,12 +618,6 @@ const Auth = () => {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-
-      <DemoKeraDialog
-        open={demoOpen}
-        onOpenChange={setDemoOpen}
-        onWantToSignUp={() => setMode("signup")}
-      />
 
       <DevVideoSwitcher
         storageKey="kera:auth:bg-video"
