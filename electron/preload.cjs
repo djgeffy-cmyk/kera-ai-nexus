@@ -61,6 +61,13 @@ contextBridge.exposeInMainWorld("kera", {
       return () => ipcRenderer.removeListener("kera:videos:progress", handler);
     },
   },
+  organizer: {
+    defaults: () => ipcRenderer.invoke("kera:organizer:defaults"),
+    scan: (folderPath) => ipcRenderer.invoke("kera:organizer:scan", folderPath),
+    apply: (payload) => ipcRenderer.invoke("kera:organizer:apply", payload),
+    history: () => ipcRenderer.invoke("kera:organizer:history"),
+    undo: () => ipcRenderer.invoke("kera:organizer:undo"),
+  },
   mascot: {
     show: () => ipcRenderer.invoke("kera:mascot:show"),
     hide: () => ipcRenderer.invoke("kera:mascot:hide"),

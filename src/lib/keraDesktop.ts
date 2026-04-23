@@ -92,6 +92,22 @@ export type KeraDesktopApi = {
     clear: () => Promise<{ ok: boolean }>;
     onProgress: (cb: (p: { name: string; received: number; total: number }) => void) => () => void;
   };
+  organizer: {
+    defaults: () => Promise<{ label: string; path: string }[]>;
+    scan: (folderPath: string) => Promise<{
+      folder: string;
+      files: { name: string; path: string; ext: string; sizeBytes: number; modifiedAt: string }[];
+    }>;
+    apply: (payload: { rootFolder: string; plan: { from: string; folder: string }[] }) => Promise<{
+      ok: boolean;
+      cancelled?: boolean;
+      moved?: number;
+      errors?: { from: string; error: string }[];
+      error?: string;
+    }>;
+    history: () => Promise<{ at: number; root: string; moves: { from: string; to: string }[] }[]>;
+    undo: () => Promise<{ ok: boolean; cancelled?: boolean; restored?: number; errors?: { to: string; error: string }[]; error?: string }>;
+  };
   mascot: {
     show: () => Promise<{ ok: boolean }>;
     hide: () => Promise<{ ok: boolean }>;
