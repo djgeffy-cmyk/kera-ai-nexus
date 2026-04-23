@@ -6,7 +6,6 @@ import { Volume2, VolumeX, MousePointerClick, Video, VideoOff } from "lucide-rea
 import { motion } from "framer-motion";
 import keraAvatar from "@/assets/kera-avatar.png";
 import rainAmbientUrl from "@/assets/rain-ambient.mp3";
-import DemoKeraDialog from "@/components/DemoKeraDialog";
 import DevVideoSwitcher from "@/components/DevVideoSwitcher";
 
 const STORAGE_BASE = "https://ytixqgkzqgeoxrbmjqbo.supabase.co/storage/v1/object/public/kera-videos";
@@ -24,7 +23,6 @@ const avatarVideoOptions = [
 
 const Welcome = () => {
   const navigate = useNavigate();
-  const [demoOpen, setDemoOpen] = useState(false);
   const [bgUrl, setBgUrl] = useState(bgVideoOptions[0].url);
   const [avatarUrl, setAvatarUrl] = useState(avatarVideoOptions[0].url);
   const BG_KEY = "kera:global:show-bg";
@@ -143,7 +141,7 @@ const Welcome = () => {
       >
         <motion.button
           type="button"
-          onClick={() => setDemoOpen(true)}
+          onClick={() => navigate("/auth")}
           whileHover={{ scale: 1.04 }}
           whileTap={{ scale: 0.97 }}
           className="group relative rounded-full"
@@ -171,7 +169,7 @@ const Welcome = () => {
 
         <h2 className="mt-8 text-primary font-display tracking-widest text-3xl uppercase text-glow">Kera</h2>
         <p className="mt-3 text-base text-foreground/90 tracking-wide text-center max-w-sm">
-          Clique sobre mim para conversar — depois você decide se cria conta
+          Clique sobre mim para entrar
         </p>
 
         <div className="mt-6 flex flex-col items-center gap-3">
@@ -187,12 +185,6 @@ const Welcome = () => {
           </p>
         </div>
       </motion.div>
-
-      <DemoKeraDialog
-        open={demoOpen}
-        onOpenChange={setDemoOpen}
-        onWantToSignUp={() => navigate("/auth")}
-      />
 
       <DevVideoSwitcher
         storageKey="kera:welcome:bg-video"
