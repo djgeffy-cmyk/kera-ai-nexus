@@ -172,6 +172,62 @@ const Auth = () => {
     };
   }, []);
 
+  // Mouse scrubbing: quando o vídeo selecionado for um "scrub video"
+  // (ex.: face-scrub), mapeamos a posição X do mouse na tela para o
+  // currentTime do vídeo. O resultado: a Kera vira o rosto seguindo o cursor.
+  useEffect(() => {
+    const video = bgVideoRef.current;
+    if (!video) return;
+    if (!MOUSE_SCRUB_IDS.has(bgVideoId)) return;
+
+    let targetTime = 0;
+    let currentTime = 0;
+    const SMOOTHING = 0.18; // 0..1 — quanto maior, mais responsivo
+
+    const setTargetFromX = (clientX: number) => {
+      const w = window.innerWidth || 1;
+      const ratio = Math.min(1, Math.max(0, clientX / w));
+      const dur = isFinite(video.duration) && video.duration > 0 ? video.duration : 10;
+      // Mantém uma pequena margem nas pontas para evitar congelar no último frame
+      targetTime = ratio * (dur - 0.05);
+    };
+
+    const tick = () => {
+      currentTime += (targetTime - currentTime) * SMOOTHING;
+      try {
+        video.currentTime = currentTime;
+      } catch {}
+      rafRef.current = requestAnimationFrame(tick);
+    };
+
+    const onMove = (e: PointerEvent) => setTargetFromX(e.clientX);
+    const onLoaded = () => {
+      try {
+        video.pause();
+      } catch {}
+      // Inicia no centro
+      currentTime = (video.duration || 10) / 2;
+      targetTime = currentTime;
+      try {
+        video.currentTime = currentTime;
+      } catch {}
+    };
+
+    if (video.readyState >= 1) onLoaded();
+    video.addEventListener("loadedmetadata", onLoaded);
+    window.addEventListener("pointermove", onMove);
+    rafRef.current = requestAnimationFrame(tick);
+
+    return () => {
+      video.removeEventListener("loadedmetadata", onLoaded);
+      window.removeEventListener("pointermove", onMove);
+      if (rafRef.current) {
+        cancelAnimationFrame(rafRef.current);
+        rafRef.current = null;
+      }
+    };
+  }, [bgVideoId]);
+
   const [resetOpen, setResetOpen] = useState(false);
   const [resetEmail, setResetEmail] = useState("");
   const [resetNote, setResetNote] = useState("");
