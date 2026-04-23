@@ -82,6 +82,7 @@ const Auth = () => {
   const [inIframe] = useState(() => isInIframe());
   const [iosNonSafari] = useState(() => isIOSNonSafari());
   const [bgVideoUrl, setBgVideoUrl] = useState(authBgOptions[0].url);
+  const [bgVideoId, setBgVideoId] = useState<string>(authBgOptions[0].id);
   const [avatarVideoUrl, setAvatarVideoUrl] = useState(authAvatarOptions[0].url);
   // Lembra a preferência do usuário entre visitas (localStorage).
   const RAIN_MUTE_KEY = "kera:auth:rain-muted";
@@ -645,7 +646,10 @@ const Auth = () => {
         storageKey="kera:auth:bg-video"
         options={authBgOptions}
         defaultId="kera-rain"
-        onChange={(url) => setBgVideoUrl(url)}
+        onChange={(url, id) => {
+          setBgVideoUrl(url);
+          setBgVideoId(id);
+        }}
       />
     </main>
   );
