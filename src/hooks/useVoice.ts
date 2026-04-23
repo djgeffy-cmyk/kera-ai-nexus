@@ -281,9 +281,37 @@ export function useVoice(opts: { useElevenLabs?: boolean; useRemoteTTS?: boolean
     const chunks = splitTextForTTS(cleanedText);
     let playedAny = false;
 
+    const fetchChunk = async (chunk: string): Promise<Blob | null> => {
+      if (!chunk.trim()) return null;
+      const ac = new AbortController();
+      inflightRef.current = ac;
+      try {
+        const resp = await fetch(TTS_URL, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ text: chunk }),
+          signal: ac.signal,
+        });
+        if (resp.status === 204) {
+          console.warn("[useVoice] TTS retornou 204 (quota/limite).");
+          return null;
+        }
+        if (!resp.ok) {
+          const errText = await resp.text().catch(() => "");
+          throw new Error("TTS HTTP " + resp.status + " " + errText.slice(0, 200));
+        }
+        const blob = await resp.blob();
+        if (!blob.size) throw new Error("TTS retornou áudio vazio");
+        if (sessionRef.current !== sessionId) throw new Error("Playback interrompido");
+        return blob;
+      } finally {
+        if (inflightRef.current === ac) inflightRef.current = null;
+      }
+    };
+
     try {
       let nextChunkPromise: Promise<Blob | null> | null = chunks.length
-        ? fetchTTSChunk(chunks[0], sessionId)
+        ? fetchChunk(chunks[0])
         : null;
 
       for (let i = 0; i < chunks.length; i += 1) {
@@ -293,7 +321,7 @@ export function useVoice(opts: { useElevenLabs?: boolean; useRemoteTTS?: boolean
         if (!blob) break;
 
         nextChunkPromise = i + 1 < chunks.length
-          ? fetchTTSChunk(chunks[i + 1], sessionId)
+          ? fetchChunk(chunks[i + 1])
           : null;
 
         await playAudioBlob(blob, sessionId);
@@ -314,7 +342,7 @@ export function useVoice(opts: { useElevenLabs?: boolean; useRemoteTTS?: boolean
       }
       inflightRef.current = null;
     }
-  }, [cleanupAudio, clearPendingUnlock, fetchTTSChunk, playAudioBlob, rejectPendingPlayback]);
+  }, [cleanupAudio, clearPendingUnlock, playAudioBlob, rejectPendingPlayback]);
 
   // "Warm-up" do contexto de áudio: chamado dentro de um clique do usuário para
   // destravar reprodução de Audio() em iOS Safari.
