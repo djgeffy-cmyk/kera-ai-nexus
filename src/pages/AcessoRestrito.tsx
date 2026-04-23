@@ -136,8 +136,10 @@ const AcessoRestrito = () => {
   const handleRetry = () => {
     setRechecking(true);
     clearGeoCache();
-    // Recarrega a app na raiz para que o GeoBlockGate refaça a checagem
-    window.location.replace("/");
+    // Recarrega a app na raiz (HashRouter) para que o GeoBlockGate refaça a checagem
+    window.location.replace("/#/");
+    // garante reload completo caso já estivéssemos em /#/
+    setTimeout(() => window.location.reload(), 50);
   };
 
   const handleBackToApp = () => {
