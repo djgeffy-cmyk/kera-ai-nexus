@@ -351,20 +351,20 @@ const Auth = () => {
       <video
         ref={bgVideoRef}
         aria-hidden
-        autoPlay={!MOUSE_SCRUB_IDS.has(bgVideoId)}
-        loop={!MOUSE_SCRUB_IDS.has(bgVideoId)}
+        autoPlay
+        loop
         muted
         playsInline
         preload="auto"
         poster={keraAvatar}
         disablePictureInPicture
-        // No modo "scrub" (close-up controlado pelo mouse), o vídeo é quadrado
-        // 1440x1440 — usamos `object-contain` para mostrar o rosto INTEIRO
-        // centralizado em telas widescreen, sem cortar as laterais. Nos demais
-        // vídeos (chuva vertical), mantemos `object-cover object-bottom` para
-        // garantir que o solo com as gotas fique sempre visível.
+        // Vídeos de close-up (rosto da Kera, 1440x1440): usamos `object-contain`
+        // para SEMPRE mostrar o rosto inteiro, adaptando às bordas da tela
+        // (com fundo escuro nas laterais em telas widescreen).
+        // Vídeos de chuva (verticais): `object-cover object-bottom` mantém o
+        // solo com as gotas sempre visível.
         className={
-          MOUSE_SCRUB_IDS.has(bgVideoId)
+          CLOSEUP_IDS.has(bgVideoId)
             ? "absolute inset-0 w-full h-full object-contain object-center bg-background"
             : "absolute inset-0 w-full h-full object-cover object-bottom"
         }
