@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { Sparkles, FolderOpen, Wand2, RotateCcw, Loader2, Check, Folder } from "lucide-react";
+import { Sparkles, FolderOpen, Wand2, RotateCcw, Loader2, Check, Folder, ShieldCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -33,16 +33,42 @@ export const FolderOrganizer = () => {
   const [classifying, setClassifying] = useState(false);
   const [applying, setApplying] = useState(false);
   const [overrides, setOverrides] = useState<Map<string, string>>(new Map());
+  const [authorizing, setAuthorizing] = useState(false);
 
-  useEffect(() => {
+  const refreshDefaults = async () => {
     const k = getKera();
     if (!k?.organizer) return;
-    k.organizer.defaults().then((d) => {
-      setDefaults(d);
-      if (d[0] && !rootFolder) setRootFolder(d[0].path);
-    });
+    const d = await k.organizer.defaults();
+    setDefaults(d);
+    if (d[0] && !rootFolder) setRootFolder(d[0].path);
+  };
+
+  useEffect(() => {
+    refreshDefaults();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  const authorizeAll = async () => {
+    const k = getKera();
+    if (!k?.organizer?.authorizeAll) return;
+    setAuthorizing(true);
+    try {
+      const r = await k.organizer.authorizeAll();
+      if (r.cancelled) return;
+      if (!r.ok) {
+        toast.error(r.error || "Não foi possível autorizar.");
+        return;
+      }
+      if (r.alreadyAuthorized) {
+        toast.info("Todas as suas pastas pessoais já estavam autorizadas.");
+      } else {
+        toast.success(`✓ ${r.added?.length ?? 0} pasta(s) autorizada(s) com sucesso!`);
+      }
+      await refreshDefaults();
+    } finally {
+      setAuthorizing(false);
+    }
+  };
 
   const scan = async (folder: string) => {
     const k = getKera();
@@ -152,9 +178,25 @@ export const FolderOrganizer = () => {
             Organizador de pastas com IA
           </h2>
         </div>
-        <Button onClick={undo} size="sm" variant="ghost" className="gap-2">
-          <RotateCcw className="size-3.5" /> Desfazer último
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button
+            onClick={authorizeAll}
+            size="sm"
+            variant="outline"
+            className="gap-2"
+            disabled={authorizing}
+          >
+            {authorizing ? (
+              <Loader2 className="size-3.5 animate-spin" />
+            ) : (
+              <ShieldCheck className="size-3.5" />
+            )}
+            Autorizar pastas pessoais
+          </Button>
+          <Button onClick={undo} size="sm" variant="ghost" className="gap-2">
+            <RotateCcw className="size-3.5" /> Desfazer último
+          </Button>
+        </div>
       </div>
       <p className="text-xs text-muted-foreground">
         A Kera lê os nomes dos arquivos e sugere pastas temáticas (ex.: "Notas Fiscais 2025",

@@ -412,27 +412,32 @@ ipcMain.handle("kera:fs:pickFolder", async () => {
 // Pastas-padrão do usuário que a Kera oferece pra organizar.
 function defaultUserFolders() {
   const home = os.homedir();
-  const candidates =
-    process.platform === "win32"
-      ? [
-          { label: "Downloads", path: path.join(home, "Downloads") },
-          { label: "Documentos", path: path.join(home, "Documents") },
-          { label: "Área de Trabalho", path: path.join(home, "Desktop") },
-        ]
-      : process.platform === "darwin"
-      ? [
-          { label: "Downloads", path: path.join(home, "Downloads") },
-          { label: "Documentos", path: path.join(home, "Documents") },
-          { label: "Desktop", path: path.join(home, "Desktop") },
-        ]
-      : [
-          { label: "Downloads", path: path.join(home, "Downloads") },
-          { label: "Documentos", path: path.join(home, "Documentos") },
-          { label: "Documents", path: path.join(home, "Documents") },
-          { label: "Área de Trabalho", path: path.join(home, "Área de Trabalho") },
-          { label: "Desktop", path: path.join(home, "Desktop") },
-        ];
-  return candidates.filter((c) => fsSync.existsSync(c.path));
+  // Cobre nomes em PT-BR e EN-US para Windows / macOS / Linux.
+  const candidates = [
+    { label: "Downloads", path: path.join(home, "Downloads") },
+    { label: "Downloads (PT)", path: path.join(home, "Transferências") },
+    { label: "Documentos", path: path.join(home, "Documents") },
+    { label: "Documentos (PT)", path: path.join(home, "Documentos") },
+    { label: "Área de Trabalho", path: path.join(home, "Desktop") },
+    { label: "Área de Trabalho (PT)", path: path.join(home, "Área de Trabalho") },
+    { label: "Imagens", path: path.join(home, "Pictures") },
+    { label: "Imagens (PT)", path: path.join(home, "Imagens") },
+    { label: "Vídeos", path: path.join(home, "Videos") },
+    { label: "Vídeos (PT)", path: path.join(home, "Vídeos") },
+    { label: "Música", path: path.join(home, "Music") },
+    { label: "Música (PT)", path: path.join(home, "Música") },
+  ];
+  // Deduplica caminhos resolvidos (case-insensitive) e mantém só os existentes.
+  const seen = new Set();
+  const out = [];
+  for (const c of candidates) {
+    if (!fsSync.existsSync(c.path)) continue;
+    const key = path.resolve(c.path).toLowerCase();
+    if (seen.has(key)) continue;
+    seen.add(key);
+    out.push(c);
+  }
+  return out;
 }
 
 // Auto-autoriza as pastas padrão na primeira vez (idempotente).
@@ -451,6 +456,36 @@ function ensureDefaultsAllowed() {
 ipcMain.handle("kera:organizer:defaults", () => {
   ensureDefaultsAllowed();
   return defaultUserFolders();
+});
+
+// Autoriza em lote todas as pastas pessoais comuns existentes (Downloads,
+// Documentos, Desktop, Imagens, Vídeos, Música — em PT/EN), com confirmação
+// nativa única.
+ipcMain.handle("kera:organizer:authorize-all", async () => {
+  const folders = defaultUserFolders();
+  if (folders.length === 0) {
+    return { ok: false, error: "Nenhuma pasta pessoal encontrada." };
+  }
+  const list = loadAllowlist();
+  const newOnes = folders.filter(
+    (f) => !list.some((x) => path.resolve(x).toLowerCase() === path.resolve(f.path).toLowerCase())
+  );
+  if (newOnes.length === 0) {
+    return { ok: true, added: [], list, alreadyAuthorized: true };
+  }
+  const summary = newOnes.map((f) => `• ${f.label} — ${f.path}`).join("\n");
+  const { response } = await dialog.showMessageBox(mainWindow, {
+    type: "question",
+    buttons: ["Cancelar", `Autorizar ${newOnes.length} pasta(s)`],
+    defaultId: 1,
+    cancelId: 0,
+    title: "Autorizar pastas pessoais",
+    message: `A Kera vai poder LER e MOVER arquivos nestas pastas:\n\n${summary}\n\nVocê pode revogar a qualquer momento na lista de Pastas permitidas.`,
+  });
+  if (response !== 1) return { ok: false, cancelled: true };
+  for (const f of newOnes) list.push(f.path);
+  saveAllowlist(list);
+  return { ok: true, added: newOnes, list };
 });
 
 // Escaneia uma pasta (rasa: apenas arquivos no nível raiz, ignora subpastas).
