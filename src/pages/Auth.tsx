@@ -85,6 +85,11 @@ const Auth = () => {
   const [bgVideoUrl, setBgVideoUrl] = useState(authBgOptions[0].url);
   const [bgVideoId, setBgVideoId] = useState<string>(authBgOptions[0].id);
   const [avatarVideoUrl, setAvatarVideoUrl] = useState(authAvatarOptions[0].url);
+  const [scrubSettings, setScrubSettings] = useState<ScrubSettings>(() => loadScrubSettings());
+  const scrubSettingsRef = useRef<ScrubSettings>(scrubSettings);
+  useEffect(() => {
+    scrubSettingsRef.current = scrubSettings;
+  }, [scrubSettings]);
   // Lembra a preferência do usuário entre visitas (localStorage).
   const RAIN_MUTE_KEY = "kera:auth:rain-muted";
   const [audioMuted, setAudioMuted] = useState<boolean>(() => {
