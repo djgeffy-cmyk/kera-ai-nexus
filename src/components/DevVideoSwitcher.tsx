@@ -1,5 +1,7 @@
 import { useEffect, useState } from "react";
 import { CloudRain, RefreshCw, Sparkles, X } from "lucide-react";
+import { toast } from "sonner";
+import { filterKeraOptions, resolveValidKeraId } from "@/lib/keraIdentity";
 
 export type VideoOption = {
   id: string;
@@ -21,26 +23,40 @@ interface DevVideoSwitcherProps {
  * no localStorage por `storageKey`.
  */
 const DevVideoSwitcher = ({ storageKey, options, onChange, defaultId }: DevVideoSwitcherProps) => {
+  // Remove opções incompatíveis com a identidade da Kera (ex.: "looking-sides").
+  const safeOptions = filterKeraOptions(options);
+  const fallbackId = defaultId ?? safeOptions[0]?.id;
   const [open, setOpen] = useState(false);
   const [reloadTick, setReloadTick] = useState(0);
   const [activeId, setActiveId] = useState<string>(() => {
-    if (typeof window === "undefined") return defaultId ?? options[0]?.id;
+    if (typeof window === "undefined") return fallbackId;
     try {
-      return window.localStorage.getItem(storageKey) ?? defaultId ?? options[0]?.id;
+      const stored = window.localStorage.getItem(storageKey);
+      const { id, migrated } = resolveValidKeraId(stored, safeOptions, fallbackId);
+      if (migrated && stored) {
+        // Avisa o usuário e regrava a chave já com o valor válido.
+        toast.info("Vídeo da Kera atualizado", {
+          description: "A versão anterior foi descontinuada. Voltamos ao padrão.",
+        });
+        try {
+          window.localStorage.setItem(storageKey, id);
+        } catch {}
+      }
+      return id;
     } catch {
-      return defaultId ?? options[0]?.id;
+      return fallbackId;
     }
   });
 
   useEffect(() => {
-    const opt = options.find((o) => o.id === activeId) ?? options[0];
+    const opt = safeOptions.find((o) => o.id === activeId) ?? safeOptions[0];
     if (opt) {
       // Acrescenta cache-buster apenas em recargas manuais para forçar refetch.
       const url = reloadTick > 0 ? `${opt.url}${opt.url.includes("?") ? "&" : "?"}r=${reloadTick}` : opt.url;
       onChange(url, opt.id);
     }
     try {
-      window.localStorage.setItem(storageKey, activeId);
+      window.localStorage.setItem(storageKey, opt?.id ?? activeId);
     } catch {}
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeId, reloadTick]);
@@ -48,12 +64,12 @@ const DevVideoSwitcher = ({ storageKey, options, onChange, defaultId }: DevVideo
   if (!import.meta.env.DEV) return null;
 
   // Agrupa opções por `group` (mantendo ordem de aparição); itens sem grupo vão para "default".
-  const groups = options.reduce<Record<string, VideoOption[]>>((acc, opt) => {
+  const groups = safeOptions.reduce<Record<string, VideoOption[]>>((acc, opt) => {
     const key = opt.group ?? "__default__";
     (acc[key] = acc[key] ?? []).push(opt);
     return acc;
   }, {});
-  const groupOrder = Array.from(new Set(options.map((o) => o.group ?? "__default__")));
+  const groupOrder = Array.from(new Set(safeOptions.map((o) => o.group ?? "__default__")));
 
   return (
     <div className="fixed bottom-4 right-4 z-50 select-none">
