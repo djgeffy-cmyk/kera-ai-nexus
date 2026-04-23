@@ -228,11 +228,24 @@ const Auth = () => {
 
     if (video.readyState >= 1) onLoaded();
     video.addEventListener("loadedmetadata", onLoaded);
+    // Em alguns navegadores o autoPlay roda mesmo com a prop falsa quando o
+    // vídeo já estava no DOM. Pausamos também a cada `play` para garantir que
+    // o controle pelo `currentTime` funcione sem briga com o playback.
+    const onPlay = () => {
+      try {
+        video.pause();
+      } catch {}
+    };
+    video.addEventListener("play", onPlay);
+    try {
+      video.pause();
+    } catch {}
     window.addEventListener("pointermove", onMove);
     rafRef.current = requestAnimationFrame(tick);
 
     return () => {
       video.removeEventListener("loadedmetadata", onLoaded);
+      video.removeEventListener("play", onPlay);
       window.removeEventListener("pointermove", onMove);
       if (rafRef.current) {
         cancelAnimationFrame(rafRef.current);
