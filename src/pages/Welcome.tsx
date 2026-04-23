@@ -8,6 +8,7 @@ import { motion } from "framer-motion";
 import keraAvatar from "@/assets/kera-avatar.png";
 import rainAmbientUrl from "@/assets/rain-ambient.mp3";
 import DevVideoSwitcher from "@/components/DevVideoSwitcher";
+import RainOverlay from "@/components/RainOverlay";
 
 const STORAGE_BASE = "https://ytixqgkzqgeoxrbmjqbo.supabase.co/storage/v1/object/public/kera-videos";
 const VERSION = "2026-04-22";
@@ -107,6 +108,9 @@ const Welcome = () => {
       )}
 
       <audio ref={audioRef} src={rainAmbientUrl} loop preload="auto" muted={audioMuted} aria-hidden />
+
+      {/* Chuva suave em canvas — sobre o vídeo, atrás do card */}
+      <RainOverlay intensity="soft" />
 
       <div className="fixed top-4 right-4 z-40 flex flex-col gap-2">
         <button
