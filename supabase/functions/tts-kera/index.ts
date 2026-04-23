@@ -77,7 +77,9 @@ async function ttsElevenLabs(opts: {
   modelId: string;
 }): Promise<Response> {
   const { apiKey, text, voiceId, modelId } = opts;
-  const url = `https://api.elevenlabs.io/v1/text-to-speech/${voiceId}?output_format=mp3_44100_128`;
+  // Endpoint /stream + optimize_streaming_latency=3 reduz fortemente o time-to-first-byte.
+  // output_format mp3_22050_32 é leve e suficiente pra fala (mais rápido que 44100_128).
+  const url = `https://api.elevenlabs.io/v1/text-to-speech/${voiceId}/stream?output_format=mp3_22050_32&optimize_streaming_latency=3`;
 
   // Retry até 6x se for 429 concurrent_limit_exceeded (limite de 3 requisições paralelas)
   let lastErr = "";
@@ -101,14 +103,13 @@ async function ttsElevenLabs(opts: {
       }),
     });
     if (upstream.ok) {
-      // Bufferiza o áudio inteiro antes de responder (evita "connection closed before message completed")
-      const audioBuf = await upstream.arrayBuffer();
-      console.log(`[ElevenLabs] OK voice=${voiceId} bytes=${audioBuf.byteLength}`);
-      return new Response(audioBuf, {
+      // Pass-through do stream: o cliente começa a baixar (e pode tocar) antes
+      // do ElevenLabs terminar de gerar todo o áudio. Reduz time-to-first-audio.
+      console.log(`[ElevenLabs] OK stream voice=${voiceId} model=${modelId}`);
+      return new Response(upstream.body, {
         headers: {
           ...corsHeaders,
           "Content-Type": "audio/mpeg",
-          "Content-Length": String(audioBuf.byteLength),
           "Cache-Control": "no-store",
           "X-TTS-Provider": "elevenlabs",
         },
