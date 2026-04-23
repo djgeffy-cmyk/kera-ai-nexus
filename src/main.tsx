@@ -3,6 +3,16 @@ import App from "./App.tsx";
 import "./index.css";
 import { setDesktopVideoCache } from "./lib/assetUrl";
 
+try {
+  const { pathname, search, hash, origin } = window.location;
+  const isFileRequest = /\.[a-zA-Z0-9]+$/.test(pathname);
+  const normalizedHashPath = hash.startsWith("#") ? hash.slice(1) : "";
+
+  if (pathname !== "/" && !isFileRequest && normalizedHashPath !== pathname) {
+    window.location.replace(`${origin}/#${pathname}${search}`);
+  }
+} catch {}
+
 // Aplica o tema salvo antes de renderizar pra evitar flash
 try {
   const saved = localStorage.getItem("kera:theme");
