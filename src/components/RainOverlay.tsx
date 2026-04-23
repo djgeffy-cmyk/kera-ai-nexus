@@ -40,6 +40,38 @@ const INTENSITY_COUNT: Record<Intensity, number> = {
 
 const clamp01 = (v: number) => (v < 0 ? 0 : v > 1 ? 1 : v);
 
+/**
+ * Perfil responsivo baseado na largura da viewport.
+ * - mobile  (<640px):   menos gotas, menores e mais lentas (não polui a tela)
+ * - tablet  (<1024px):  meio termo
+ * - desktop (>=1024px): valores cheios
+ * Também respeita prefers-reduced-motion → reduz drasticamente.
+ */
+const getResponsiveProfile = () => {
+  if (typeof window === "undefined") {
+    return { countMul: 1, sizeMul: 1, speedMul: 1 };
+  }
+  const w = window.innerWidth;
+  const reduced =
+    typeof window.matchMedia === "function" &&
+    window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+  let profile;
+  if (w < 640) {
+    profile = { countMul: 0.45, sizeMul: 0.7, speedMul: 0.75 };
+  } else if (w < 1024) {
+    profile = { countMul: 0.7, sizeMul: 0.85, speedMul: 0.88 };
+  } else {
+    profile = { countMul: 1, sizeMul: 1, speedMul: 1 };
+  }
+
+  if (reduced) {
+    profile.countMul *= 0.4;
+    profile.speedMul *= 0.6;
+  }
+  return profile;
+};
+
 const RainOverlay = ({ intensity = "soft", level = 1, className = "" }: RainOverlayProps) => {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const rafRef = useRef<number | null>(null);
@@ -62,7 +94,8 @@ const RainOverlay = ({ intensity = "soft", level = 1, className = "" }: RainOver
     if (!ctx) return;
 
     const dpr = Math.min(window.devicePixelRatio || 1, 2);
-    const target = INTENSITY_COUNT[intensity];
+    let profile = getResponsiveProfile();
+    let target = Math.max(20, Math.round(INTENSITY_COUNT[intensity] * profile.countMul));
 
     const resize = () => {
       const w = window.innerWidth;
@@ -80,9 +113,13 @@ const RainOverlay = ({ intensity = "soft", level = 1, className = "" }: RainOver
       const r = Math.random();
       const layer: 0 | 1 | 2 = r < 0.5 ? 0 : r < 0.85 ? 1 : 2;
 
-      const speeds = [2.2, 4.0, 6.4];
-      const lens = [9, 14, 22];
-      const thickness = [0.5, 0.8, 1.2];
+      const speeds = [2.2 * profile.speedMul, 4.0 * profile.speedMul, 6.4 * profile.speedMul];
+      const lens = [9 * profile.sizeMul, 14 * profile.sizeMul, 22 * profile.sizeMul];
+      const thickness = [
+        Math.max(0.4, 0.5 * profile.sizeMul),
+        Math.max(0.5, 0.8 * profile.sizeMul),
+        Math.max(0.6, 1.2 * profile.sizeMul),
+      ];
       const alphas = [0.18, 0.32, 0.5];
 
       const jitter = 0.6 + Math.random() * 0.8;
@@ -181,15 +218,40 @@ const RainOverlay = ({ intensity = "soft", level = 1, className = "" }: RainOver
       cancelAnimationFrame(resizeRaf);
       resizeRaf = requestAnimationFrame(() => {
         resize();
+        // Recalcula perfil responsivo (mobile <-> desktop, rotação de tablet, etc)
+        profile = getResponsiveProfile();
+        target = Math.max(20, Math.round(INTENSITY_COUNT[intensity] * profile.countMul));
         const diff = target - dropsRef.current.length;
         if (diff > 0) {
           for (let i = 0; i < diff; i++) dropsRef.current.push(makeDrop(true));
         } else if (diff < 0) {
           dropsRef.current.length = target;
         }
+        // Atualiza tamanho/velocidade das gotas existentes pra refletir o novo perfil
+        const sm = profile.sizeMul;
+        const spm = profile.speedMul;
+        for (const d of dropsRef.current) {
+          const baseLen = [9, 14, 22][d.layer];
+          const baseSpd = [2.2, 4.0, 6.4][d.layer];
+          const baseTh = [0.5, 0.8, 1.2][d.layer];
+          // Mantém o jitter relativo aproximado
+          const jLen = d.len / ([9, 14, 22][d.layer] || 1) || 1;
+          const jSpd = d.speed / ([2.2, 4.0, 6.4][d.layer] || 1) || 1;
+          d.len = baseLen * sm * (jLen / (jLen || 1));
+          d.len = baseLen * sm * Math.max(0.6, Math.min(1.4, jLen));
+          d.speed = baseSpd * spm * Math.max(0.6, Math.min(1.4, jSpd));
+          d.thickness = Math.max(0.4, baseTh * sm);
+        }
       });
     };
     window.addEventListener("resize", onResize);
+    // Reage a mudança de prefers-reduced-motion
+    const mql =
+      typeof window.matchMedia === "function"
+        ? window.matchMedia("(prefers-reduced-motion: reduce)")
+        : null;
+    const onMotionChange = () => onResize();
+    mql?.addEventListener?.("change", onMotionChange);
 
     const onVisibility = () => {
       if (document.hidden) {
@@ -206,6 +268,7 @@ const RainOverlay = ({ intensity = "soft", level = 1, className = "" }: RainOver
       cancelAnimationFrame(resizeRaf);
       window.removeEventListener("resize", onResize);
       document.removeEventListener("visibilitychange", onVisibility);
+      mql?.removeEventListener?.("change", onMotionChange);
     };
   }, [intensity]);
 
