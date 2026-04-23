@@ -8,7 +8,9 @@ const corsHeaders = {
 
 // ElevenLabs - Sarah: voz feminina jovem, natural, excelente em PT-BR
 const ELEVEN_DEFAULT_VOICE = "EXAVITQu4vr4xnSDxMaL"; // Sarah
-const ELEVEN_DEFAULT_MODEL = "eleven_multilingual_v2";
+// Turbo v2.5: ~50% menos latência que multilingual_v2, qualidade quase igual em PT-BR.
+// Usado para reduzir o tempo entre o clique em "Ouvir" e o início da fala.
+const ELEVEN_DEFAULT_MODEL = "eleven_turbo_v2_5";
 
 // Pré-processador de pronúncia para PT-BR.
 // Carrega correções da tabela pronunciation_fixes (gerenciada no painel admin)
@@ -75,7 +77,9 @@ async function ttsElevenLabs(opts: {
   modelId: string;
 }): Promise<Response> {
   const { apiKey, text, voiceId, modelId } = opts;
-  const url = `https://api.elevenlabs.io/v1/text-to-speech/${voiceId}?output_format=mp3_44100_128`;
+  // Endpoint /stream + optimize_streaming_latency=3 reduz fortemente o time-to-first-byte.
+  // output_format mp3_22050_32 é leve e suficiente pra fala (mais rápido que 44100_128).
+  const url = `https://api.elevenlabs.io/v1/text-to-speech/${voiceId}/stream?output_format=mp3_22050_32&optimize_streaming_latency=3`;
 
   // Retry até 6x se for 429 concurrent_limit_exceeded (limite de 3 requisições paralelas)
   let lastErr = "";
@@ -99,14 +103,13 @@ async function ttsElevenLabs(opts: {
       }),
     });
     if (upstream.ok) {
-      // Bufferiza o áudio inteiro antes de responder (evita "connection closed before message completed")
-      const audioBuf = await upstream.arrayBuffer();
-      console.log(`[ElevenLabs] OK voice=${voiceId} bytes=${audioBuf.byteLength}`);
-      return new Response(audioBuf, {
+      // Pass-through do stream: o cliente começa a baixar (e pode tocar) antes
+      // do ElevenLabs terminar de gerar todo o áudio. Reduz time-to-first-audio.
+      console.log(`[ElevenLabs] OK stream voice=${voiceId} model=${modelId}`);
+      return new Response(upstream.body, {
         headers: {
           ...corsHeaders,
           "Content-Type": "audio/mpeg",
-          "Content-Length": String(audioBuf.byteLength),
           "Cache-Control": "no-store",
           "X-TTS-Provider": "elevenlabs",
         },
