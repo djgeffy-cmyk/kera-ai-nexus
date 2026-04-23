@@ -72,12 +72,6 @@ const Welcome = () => {
     } catch {}
   }, [showBackground]);
 
-  useEffect(() => {
-    try {
-      window.localStorage.setItem(RAIN_MUTE_KEY, audioMuted ? "1" : "0");
-    } catch {}
-  }, [audioMuted]);
-
   return (
     <main className="relative min-h-screen flex items-center justify-center p-4 overflow-hidden bg-background">
       {showBackground && (
@@ -96,11 +90,8 @@ const Welcome = () => {
         />
       )}
 
-      <audio ref={audioRef} src={rainAmbientUrl} loop preload="auto" muted={audioMuted} aria-hidden />
-
-      {/* Chuva suave em canvas — intensidade segue o VOLUME RMS real do áudio.
-          Quanto mais forte a chuva no .mp3 toca, mais densa fica visualmente. */}
-      <RainOverlay intensity="soft" level={rainLevel} />
+      {/* Chuva visual suave em canvas (sem áudio). */}
+      <RainOverlay intensity="soft" level={1} />
 
       <div className="fixed top-4 right-4 z-40 flex flex-col gap-2">
         <button
@@ -110,15 +101,6 @@ const Welcome = () => {
           className="size-10 rounded-full bg-background/40 backdrop-blur-md border border-white/10 flex items-center justify-center text-primary/80 hover:text-primary transition-all shadow-soft"
         >
           {showBackground ? <Video className="size-4" /> : <VideoOff className="size-4" />}
-        </button>
-
-        <button
-          type="button"
-          onClick={() => setAudioMuted((m) => !m)}
-          title={audioMuted ? "Ativar som ambiente" : "Desativar som ambiente"}
-          className="size-10 rounded-full bg-background/40 backdrop-blur-md border border-white/10 flex items-center justify-center text-primary/80 hover:text-primary transition-all shadow-soft"
-        >
-          {audioMuted ? <VolumeX className="size-4" /> : <Volume2 className="size-4" />}
         </button>
       </div>
 
