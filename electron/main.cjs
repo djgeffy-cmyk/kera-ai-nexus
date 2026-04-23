@@ -458,6 +458,36 @@ ipcMain.handle("kera:organizer:defaults", () => {
   return defaultUserFolders();
 });
 
+// Autoriza em lote todas as pastas pessoais comuns existentes (Downloads,
+// Documentos, Desktop, Imagens, Vídeos, Música — em PT/EN), com confirmação
+// nativa única.
+ipcMain.handle("kera:organizer:authorize-all", async () => {
+  const folders = defaultUserFolders();
+  if (folders.length === 0) {
+    return { ok: false, error: "Nenhuma pasta pessoal encontrada." };
+  }
+  const list = loadAllowlist();
+  const newOnes = folders.filter(
+    (f) => !list.some((x) => path.resolve(x).toLowerCase() === path.resolve(f.path).toLowerCase())
+  );
+  if (newOnes.length === 0) {
+    return { ok: true, added: [], list, alreadyAuthorized: true };
+  }
+  const summary = newOnes.map((f) => `• ${f.label} — ${f.path}`).join("\n");
+  const { response } = await dialog.showMessageBox(mainWindow, {
+    type: "question",
+    buttons: ["Cancelar", `Autorizar ${newOnes.length} pasta(s)`],
+    defaultId: 1,
+    cancelId: 0,
+    title: "Autorizar pastas pessoais",
+    message: `A Kera vai poder LER e MOVER arquivos nestas pastas:\n\n${summary}\n\nVocê pode revogar a qualquer momento na lista de Pastas permitidas.`,
+  });
+  if (response !== 1) return { ok: false, cancelled: true };
+  for (const f of newOnes) list.push(f.path);
+  saveAllowlist(list);
+  return { ok: true, added: newOnes, list };
+});
+
 // Escaneia uma pasta (rasa: apenas arquivos no nível raiz, ignora subpastas).
 ipcMain.handle("kera:organizer:scan", async (_e, folderPath) => {
   const target = path.resolve(folderPath);
