@@ -228,11 +228,24 @@ const Auth = () => {
 
     if (video.readyState >= 1) onLoaded();
     video.addEventListener("loadedmetadata", onLoaded);
+    // Em alguns navegadores o autoPlay roda mesmo com a prop falsa quando o
+    // vídeo já estava no DOM. Pausamos também a cada `play` para garantir que
+    // o controle pelo `currentTime` funcione sem briga com o playback.
+    const onPlay = () => {
+      try {
+        video.pause();
+      } catch {}
+    };
+    video.addEventListener("play", onPlay);
+    try {
+      video.pause();
+    } catch {}
     window.addEventListener("pointermove", onMove);
     rafRef.current = requestAnimationFrame(tick);
 
     return () => {
       video.removeEventListener("loadedmetadata", onLoaded);
+      video.removeEventListener("play", onPlay);
       window.removeEventListener("pointermove", onMove);
       if (rafRef.current) {
         cancelAnimationFrame(rafRef.current);
@@ -429,10 +442,16 @@ const Auth = () => {
         preload="auto"
         poster={keraAvatar}
         disablePictureInPicture
-        // O vídeo é vertical (784x1168). Em telas widescreen `object-cover` corta
-        // o topo E o chão. Alinhar pelo bottom garante que o solo com as gotas
-        // batendo SEMPRE fique visível.
-        className="absolute inset-0 w-full h-full object-cover object-bottom"
+        // No modo "scrub" (close-up controlado pelo mouse), o vídeo é quadrado
+        // 1440x1440 — usamos `object-contain` para mostrar o rosto INTEIRO
+        // centralizado em telas widescreen, sem cortar as laterais. Nos demais
+        // vídeos (chuva vertical), mantemos `object-cover object-bottom` para
+        // garantir que o solo com as gotas fique sempre visível.
+        className={
+          MOUSE_SCRUB_IDS.has(bgVideoId)
+            ? "absolute inset-0 w-full h-full object-contain object-center bg-background"
+            : "absolute inset-0 w-full h-full object-cover object-bottom"
+        }
         key={bgVideoUrl}
         src={bgVideoUrl}
         // Sem filtros: mostra o vídeo de chuva original, com as gotas no chão visíveis
