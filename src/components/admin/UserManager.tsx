@@ -315,6 +315,12 @@ export const UserManager = () => {
                     {u.profile.granted_agent_keys.length} agente(s)
                   </span>
                 )}
+                {u.profile?.grok_allowed && (
+                  <span className="flex items-center gap-1 text-[10px] bg-fuchsia-500/10 text-fuchsia-400 px-2 py-0.5 rounded-full border border-fuchsia-500/20">
+                    <Zap className="size-2.5" />
+                    Grok
+                  </span>
+                )}
                 <Button
                   size="sm"
                   variant="outline"
@@ -323,6 +329,24 @@ export const UserManager = () => {
                   title="Liberar agentes específicos pra esse usuário"
                 >
                   <Sparkles className="size-3 mr-1" /> Agentes
+                </Button>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className={`h-7 text-xs ${
+                    u.profile?.grok_allowed
+                      ? "border-fuchsia-500/40 text-fuchsia-400 hover:bg-fuchsia-500/10"
+                      : "border-border text-muted-foreground hover:bg-muted/50"
+                  }`}
+                  onClick={() => toggleGrokAccess(u)}
+                  title={
+                    u.profile?.grok_allowed
+                      ? "Revogar acesso ao Grok (xAI)"
+                      : "Liberar acesso ao Grok (xAI) — consome créditos da sua conta paga"
+                  }
+                >
+                  <Zap className="size-3 mr-1" />
+                  {u.profile?.grok_allowed ? "Grok ON" : "Grok"}
                 </Button>
                 <Button
                   size="sm"
