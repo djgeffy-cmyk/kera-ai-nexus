@@ -51,8 +51,12 @@ const DevVideoSwitcher = ({ storageKey, options, onChange, defaultId }: DevVideo
   useEffect(() => {
     const opt = safeOptions.find((o) => o.id === activeId) ?? safeOptions[0];
     if (opt) {
-      // Acrescenta cache-buster apenas em recargas manuais para forçar refetch.
-      const url = reloadTick > 0 ? `${opt.url}${opt.url.includes("?") ? "&" : "?"}r=${reloadTick}` : opt.url;
+      // Cache-buster sempre que a opção mudar ou o usuário pedir reload, para
+      // garantir que o navegador busque a versão atual do arquivo (evita ver
+      // o vídeo antigo de uma opção homônima após swap no storage/CDN).
+      const sep = opt.url.includes("?") ? "&" : "?";
+      const stamp = `${opt.id}-${reloadTick}-${Date.now()}`;
+      const url = `${opt.url}${sep}r=${stamp}`;
       onChange(url, opt.id);
     }
     try {
