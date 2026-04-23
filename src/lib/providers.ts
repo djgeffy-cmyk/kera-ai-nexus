@@ -5,7 +5,7 @@ export const PROVIDERS = [
   { id: "groq", label: "Groq · Llama 3.3 70B", description: "Grátis e ultra-rápido", help: "Crie em console.groq.com/keys" },
   { id: "openrouter", label: "OpenRouter · Llama 3.3 (free)", description: "Vários modelos gratuitos", help: "Crie em openrouter.ai/keys" },
   { id: "gemini", label: "Google Gemini 2.0 Flash", description: "Estilo NotebookLM (Google)", help: "Crie em aistudio.google.com/apikey" },
-  { id: "xai", label: "xAI · Grok 2", description: "Pago", help: "Crie em console.x.ai" },
+  { id: "xai", label: "xAI · Grok 4", description: "Pago (sua conta xAI)", help: "Crie em console.x.ai" },
 ] as const;
 
 export type ProviderId = typeof PROVIDERS[number]["id"];
