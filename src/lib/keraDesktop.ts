@@ -116,6 +116,22 @@ export type KeraDesktopApi = {
     }>;
     history: () => Promise<{ at: number; root: string; moves: { from: string; to: string }[] }[]>;
     undo: () => Promise<{ ok: boolean; cancelled?: boolean; restored?: number; errors?: { to: string; error: string }[]; error?: string }>;
+    diagnose: () => Promise<{
+      ok: boolean;
+      total: number;
+      okCount: number;
+      results: {
+        folder: string;
+        exists: boolean;
+        canList: boolean;
+        canWrite: boolean;
+        canRead: boolean;
+        canMove: boolean;
+        canDelete: boolean;
+        fileCount: number | null;
+        error: string | null;
+      }[];
+    }>;
   };
   mascot: {
     show: () => Promise<{ ok: boolean }>;

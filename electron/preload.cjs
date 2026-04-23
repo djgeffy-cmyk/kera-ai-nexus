@@ -68,6 +68,7 @@ contextBridge.exposeInMainWorld("kera", {
     apply: (payload) => ipcRenderer.invoke("kera:organizer:apply", payload),
     history: () => ipcRenderer.invoke("kera:organizer:history"),
     undo: () => ipcRenderer.invoke("kera:organizer:undo"),
+    diagnose: () => ipcRenderer.invoke("kera:organizer:diagnose"),
   },
   mascot: {
     show: () => ipcRenderer.invoke("kera:mascot:show"),
