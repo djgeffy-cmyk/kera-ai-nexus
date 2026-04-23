@@ -14,6 +14,7 @@ import {
   isKeraDesktop, getKera,
   type KeraFsEntry, type KeraPlatformInfo, type KeraSystemStatus, type KeraExecResult,
 } from "@/lib/keraDesktop";
+import { FolderOrganizer } from "@/components/FolderOrganizer";
 
 const KeraDesktopPage = () => {
   const navigate = useNavigate();
@@ -575,6 +576,9 @@ const KeraDesktopPage = () => {
             💡 Dica: você também pode digitar livremente no chat — tipo "lista os PDFs do meu Documentos" ou "cria um arquivo notas.txt em /home/usuario/Documentos com a frase 'lembrete'".
           </div>
         </Card>
+
+        {/* ORGANIZADOR DE PASTAS COM IA */}
+        <FolderOrganizer />
 
         {/* CONTROLES DE ENERGIA */}
         <Card className="p-4 space-y-3">
